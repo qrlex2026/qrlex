@@ -476,7 +476,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
                         playsInline
                         className="absolute inset-0 w-full h-full object-cover"
                     >
-                        <source src="https://videos.pexels.com/video-files/3195394/3195394-uhd_2560_1440_25fps.mp4" type="video/mp4" />
+                        <source src="https://github.com/qrlex2026/qrlexvideo/raw/refs/heads/main/2.mp4" type="video/mp4" />
                     </video>
 
                     {/* Gradient Overlay */}
@@ -485,7 +485,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
                     {/* Content */}
                     <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
                         {/* Logo */}
-                        <div className="w-[90px] h-[90px] rounded-2xl bg-black flex items-center justify-center mb-5 shadow-2xl">
+                        <div className="w-[90px] h-[90px] rounded-2xl bg-black flex items-center justify-center mb-5 mt-5 shadow-2xl">
                             <span className="text-white text-4xl font-bold">R</span>
                         </div>
 
@@ -499,7 +499,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
                     </div>
 
                     {/* Bottom Navigation */}
-                    <div className="relative z-10 pb-8 px-6">
+                    <div className="relative z-10 pb-14 px-6">
                         <div className="flex items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
                             <button
                                 onClick={() => setShowWelcome(false)}
@@ -539,11 +539,13 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
                                 <button
                                     key={lang.code}
                                     onClick={() => {
-                                        // Set Google Translate cookie
-                                        document.cookie = `googtrans=/tr/${lang.code}; path=/; domain=${window.location.hostname}`;
-                                        document.cookie = `googtrans=/tr/${lang.code}; path=/`;
+                                        // Programmatically trigger Google Translate
+                                        const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+                                        if (select) {
+                                            select.value = lang.code;
+                                            select.dispatchEvent(new Event('change'));
+                                        }
                                         setIsLanguageOpen(false);
-                                        window.location.reload();
                                     }}
                                     className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl px-4 py-3.5 transition-colors"
                                 >
