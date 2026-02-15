@@ -1,0 +1,35 @@
+# 🚀 QRlex Project Rules
+
+## 🧠 General Context
+- **Project Name:** QRlex (SaaS QR Menu System)
+- **Language:** Turkish (Türkçe) - Always communicate in Turkish.
+- **Tone:** Friendly, Professional, Proactive ("Dostum" hitabı uygun).
+
+## 🛠️ Tech Stack & Best Practices
+- **Framework:** Next.js 15+ (App Router)
+- **Styling:** Tailwind CSS v4 (Mobile First Approach)
+- **Language:** TypeScript (Strict mode)
+- **Database:** Supabase (PostgreSQL) + RLS (Row Level Security)
+- **Icons:** `lucide-react`
+- **Font:** Plus Jakarta Sans
+
+## 🎨 UI/UX Guidelines
+- **Mobile First:** All designs must look perfect on mobile first, then scale to desktop.
+- **Premium Aesthetic:** Use clean lines, generous whitespace, and high-quality imagery.
+- **Interactions:** Fast, responsive, no layout shift (CLS).
+- **Components:** Modular, named export, functional components.
+
+## 🏗️ Architecture & SaaS Rules
+- **Multi-tenancy:** Always consider `restaurant_id` in database queries.
+- **Security:** NEVER bypass RLS in public routes.
+- **Storage:** Use optimized images (Cloudflare/Supabase).
+
+## 📝 Coding Convention
+- Use `const` over `let`.
+- Use `async/await` for data fetching.
+- Filenames: `kebab-case` for files, `PascalCase` for components.
+- Interfaces: Prefix with `I` is NOT required (e.g., `interface Product`).
+
+## ⚠️ Critical Memories
+- Shopping cart button removed (Menu is view-only).
+- Font is globally configured in `globals.css` via `@theme`.
