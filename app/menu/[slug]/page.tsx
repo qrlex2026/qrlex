@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Info, Star, Search, X, ChevronUp } from "lucide-react";
+import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -17,7 +17,21 @@ const CATEGORIES = [
     { id: "tatlilar", name: "Tatlılar" },
 ];
 
-const PRODUCTS = [
+type Product = {
+    id: string;
+    categoryId: string;
+    name: string;
+    description: string;
+    price: number;
+    image: string;
+    isPopular: boolean;
+    prepTime: string;
+    calories: string;
+    ingredients: string[];
+    allergens: string[];
+};
+
+const PRODUCTS: Product[] = [
     {
         id: "1",
         categoryId: "burgerler",
@@ -26,6 +40,10 @@ const PRODUCTS = [
         price: 320,
         image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80",
         isPopular: true,
+        prepTime: "15-20 dk",
+        calories: "650 kcal",
+        ingredients: ["Dana köfte (120g)", "Cheddar peyniri", "Özel burger sosu", "Turşu", "Marul", "Domates", "Brioche ekmeği"],
+        allergens: ["Gluten", "Süt ürünleri", "Hardal"],
     },
     {
         id: "2",
@@ -35,6 +53,10 @@ const PRODUCTS = [
         price: 380,
         image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=500&q=80",
         isPopular: true,
+        prepTime: "20-25 dk",
+        calories: "720 kcal",
+        ingredients: ["Dana köfte (150g)", "Trüf mantarlı mayonez", "Karamelize soğan", "Swiss peyniri", "Roka", "Brioche ekmeği"],
+        allergens: ["Gluten", "Süt ürünleri", "Yumurta"],
     },
     {
         id: "5",
@@ -42,8 +64,12 @@ const PRODUCTS = [
         name: "BBQ Bacon",
         description: "Dana bacon, BBQ sos, çıtır soğan halkaları, cheddar.",
         price: 360,
-        image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=500&q=80", // reused or new
+        image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=500&q=80",
         isPopular: false,
+        prepTime: "18-22 dk",
+        calories: "780 kcal",
+        ingredients: ["Dana köfte (150g)", "Dana bacon", "BBQ sos", "Çıtır soğan halkaları", "Cheddar peyniri", "Brioche ekmeği"],
+        allergens: ["Gluten", "Süt ürünleri"],
     },
     {
         id: "3",
@@ -53,6 +79,10 @@ const PRODUCTS = [
         price: 290,
         image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=500&q=80",
         isPopular: true,
+        prepTime: "12-15 dk",
+        calories: "520 kcal",
+        ingredients: ["Pizza hamuru", "San Marzano domates sosu", "Mozzarella peyniri", "Taze fesleğen", "Zeytinyağı"],
+        allergens: ["Gluten", "Süt ürünleri"],
     },
     {
         id: "6",
@@ -62,6 +92,10 @@ const PRODUCTS = [
         price: 330,
         image: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=500&q=80",
         isPopular: true,
+        prepTime: "12-15 dk",
+        calories: "580 kcal",
+        ingredients: ["Pizza hamuru", "Domates sosu", "Mozzarella", "Pepperoni sucuk dilimleri", "Kekik"],
+        allergens: ["Gluten", "Süt ürünleri"],
     },
     {
         id: "7",
@@ -71,6 +105,10 @@ const PRODUCTS = [
         price: 350,
         image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80",
         isPopular: false,
+        prepTime: "12-15 dk",
+        calories: "620 kcal",
+        ingredients: ["Pizza hamuru", "Mozzarella", "Gorgonzola", "Parmesan", "Ricotta", "Bal"],
+        allergens: ["Gluten", "Süt ürünleri"],
     },
     {
         id: "4",
@@ -80,6 +118,10 @@ const PRODUCTS = [
         price: 60,
         image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=500&q=80",
         isPopular: false,
+        prepTime: "1 dk",
+        calories: "0 kcal",
+        ingredients: ["Karbonatlı su", "Renklendirici (E150d)", "Aspartam", "Fosforik asit"],
+        allergens: [],
     },
     {
         id: "8",
@@ -89,6 +131,10 @@ const PRODUCTS = [
         price: 80,
         image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80",
         isPopular: true,
+        prepTime: "3-5 dk",
+        calories: "120 kcal",
+        ingredients: ["Taze limon suyu", "Şeker", "Su", "Taze nane yaprakları", "Buz"],
+        allergens: [],
     },
     {
         id: "9",
@@ -98,6 +144,10 @@ const PRODUCTS = [
         price: 40,
         image: "https://images.unsplash.com/photo-1626132647523-66f5bf380027?auto=format&fit=crop&w=500&q=80",
         isPopular: false,
+        prepTime: "1 dk",
+        calories: "75 kcal",
+        ingredients: ["Yoğurt", "Su", "Tuz"],
+        allergens: ["Süt ürünleri"],
     },
     {
         id: "10",
@@ -107,6 +157,10 @@ const PRODUCTS = [
         price: 240,
         image: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=500&q=80",
         isPopular: true,
+        prepTime: "5 dk",
+        calories: "450 kcal",
+        ingredients: ["Krem peynir", "Yumurta", "Krema", "Şeker", "Un", "Belçika çikolatası"],
+        allergens: ["Gluten", "Süt ürünleri", "Yumurta"],
     },
     {
         id: "11",
@@ -116,6 +170,10 @@ const PRODUCTS = [
         price: 250,
         image: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?auto=format&fit=crop&w=500&q=80",
         isPopular: false,
+        prepTime: "15-18 dk",
+        calories: "480 kcal",
+        ingredients: ["Bitter çikolata", "Tereyağı", "Yumurta", "Şeker", "Un", "Vanilya dondurması"],
+        allergens: ["Gluten", "Süt ürünleri", "Yumurta", "Soya"],
     },
     {
         id: "12",
@@ -125,6 +183,10 @@ const PRODUCTS = [
         price: 180,
         image: "",
         isPopular: false,
+        prepTime: "8-10 dk",
+        calories: "320 kcal",
+        ingredients: ["Marul", "Parmesan peyniri", "Kruton", "Sezar sos", "Zeytinyağı"],
+        allergens: ["Gluten", "Süt ürünleri", "Yumurta", "Balık (ançüez)"],
     },
     {
         id: "13",
@@ -134,6 +196,10 @@ const PRODUCTS = [
         price: 160,
         image: "",
         isPopular: true,
+        prepTime: "5-8 dk",
+        calories: "220 kcal",
+        ingredients: ["Domates", "Salatalık", "Siyah zeytin", "Beyaz peynir", "Zeytinyağı", "Limon"],
+        allergens: ["Süt ürünleri"],
     },
     {
         id: "14",
@@ -143,6 +209,10 @@ const PRODUCTS = [
         price: 120,
         image: "",
         isPopular: false,
+        prepTime: "8-10 dk",
+        calories: "380 kcal",
+        ingredients: ["Soğan", "Un", "Mısır unu", "Özel baharat karışımı", "Ranch sos"],
+        allergens: ["Gluten", "Süt ürünleri", "Yumurta"],
     },
     {
         id: "15",
@@ -152,6 +222,10 @@ const PRODUCTS = [
         price: 200,
         image: "",
         isPopular: true,
+        prepTime: "15-20 dk",
+        calories: "520 kcal",
+        ingredients: ["Tavuk kanat (8 adet)", "Acı sos", "Tereyağı", "Sarımsak", "Havuç & kereviz çubukları"],
+        allergens: ["Süt ürünleri"],
     },
 ];
 
@@ -165,6 +239,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const categoryNavRef = useRef<HTMLDivElement>(null);
     const isScrollingRef = useRef(false);
 
@@ -400,7 +475,8 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
                                 {products.map((product) => (
                                     <div
                                         key={product.id}
-                                        className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-4 h-32 active:scale-[0.98] transition-transform"
+                                        onClick={() => setSelectedProduct(product)}
+                                        className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-4 h-32 active:scale-[0.98] transition-transform cursor-pointer"
                                     >
                                         {/* Image */}
                                         <div className="relative w-24 h-full shrink-0">
@@ -430,6 +506,116 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
                     );
                 })}
             </div>
+
+            {/* Product Detail Overlay */}
+            {selectedProduct && (
+                <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100vh' }}>
+                    {/* Product Image Section */}
+                    <div className="relative w-full shrink-0" style={{ height: '45%' }}>
+                        {selectedProduct.image ? (
+                            <Image
+                                src={selectedProduct.image}
+                                alt={selectedProduct.name}
+                                fill
+                                className="object-cover"
+                                sizes="100vw"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                                <span className="text-gray-400 text-6xl">🍽️</span>
+                            </div>
+                        )}
+                        {/* Back Button */}
+                        <button
+                            onClick={() => setSelectedProduct(null)}
+                            className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors"
+                        >
+                            <ChevronLeft size={22} />
+                        </button>
+                    </div>
+
+                    {/* Detail Card */}
+                    <div
+                        className="flex-1 bg-white overflow-y-auto -mt-6 relative"
+                        style={{ borderRadius: '25px 25px 0 0' }}
+                    >
+                        <div className="px-5 pt-7 pb-10">
+                            {/* Product Name & Price */}
+                            <div className="flex items-start justify-between gap-3 mb-3">
+                                <h2 className="text-2xl font-bold text-gray-900 leading-tight">{selectedProduct.name}</h2>
+                                <span className="text-2xl font-bold text-black whitespace-nowrap">{selectedProduct.price} TL</span>
+                            </div>
+
+                            {/* Description */}
+                            <p className="text-gray-500 text-sm leading-relaxed mb-5">{selectedProduct.description}</p>
+
+                            {/* Prep Time & Calories */}
+                            <div className="flex gap-3 mb-6">
+                                <div className="flex-1 bg-gray-50 rounded-xl p-3.5 flex items-center gap-3 border border-gray-100">
+                                    <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
+                                        <Clock size={18} className="text-orange-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Hazırlanış</p>
+                                        <p className="text-sm font-semibold text-gray-900">{selectedProduct.prepTime}</p>
+                                    </div>
+                                </div>
+                                <div className="flex-1 bg-gray-50 rounded-xl p-3.5 flex items-center gap-3 border border-gray-100">
+                                    <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                                        <Flame size={18} className="text-red-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Kalori</p>
+                                        <p className="text-sm font-semibold text-gray-900">{selectedProduct.calories}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Ingredients */}
+                            <div className="mb-6">
+                                <h3 className="text-base font-bold text-gray-900 mb-3">📋 İçindekiler</h3>
+                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedProduct.ingredients.map((item, i) => (
+                                            <span
+                                                key={i}
+                                                className="bg-white text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full border border-gray-200"
+                                            >
+                                                {item}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Allergen Warning */}
+                            {selectedProduct.allergens.length > 0 && (
+                                <div>
+                                    <h3 className="text-base font-bold text-gray-900 mb-3">⚠️ Alerjen Uyarısı</h3>
+                                    <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                                        <div className="flex items-start gap-3">
+                                            <AlertTriangle size={18} className="text-amber-500 mt-0.5 shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-amber-700 mb-2 font-medium">Bu ürün aşağıdaki alerjenleri içerir:</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {selectedProduct.allergens.map((allergen, i) => (
+                                                        <span
+                                                            key={i}
+                                                            className="bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-full"
+                                                        >
+                                                            {allergen}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Search Popup */}
             {isSearchOpen && (
