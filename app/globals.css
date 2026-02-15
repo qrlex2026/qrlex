@@ -23,18 +23,36 @@ body {
   /* Firefox */
 }
 
-/* Hide Google Translate branding */
+/* Hide ALL Google Translate UI elements */
 .goog-te-banner-frame,
 .goog-te-gadget,
+.goog-te-gadget-simple,
 #goog-gt-tt,
 .goog-te-balloon-frame,
 .goog-tooltip,
-.goog-tooltip:hover {
+.goog-tooltip:hover,
+.goog-te-menu-value,
+.goog-te-ftab-frame,
+div#goog-gt-,
+#goog-gt-tt *,
+.goog-te-spinner-pos,
+.goog-te-banner-frame.skiptranslate,
+.skiptranslate iframe,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-ZVi9od-SmfZ-OEVmcd,
+.VIpgJd-ZVi9od-xl07Ob-lTBxed,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-suEOdc {
   display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 body {
   top: 0 !important;
+  position: static !important;
 }
 
 .goog-text-highlight {
@@ -42,7 +60,9 @@ body {
   box-shadow: none !important;
 }
 
-.VIpgJd-ZVi9od-ORHb-OEVmcd,
-.VIpgJd-ZVi9od-SmfZ-OEVmcd {
+iframe.goog-te-banner-frame,
+iframe.skiptranslate {
   display: none !important;
+  height: 0 !important;
+  visibility: hidden !important;
 }
