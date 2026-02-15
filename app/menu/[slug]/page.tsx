@@ -467,7 +467,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
         <>
             {/* Welcome Screen */}
             {showWelcome && (
-                <div className="fixed inset-0 z-[100] flex flex-col" style={{ width: '100vw', height: '100vh' }}>
+                <div className="fixed inset-0 z-[100] flex flex-col bg-black" style={{ width: '100vw', height: '100vh' }}>
                     {/* Video Background */}
                     <video
                         autoPlay
@@ -483,9 +483,9 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
 
                     {/* Content */}
-                    <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
+                    <div className="relative z-10 flex-1 flex flex-col items-center justify-start pt-5 px-6">
                         {/* Logo */}
-                        <div className="w-[90px] h-[90px] rounded-2xl bg-black flex items-center justify-center mb-5 mt-5 shadow-2xl">
+                        <div className="w-[90px] h-[90px] rounded-2xl bg-black flex items-center justify-center mb-5 shadow-2xl">
                             <span className="text-white text-4xl font-bold">R</span>
                         </div>
 
@@ -499,7 +499,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
                     </div>
 
                     {/* Bottom Navigation */}
-                    <div className="relative z-10 pb-14 px-6">
+                    <div className="relative z-10 pb-20 px-6">
                         <div className="flex items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
                             <button
                                 onClick={() => setShowWelcome(false)}
@@ -540,10 +540,20 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
                                     key={lang.code}
                                     onClick={() => {
                                         // Programmatically trigger Google Translate
-                                        const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-                                        if (select) {
-                                            select.value = lang.code;
-                                            select.dispatchEvent(new Event('change'));
+                                        const tryTranslate = () => {
+                                            const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+                                            if (select) {
+                                                select.value = lang.code;
+                                                select.dispatchEvent(new Event('change'));
+                                                return true;
+                                            }
+                                            return false;
+                                        };
+                                        if (!tryTranslate()) {
+                                            // Widget not ready, fallback: set cookie and reload
+                                            document.cookie = `googtrans=/tr/${lang.code}; path=/`;
+                                            document.cookie = `googtrans=/tr/${lang.code}; path=/; domain=${window.location.hostname}`;
+                                            window.location.reload();
                                         }
                                         setIsLanguageOpen(false);
                                     }}

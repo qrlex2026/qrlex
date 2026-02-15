@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -24,21 +25,19 @@ export default function RootLayout({
         className={`${plusJakartaSans.variable} antialiased font-sans bg-gray-50 text-gray-900`}
       >
         {children}
-        {/* Hidden Google Translate Widget */}
         <div id="google_translate_element" style={{ display: 'none' }} />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              function googleTranslateElementInit() {
-                new google.translate.TranslateElement({
-                  pageLanguage: 'tr',
-                  autoDisplay: false
-                }, 'google_translate_element');
-              }
-            `,
-          }}
+        <Script id="google-translate-init" strategy="afterInteractive">
+          {`function googleTranslateElementInit() {
+              new google.translate.TranslateElement({
+                pageLanguage: 'tr',
+                autoDisplay: false
+              }, 'google_translate_element');
+            }`}
+        </Script>
+        <Script
+          src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+          strategy="afterInteractive"
         />
-        <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async />
       </body>
     </html>
   );
