@@ -22,3 +22,27 @@ body {
   scrollbar-width: none;
   /* Firefox */
 }
+
+/* Hide Google Translate branding */
+.goog-te-banner-frame,
+.goog-te-gadget,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-ZVi9od-SmfZ-OEVmcd {
+  display: none !important;
+}

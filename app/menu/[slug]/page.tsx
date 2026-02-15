@@ -317,6 +317,7 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 
 export default function MenuPage({ params }: { params: { slug: string } }) {
     const [showWelcome, setShowWelcome] = useState(true);
+    const [isLanguageOpen, setIsLanguageOpen] = useState(false);
     const [activeCategory, setActiveCategory] = useState("");
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -507,13 +508,49 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
                                 Menü
                             </button>
                             <div className="w-px h-8 bg-white/20" />
-                            <button className="flex-1 py-4 text-white/60 font-medium text-sm text-center hover:bg-white/10 transition-colors">
+                            <button onClick={() => setIsLanguageOpen(true)} className="flex-1 py-4 text-white/60 font-medium text-sm text-center hover:bg-white/10 transition-colors">
                                 Dil
                             </button>
                             <div className="w-px h-8 bg-white/20" />
                             <button className="flex-1 py-4 text-white/60 font-medium text-sm text-center hover:bg-white/10 transition-colors rounded-r-2xl">
                                 Kampanyalar
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Language Selection Popup */}
+            {isLanguageOpen && (
+                <div className="fixed inset-0 z-[110] flex items-end justify-center" style={{ width: '100vw', height: '100vh' }}>
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsLanguageOpen(false)} />
+                    <div className="relative z-10 w-full max-w-md bg-white rounded-t-3xl px-5 pt-6 pb-8 animate-in slide-in-from-bottom">
+                        <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-5" />
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">Dil Seçin</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                            {[
+                                { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
+                                { code: 'en', label: 'English', flag: '🇬🇧' },
+                                { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+                                { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+                                { code: 'fr', label: 'Français', flag: '🇫🇷' },
+                                { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+                            ].map((lang) => (
+                                <button
+                                    key={lang.code}
+                                    onClick={() => {
+                                        // Set Google Translate cookie
+                                        document.cookie = `googtrans=/tr/${lang.code}; path=/; domain=${window.location.hostname}`;
+                                        document.cookie = `googtrans=/tr/${lang.code}; path=/`;
+                                        setIsLanguageOpen(false);
+                                        window.location.reload();
+                                    }}
+                                    className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl px-4 py-3.5 transition-colors"
+                                >
+                                    <span className="text-2xl">{lang.flag}</span>
+                                    <span className="text-sm font-medium text-gray-800">{lang.label}</span>
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>
