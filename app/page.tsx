@@ -10,7 +10,7 @@ export default function Home() {
   return (
     <>
       {/* Welcome Screen */}
-      <div className="flex flex-col bg-black" style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+      <div className="flex flex-col bg-black" style={{ width: '100vw', height: '100dvh', overflow: 'hidden' }}>
         {/* Video Background */}
         <video
           autoPlay
@@ -45,7 +45,7 @@ export default function Home() {
         <div className="relative z-10 pb-20 px-6">
           <div className="flex items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
             <Link
-              href="/menu/demo-restaurant"
+              href="/demo-restaurant"
               className="flex-1 py-4 text-white font-semibold text-sm text-center hover:bg-white/10 transition-colors rounded-l-2xl"
             >
               Menü
@@ -64,7 +64,7 @@ export default function Home() {
 
       {/* Language Selection Popup */}
       {isLanguageOpen && (
-        <div className="fixed inset-0 z-[110] flex items-end justify-center" style={{ width: '100vw', height: '100vh' }}>
+        <div className="fixed inset-0 z-[110] flex items-end justify-center" style={{ width: '100vw', height: '100dvh' }}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsLanguageOpen(false)} />
           <div className="relative z-10 w-full max-w-md bg-white rounded-t-3xl px-5 pt-6 pb-8">
             <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-5" />

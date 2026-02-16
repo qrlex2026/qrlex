@@ -8,6 +8,17 @@ body {
   font-family: var(--font-plus-jakarta-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* iOS Safari safe area support */
+  padding-bottom: env(safe-area-inset-bottom);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS Safari viewport fix for older versions */
+@supports (-webkit-touch-callout: none) {
+  .fixed {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

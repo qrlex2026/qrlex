@@ -599,7 +599,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
 
             {/* Business Profile Overlay */}
             {isProfileOpen && (
-                <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100vh' }}>
+                <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
                     {/* Business Image Section */}
                     <div className="relative w-full shrink-0" style={{ height: '45%' }}>
                         <Image
@@ -711,7 +711,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
 
             {/* Reviews Overlay */}
             {isReviewsOpen && (
-                <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100vh' }}>
+                <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
                     {/* Header Section */}
                     <div className="relative w-full shrink-0 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500" style={{ height: '45%' }}>
                         {/* Back Button */}
@@ -819,7 +819,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
 
             {/* Write Review Popup */}
             {isWriteReviewOpen && (
-                <div className="fixed inset-0 z-[60] bg-white flex flex-col" style={{ width: '100vw', height: '100vh' }}>
+                <div className="fixed inset-0 z-[60] bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
                     {/* Category Ratings Section */}
                     <div className="relative w-full shrink-0 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500" style={{ height: '45%' }}>
                         {/* Back Button */}
@@ -951,7 +951,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
 
             {/* Product Detail Overlay */}
             {selectedProduct && (
-                <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100vh' }}>
+                <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
                     {/* Product Image Section */}
                     <div className="relative w-full shrink-0" style={{ height: '45%' }}>
                         {selectedProduct.image ? (
