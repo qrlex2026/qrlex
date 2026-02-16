@@ -1,191 +1,295 @@
 "use client";
+import { useState, useEffect } from "react";
+import { Search, Plus, Trash2, Star, ToggleLeft, ToggleRight, Pencil, X } from "lucide-react";
 
-import { useState } from "react";
-import { Plus, Search, Edit2, Trash2, Eye, EyeOff, Flame } from "lucide-react";
-
-type Product = {
+interface Category {
     id: string;
-    categoryId: string;
     name: string;
-    description: string;
+}
+
+interface Product {
+    id: string;
+    name: string;
+    description: string | null;
     price: number;
+    discountPrice: number | null;
+    image: string | null;
+    prepTime: string | null;
+    calories: string | null;
     isPopular: boolean;
     isActive: boolean;
-    prepTime: string;
-    calories: string;
-};
-
-const INITIAL_PRODUCTS: Product[] = [
-    { id: "1", categoryId: "burgerler", name: "Classic Cheese", description: "120g dana köfte, cheddar peyniri, özel sos, turşu.", price: 320, isPopular: true, isActive: true, prepTime: "15-20 dk", calories: "650 kcal" },
-    { id: "2", categoryId: "burgerler", name: "Truffle Mushroom", description: "Trüf mantarlı mayonez, karamelize soğan, swiss peyniri.", price: 380, isPopular: true, isActive: true, prepTime: "20-25 dk", calories: "720 kcal" },
-    { id: "5", categoryId: "burgerler", name: "BBQ Bacon", description: "Dana bacon, BBQ sos, çıtır soğan halkaları, cheddar.", price: 360, isPopular: false, isActive: true, prepTime: "18-22 dk", calories: "780 kcal" },
-    { id: "3", categoryId: "pizzalar", name: "Margherita", description: "San Marzano domates sosu, mozzarella, taze fesleğen.", price: 290, isPopular: true, isActive: true, prepTime: "12-15 dk", calories: "520 kcal" },
-    { id: "6", categoryId: "pizzalar", name: "Pepperoni", description: "Baharatlı sucuk dilimleri, mozzarella, domates sosu.", price: 330, isPopular: true, isActive: true, prepTime: "12-15 dk", calories: "580 kcal" },
-    { id: "7", categoryId: "pizzalar", name: "Dört Peynirli", description: "Mozzarella, gorgonzola, parmesan, ricotta.", price: 350, isPopular: false, isActive: true, prepTime: "12-15 dk", calories: "620 kcal" },
-    { id: "4", categoryId: "icecekler", name: "Coca-Cola Zero", description: "330ml kutu.", price: 60, isPopular: false, isActive: true, prepTime: "1 dk", calories: "0 kcal" },
-    { id: "8", categoryId: "icecekler", name: "Ev Yapımı Limonata", description: "Taze nane ile.", price: 80, isPopular: true, isActive: true, prepTime: "3-5 dk", calories: "120 kcal" },
-    { id: "9", categoryId: "icecekler", name: "Ayran", description: "300ml şişe, bol köpüklü.", price: 40, isPopular: false, isActive: true, prepTime: "1 dk", calories: "75 kcal" },
-    { id: "10", categoryId: "tatlilar", name: "San Sebastian Cheesecake", description: "Belçika çikolatalı sos ile.", price: 240, isPopular: true, isActive: true, prepTime: "5 dk", calories: "450 kcal" },
-    { id: "11", categoryId: "tatlilar", name: "Çikolatalı Sufle", description: "İçi akışkan, yanında dondurma ile.", price: 250, isPopular: false, isActive: true, prepTime: "15-18 dk", calories: "480 kcal" },
-    { id: "12", categoryId: "salatalar", name: "Sezar Salata", description: "Marul, parmesan, kruton, sezar sos.", price: 180, isPopular: false, isActive: true, prepTime: "8-10 dk", calories: "320 kcal" },
-    { id: "13", categoryId: "salatalar", name: "Akdeniz Salatası", description: "Domates, salatalık, zeytin, beyaz peynir.", price: 160, isPopular: true, isActive: true, prepTime: "5-8 dk", calories: "220 kcal" },
-    { id: "14", categoryId: "baslangiclar", name: "Çıtır Soğan Halkaları", description: "Özel baharatlı, ranch sos ile.", price: 120, isPopular: false, isActive: true, prepTime: "8-10 dk", calories: "380 kcal" },
-    { id: "15", categoryId: "baslangiclar", name: "Kanat Tabağı", description: "8 adet acı soslu tavuk kanat.", price: 200, isPopular: true, isActive: true, prepTime: "15-20 dk", calories: "520 kcal" },
-];
-
-const CATEGORIES: Record<string, string> = {
-    burgerler: "Burgerler",
-    pizzalar: "Pizzalar",
-    salatalar: "Salatalar",
-    baslangiclar: "Başlangıçlar",
-    icecekler: "İçecekler",
-    tatlilar: "Tatlılar",
-};
+    categoryId: string;
+    category: Category;
+}
 
 export default function MenuManagement() {
-    const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [filterCategory, setFilterCategory] = useState("all");
+    const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [search, setSearch] = useState("");
+    const [filterCat, setFilterCat] = useState("all");
+    const [loading, setLoading] = useState(true);
+
+    // Modal state
+    const [showModal, setShowModal] = useState(false);
+    const [editProduct, setEditProduct] = useState<Product | null>(null);
+    const [form, setForm] = useState({
+        name: "", description: "", price: "", discountPrice: "", image: "",
+        prepTime: "", calories: "", categoryId: "", isPopular: false, isActive: true,
+    });
+    const [saving, setSaving] = useState(false);
+
+    const fetchData = () => {
+        setLoading(true);
+        Promise.all([
+            fetch("/api/admin/products").then((r) => r.json()),
+            fetch("/api/admin/categories").then((r) => r.json()),
+        ]).then(([prods, cats]) => {
+            setProducts(prods);
+            setCategories(cats);
+            setLoading(false);
+        });
+    };
+
+    useEffect(() => { fetchData(); }, []);
 
     const filtered = products.filter((p) => {
-        const matchesSearch =
-            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.description.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = filterCategory === "all" || p.categoryId === filterCategory;
-        return matchesSearch && matchesCategory;
+        const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+        const matchCat = filterCat === "all" || p.categoryId === filterCat;
+        return matchSearch && matchCat;
     });
 
-    const togglePopular = (id: string) => {
-        setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, isPopular: !p.isPopular } : p)));
+    const toggleField = async (id: string, field: "isPopular" | "isActive", value: boolean) => {
+        await fetch(`/api/admin/products/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ [field]: !value }),
+        });
+        setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: !value } : p)));
     };
 
-    const toggleActive = (id: string) => {
-        setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p)));
-    };
-
-    const deleteProduct = (id: string) => {
+    const deleteProduct = async (id: string) => {
+        if (!confirm("Bu ürünü silmek istediğinize emin misiniz?")) return;
+        await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
         setProducts((prev) => prev.filter((p) => p.id !== id));
     };
 
+    const openAddModal = () => {
+        setEditProduct(null);
+        setForm({ name: "", description: "", price: "", discountPrice: "", image: "", prepTime: "", calories: "", categoryId: categories[0]?.id || "", isPopular: false, isActive: true });
+        setShowModal(true);
+    };
+
+    const openEditModal = (p: Product) => {
+        setEditProduct(p);
+        setForm({
+            name: p.name, description: p.description || "", price: String(p.price),
+            discountPrice: p.discountPrice ? String(p.discountPrice) : "",
+            image: p.image || "", prepTime: p.prepTime || "", calories: p.calories || "",
+            categoryId: p.categoryId, isPopular: p.isPopular, isActive: p.isActive,
+        });
+        setShowModal(true);
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        const payload = {
+            name: form.name, description: form.description || null, price: form.price,
+            discountPrice: form.discountPrice || null, image: form.image || null,
+            prepTime: form.prepTime || null, calories: form.calories || null,
+            categoryId: form.categoryId, isPopular: form.isPopular, isActive: form.isActive,
+        };
+
+        if (editProduct) {
+            await fetch(`/api/admin/products/${editProduct.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+        } else {
+            await fetch("/api/admin/products", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+        }
+        setShowModal(false);
+        setSaving(false);
+        fetchData();
+    };
+
     return (
-        <div className="space-y-5">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-xl font-bold text-white">Menü Yönetimi</h1>
-                    <p className="text-sm text-gray-500">{products.length} ürün</p>
+                    <h1 className="text-2xl font-bold text-white">Menü Yönetimi</h1>
+                    <p className="text-sm text-gray-400 mt-1">{products.length} ürün</p>
                 </div>
-                <button className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-colors shadow-lg shadow-violet-500/20">
-                    <Plus size={18} />
-                    Yeni Ürün Ekle
+                <button
+                    onClick={openAddModal}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                    <Plus size={18} /> Yeni Ürün
                 </button>
             </div>
 
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 relative">
+                <div className="relative flex-1">
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     <input
                         type="text"
                         placeholder="Ürün ara..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-gray-900 border border-gray-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-gray-500 outline-none focus:border-violet-500 transition-colors"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-violet-500"
                     />
                 </div>
                 <select
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value)}
-                    className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-violet-500 transition-colors"
+                    value={filterCat}
+                    onChange={(e) => setFilterCat(e.target.value)}
+                    className="px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-sm text-white focus:outline-none focus:border-violet-500"
                 >
                     <option value="all">Tüm Kategoriler</option>
-                    {Object.entries(CATEGORIES).map(([id, name]) => (
-                        <option key={id} value={id}>{name}</option>
+                    {categories.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                 </select>
             </div>
 
-            {/* Products Table */}
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                {/* Desktop Header */}
-                <div className="hidden lg:grid grid-cols-12 gap-4 px-5 py-3 bg-gray-800/50 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <div className="col-span-4">Ürün</div>
-                    <div className="col-span-2">Kategori</div>
-                    <div className="col-span-1">Fiyat</div>
-                    <div className="col-span-1">Süre</div>
-                    <div className="col-span-1 text-center">Popüler</div>
-                    <div className="col-span-1 text-center">Durum</div>
-                    <div className="col-span-2 text-right">İşlem</div>
+            {/* Product List */}
+            {loading ? (
+                <div className="text-center py-20 text-gray-500">Yükleniyor...</div>
+            ) : (
+                <div className="space-y-2">
+                    {filtered.map((product) => (
+                        <div key={product.id} className={`bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-4 ${!product.isActive ? "opacity-50" : ""}`}>
+                            {/* Image */}
+                            {product.image && (
+                                <img src={product.image} alt={product.name} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                            )}
+                            {!product.image && (
+                                <div className="w-14 h-14 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-gray-600 text-xs">Resim yok</div>
+                            )}
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-semibold text-white truncate">{product.name}</h3>
+                                    {product.isPopular && (
+                                        <Star size={14} className="text-amber-400 flex-shrink-0" fill="currentColor" />
+                                    )}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-0.5">{product.category.name}</p>
+                            </div>
+
+                            {/* Price */}
+                            <div className="text-right flex-shrink-0">
+                                {product.discountPrice ? (
+                                    <>
+                                        <p className="text-sm font-bold text-emerald-400">₺{Number(product.discountPrice).toFixed(0)}</p>
+                                        <p className="text-xs text-gray-500 line-through">₺{Number(product.price).toFixed(0)}</p>
+                                    </>
+                                ) : (
+                                    <p className="text-sm font-bold text-white">₺{Number(product.price).toFixed(0)}</p>
+                                )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                                <button onClick={() => toggleField(product.id, "isPopular", product.isPopular)} className="p-2 rounded-lg hover:bg-gray-800 transition-colors" title="Popüler">
+                                    <Star size={16} className={product.isPopular ? "text-amber-400" : "text-gray-600"} fill={product.isPopular ? "currentColor" : "none"} />
+                                </button>
+                                <button onClick={() => toggleField(product.id, "isActive", product.isActive)} className="p-2 rounded-lg hover:bg-gray-800 transition-colors" title="Aktif/Pasif">
+                                    {product.isActive ? <ToggleRight size={16} className="text-emerald-400" /> : <ToggleLeft size={16} className="text-gray-600" />}
+                                </button>
+                                <button onClick={() => openEditModal(product)} className="p-2 rounded-lg hover:bg-gray-800 transition-colors" title="Düzenle">
+                                    <Pencil size={16} className="text-gray-400" />
+                                </button>
+                                <button onClick={() => deleteProduct(product.id)} className="p-2 rounded-lg hover:bg-red-500/10 transition-colors" title="Sil">
+                                    <Trash2 size={16} className="text-red-400" />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                    {filtered.length === 0 && (
+                        <div className="text-center py-10 text-gray-500">Ürün bulunamadı</div>
+                    )}
                 </div>
+            )}
 
-                {filtered.length === 0 ? (
-                    <div className="px-5 py-12 text-center text-gray-500">Sonuç bulunamadı.</div>
-                ) : (
-                    <div className="divide-y divide-gray-800/60">
-                        {filtered.map((product) => (
-                            <div key={product.id} className={`grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-4 px-5 py-4 items-center hover:bg-gray-800/30 transition-colors ${!product.isActive ? 'opacity-50' : ''}`}>
-                                {/* Product Info */}
-                                <div className="lg:col-span-4">
-                                    <p className="font-semibold text-white text-sm">{product.name}</p>
-                                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{product.description}</p>
+            {/* Add/Edit Modal */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
+                    <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-lg font-bold text-white">{editProduct ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}</h2>
+                            <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs text-gray-400 mb-1 block">Ürün Adı *</label>
+                                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-violet-500" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-400 mb-1 block">Açıklama</label>
+                                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-violet-500 resize-none" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-xs text-gray-400 mb-1 block">Fiyat (₺) *</label>
+                                    <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-violet-500" />
                                 </div>
-
-                                {/* Category */}
-                                <div className="lg:col-span-2">
-                                    <span className="text-xs bg-gray-800 text-gray-400 px-2.5 py-1 rounded-lg">
-                                        {CATEGORIES[product.categoryId]}
-                                    </span>
-                                </div>
-
-                                {/* Price */}
-                                <div className="lg:col-span-1">
-                                    <span className="text-sm font-bold text-white">{product.price} ₺</span>
-                                </div>
-
-                                {/* Prep Time */}
-                                <div className="lg:col-span-1">
-                                    <span className="text-xs text-gray-500">{product.prepTime}</span>
-                                </div>
-
-                                {/* Popular */}
-                                <div className="lg:col-span-1 flex lg:justify-center">
-                                    <button
-                                        onClick={() => togglePopular(product.id)}
-                                        className={`p-1.5 rounded-lg transition-colors ${product.isPopular ? "text-amber-400 bg-amber-400/10" : "text-gray-600 hover:text-gray-400"
-                                            }`}
-                                    >
-                                        <Flame size={16} />
-                                    </button>
-                                </div>
-
-                                {/* Active Status */}
-                                <div className="lg:col-span-1 flex lg:justify-center">
-                                    <button
-                                        onClick={() => toggleActive(product.id)}
-                                        className={`p-1.5 rounded-lg transition-colors ${product.isActive ? "text-emerald-400 bg-emerald-400/10" : "text-gray-600 hover:text-gray-400"
-                                            }`}
-                                    >
-                                        {product.isActive ? <Eye size={16} /> : <EyeOff size={16} />}
-                                    </button>
-                                </div>
-
-                                {/* Actions */}
-                                <div className="lg:col-span-2 flex gap-2 justify-end">
-                                    <button className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-violet-400 hover:bg-violet-500/10 transition-colors">
-                                        <Edit2 size={15} />
-                                    </button>
-                                    <button
-                                        onClick={() => deleteProduct(product.id)}
-                                        className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                    >
-                                        <Trash2 size={15} />
-                                    </button>
+                                <div>
+                                    <label className="text-xs text-gray-400 mb-1 block">İndirimli Fiyat (₺)</label>
+                                    <input type="number" value={form.discountPrice} onChange={(e) => setForm({ ...form, discountPrice: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-violet-500" />
                                 </div>
                             </div>
-                        ))}
+                            <div>
+                                <label className="text-xs text-gray-400 mb-1 block">Kategori *</label>
+                                <select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-violet-500">
+                                    {categories.map((c) => (
+                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-400 mb-1 block">Resim URL</label>
+                                <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-violet-500" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-xs text-gray-400 mb-1 block">Hazırlama Süresi</label>
+                                    <input value={form.prepTime} onChange={(e) => setForm({ ...form, prepTime: e.target.value })} placeholder="15-20 dk" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500" />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-gray-400 mb-1 block">Kalori</label>
+                                    <input value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="650 kcal" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500" />
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={form.isPopular} onChange={(e) => setForm({ ...form, isPopular: e.target.checked })} className="accent-violet-500" />
+                                    <span className="text-sm text-gray-300">Popüler</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="accent-violet-500" />
+                                    <span className="text-sm text-gray-300">Aktif</span>
+                                </label>
+                            </div>
+                            <button
+                                onClick={handleSave}
+                                disabled={saving || !form.name || !form.price || !form.categoryId}
+                                className="w-full py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-colors"
+                            >
+                                {saving ? "Kaydediliyor..." : editProduct ? "Güncelle" : "Ekle"}
+                            </button>
+                        </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

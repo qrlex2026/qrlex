@@ -1,122 +1,154 @@
 "use client";
+import { useState, useEffect } from "react";
+import { Plus, Trash2, Pencil, ToggleLeft, ToggleRight, X, GripVertical } from "lucide-react";
 
-import { useState } from "react";
-import { Plus, GripVertical, Edit2, Trash2, Package } from "lucide-react";
-
-type Category = {
+interface Category {
     id: string;
     name: string;
-    productCount: number;
+    sortOrder: number;
     isActive: boolean;
-};
+    _count: { products: number };
+}
 
-const INITIAL_CATEGORIES: Category[] = [
-    { id: "populer", name: "Popüler", productCount: 7, isActive: true },
-    { id: "burgerler", name: "Burgerler", productCount: 3, isActive: true },
-    { id: "pizzalar", name: "Pizzalar", productCount: 3, isActive: true },
-    { id: "salatalar", name: "Salatalar", productCount: 2, isActive: true },
-    { id: "baslangiclar", name: "Başlangıçlar", productCount: 2, isActive: true },
-    { id: "icecekler", name: "İçecekler", productCount: 3, isActive: true },
-    { id: "tatlilar", name: "Tatlılar", productCount: 2, isActive: true },
-];
+export default function CategoriesManagement() {
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showModal, setShowModal] = useState(false);
+    const [editCategory, setEditCategory] = useState<Category | null>(null);
+    const [name, setName] = useState("");
+    const [saving, setSaving] = useState(false);
 
-export default function CategoriesPage() {
-    const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
-
-    const toggleActive = (id: string) => {
-        setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, isActive: !c.isActive } : c)));
+    const fetchCategories = () => {
+        setLoading(true);
+        fetch("/api/admin/categories")
+            .then((r) => r.json())
+            .then((data) => { setCategories(data); setLoading(false); });
     };
 
-    const deleteCategory = (id: string) => {
-        if (id === "populer") return;
+    useEffect(() => { fetchCategories(); }, []);
+
+    const toggleActive = async (id: string, isActive: boolean) => {
+        await fetch(`/api/admin/categories/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ isActive: !isActive }),
+        });
+        setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, isActive: !isActive } : c)));
+    };
+
+    const deleteCategory = async (id: string) => {
+        const cat = categories.find((c) => c.id === id);
+        if (cat && cat._count.products > 0) {
+            alert(`Bu kategoride ${cat._count.products} ürün var. Önce ürünleri başka bir kategoriye taşıyın.`);
+            return;
+        }
+        if (!confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) return;
+        await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
         setCategories((prev) => prev.filter((c) => c.id !== id));
     };
 
+    const openAddModal = () => {
+        setEditCategory(null);
+        setName("");
+        setShowModal(true);
+    };
+
+    const openEditModal = (cat: Category) => {
+        setEditCategory(cat);
+        setName(cat.name);
+        setShowModal(true);
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        if (editCategory) {
+            await fetch(`/api/admin/categories/${editCategory.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name }),
+            });
+        } else {
+            await fetch("/api/admin/categories", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name }),
+            });
+        }
+        setShowModal(false);
+        setSaving(false);
+        fetchCategories();
+    };
+
     return (
-        <div className="space-y-5">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-white">Kategoriler</h1>
-                    <p className="text-sm text-gray-500">{categories.length} kategori</p>
+                    <h1 className="text-2xl font-bold text-white">Kategoriler</h1>
+                    <p className="text-sm text-gray-400 mt-1">{categories.length} kategori</p>
                 </div>
-                <button className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-colors shadow-lg shadow-violet-500/20">
-                    <Plus size={18} />
-                    Yeni Kategori
+                <button
+                    onClick={openAddModal}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                    <Plus size={18} /> Yeni Kategori
                 </button>
             </div>
 
-            {/* Categories List */}
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 bg-gray-800/50 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <div className="col-span-1"></div>
-                    <div className="col-span-4">Kategori Adı</div>
-                    <div className="col-span-2">Ürün Sayısı</div>
-                    <div className="col-span-2">Durum</div>
-                    <div className="col-span-3 text-right">İşlem</div>
-                </div>
-
-                <div className="divide-y divide-gray-800/60">
-                    {categories.map((cat, index) => (
-                        <div
-                            key={cat.id}
-                            className={`grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 px-5 py-4 items-center hover:bg-gray-800/30 transition-colors ${!cat.isActive ? 'opacity-50' : ''}`}
-                        >
-                            {/* Drag Handle */}
-                            <div className="hidden sm:flex sm:col-span-1 justify-center">
-                                <GripVertical size={16} className="text-gray-600 cursor-grab" />
+            {/* List */}
+            {loading ? (
+                <div className="text-center py-20 text-gray-500">Yükleniyor...</div>
+            ) : (
+                <div className="space-y-2">
+                    {categories.map((cat) => (
+                        <div key={cat.id} className={`bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-4 ${!cat.isActive ? "opacity-50" : ""}`}>
+                            <GripVertical size={16} className="text-gray-700 flex-shrink-0" />
+                            <div className="flex-1">
+                                <h3 className="text-sm font-semibold text-white">{cat.name}</h3>
+                                <p className="text-xs text-gray-500 mt-0.5">{cat._count.products} ürün</p>
                             </div>
-
-                            {/* Name */}
-                            <div className="sm:col-span-4">
-                                <div className="flex items-center gap-3">
-                                    <span className="w-7 h-7 rounded-lg bg-gray-800 flex items-center justify-center text-xs font-bold text-gray-400">
-                                        {index + 1}
-                                    </span>
-                                    <span className="font-semibold text-white text-sm">{cat.name}</span>
-                                    {cat.id === "populer" && (
-                                        <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-medium">Otomatik</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Product Count */}
-                            <div className="sm:col-span-2 flex items-center gap-1.5">
-                                <Package size={14} className="text-gray-500" />
-                                <span className="text-sm text-gray-400">{cat.productCount} ürün</span>
-                            </div>
-
-                            {/* Status */}
-                            <div className="sm:col-span-2">
-                                <button
-                                    onClick={() => toggleActive(cat.id)}
-                                    className={`text-xs font-medium px-3 py-1 rounded-full transition-colors ${cat.isActive
-                                            ? "bg-emerald-500/10 text-emerald-400"
-                                            : "bg-gray-800 text-gray-500"
-                                        }`}
-                                >
-                                    {cat.isActive ? "Aktif" : "Pasif"}
+                            <div className="flex items-center gap-1">
+                                <button onClick={() => toggleActive(cat.id, cat.isActive)} className="p-2 rounded-lg hover:bg-gray-800 transition-colors" title="Aktif/Pasif">
+                                    {cat.isActive ? <ToggleRight size={16} className="text-emerald-400" /> : <ToggleLeft size={16} className="text-gray-600" />}
                                 </button>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="sm:col-span-3 flex gap-2 justify-end">
-                                <button className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-violet-400 hover:bg-violet-500/10 transition-colors">
-                                    <Edit2 size={15} />
+                                <button onClick={() => openEditModal(cat)} className="p-2 rounded-lg hover:bg-gray-800 transition-colors" title="Düzenle">
+                                    <Pencil size={16} className="text-gray-400" />
                                 </button>
-                                {cat.id !== "populer" && (
-                                    <button
-                                        onClick={() => deleteCategory(cat.id)}
-                                        className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                    >
-                                        <Trash2 size={15} />
-                                    </button>
-                                )}
+                                <button onClick={() => deleteCategory(cat.id)} className="p-2 rounded-lg hover:bg-red-500/10 transition-colors" title="Sil">
+                                    <Trash2 size={16} className="text-red-400" />
+                                </button>
                             </div>
                         </div>
                     ))}
                 </div>
-            </div>
+            )}
+
+            {/* Modal */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
+                    <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-lg font-bold text-white">{editCategory ? "Kategoriyi Düzenle" : "Yeni Kategori"}</h2>
+                            <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs text-gray-400 mb-1 block">Kategori Adı</label>
+                                <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-violet-500" placeholder="Örn: Burgerler" />
+                            </div>
+                            <button
+                                onClick={handleSave}
+                                disabled={saving || !name}
+                                className="w-full py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-colors"
+                            >
+                                {saving ? "Kaydediliyor..." : editCategory ? "Güncelle" : "Ekle"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

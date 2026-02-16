@@ -1,103 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import Image from "next/image";
 import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-
-// --- Mock Data ---
-const CATEGORIES = [
-    { id: "populer", name: "Popüler" },
-    { id: "burgerler", name: "Burgerler" },
-    { id: "pizzalar", name: "Pizzalar" },
-    { id: "salatalar", name: "Salatalar" },
-    { id: "baslangiclar", name: "Başlangıçlar" },
-    { id: "icecekler", name: "İçecekler" },
-    { id: "tatlilar", name: "Tatlılar" },
-];
-
-const BUSINESS_INFO = {
-    name: "Resital Lounge",
-    description: "Modern ve şık atmosferiyle Resital Lounge, taze malzemeler ve özenle hazırlanan tariflerle unutulmaz bir yemek deneyimi sunuyor. Ailece veya dostlarınızla keyifli vakit geçirebileceğiniz mekânımızda sizi ağırlamaktan mutluluk duyarız.",
-    image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
-    address: "Atatürk Mah. Cumhuriyet Cad. No:42, Gebze / Kocaeli",
-    phone: "+90 262 555 00 42",
-    email: "info@resitallounge.com",
-    website: "www.resitallounge.com",
-    instagram: "@resitallounge",
-    workingHours: [
-        { day: "Pazartesi", hours: "11:00 - 23:00" },
-        { day: "Salı", hours: "11:00 - 23:00" },
-        { day: "Çarşamba", hours: "11:00 - 23:00" },
-        { day: "Perşembe", hours: "11:00 - 23:00" },
-        { day: "Cuma", hours: "11:00 - 00:00" },
-        { day: "Cumartesi", hours: "10:00 - 00:00" },
-        { day: "Pazar", hours: "10:00 - 23:00" },
-    ],
-};
-
-const REVIEWS = {
-    average: 4.6,
-    totalCount: 128,
-    distribution: [
-        { stars: 5, count: 78 },
-        { stars: 4, count: 32 },
-        { stars: 3, count: 12 },
-        { stars: 2, count: 4 },
-        { stars: 1, count: 2 },
-    ],
-    items: [
-        {
-            id: "r1",
-            name: "Ahmet Y.",
-            date: "2 gün önce",
-            rating: 5,
-            comment: "Truffle Mushroom burger gerçekten müthişti! Trüf sosunun yoğunluğu ve etin pişirme derecesi kusursuzdu. Kesinlikle tekrar geleceğim.",
-            helpful: 12,
-        },
-        {
-            id: "r2",
-            name: "Elif K.",
-            date: "1 hafta önce",
-            rating: 5,
-            comment: "Ambiyans çok başarılı, personel çok ilgili. San Sebastian cheesecake hayatımda yediğim en iyisiydi!",
-            helpful: 8,
-        },
-        {
-            id: "r3",
-            name: "Mehmet A.",
-            date: "2 hafta önce",
-            rating: 4,
-            comment: "Yemekler lezzetli, fiyatlar biraz yüksek ama kalite göz önüne alındığında makul. Margherita pizza tavsiye.",
-            helpful: 5,
-        },
-        {
-            id: "r4",
-            name: "Zeynep D.",
-            date: "3 hafta önce",
-            rating: 5,
-            comment: "Arkadaşlarla mükemmel bir akşam geçirdik. Ev yapımı limonata şiddetle tavsiye ederim, gerçekten taze!",
-            helpful: 15,
-        },
-        {
-            id: "r5",
-            name: "Can B.",
-            date: "1 ay önce",
-            rating: 4,
-            comment: "Burgerler çok iyi, özellikle BBQ Bacon. Servis biraz yavaştı ama yoğun saatlerdeydi, anlaşılır.",
-            helpful: 3,
-        },
-        {
-            id: "r6",
-            name: "Seda T.",
-            date: "1 ay önce",
-            rating: 3,
-            comment: "Yemekler güzeldi fakat bekleme süresi uzundu. Mekan olarak çok şık, tekrar denemek isterim.",
-            helpful: 2,
-        },
-    ],
-};
 
 type Product = {
     id: string;
@@ -105,6 +12,7 @@ type Product = {
     name: string;
     description: string;
     price: number;
+    discountPrice?: number | null;
     image: string;
     isPopular: boolean;
     prepTime: string;
@@ -113,209 +21,12 @@ type Product = {
     allergens: string[];
 };
 
-const PRODUCTS: Product[] = [
-    {
-        id: "1",
-        categoryId: "burgerler",
-        name: "Classic Cheese",
-        description: "120g dana köfte, cheddar peyniri, özel sos, turşu.",
-        price: 320,
-        image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80",
-        isPopular: true,
-        prepTime: "15-20 dk",
-        calories: "650 kcal",
-        ingredients: ["Dana köfte (120g)", "Cheddar peyniri", "Özel burger sosu", "Turşu", "Marul", "Domates", "Brioche ekmeği"],
-        allergens: ["Gluten", "Süt ürünleri", "Hardal"],
-    },
-    {
-        id: "2",
-        categoryId: "burgerler",
-        name: "Truffle Mushroom",
-        description: "Trüf mantarlı mayonez, karamelize soğan, swiss peyniri.",
-        price: 380,
-        image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=500&q=80",
-        isPopular: true,
-        prepTime: "20-25 dk",
-        calories: "720 kcal",
-        ingredients: ["Dana köfte (150g)", "Trüf mantarlı mayonez", "Karamelize soğan", "Swiss peyniri", "Roka", "Brioche ekmeği"],
-        allergens: ["Gluten", "Süt ürünleri", "Yumurta"],
-    },
-    {
-        id: "5",
-        categoryId: "burgerler",
-        name: "BBQ Bacon",
-        description: "Dana bacon, BBQ sos, çıtır soğan halkaları, cheddar.",
-        price: 360,
-        image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=500&q=80",
-        isPopular: false,
-        prepTime: "18-22 dk",
-        calories: "780 kcal",
-        ingredients: ["Dana köfte (150g)", "Dana bacon", "BBQ sos", "Çıtır soğan halkaları", "Cheddar peyniri", "Brioche ekmeği"],
-        allergens: ["Gluten", "Süt ürünleri"],
-    },
-    {
-        id: "3",
-        categoryId: "pizzalar",
-        name: "Margherita",
-        description: "San Marzano domates sosu, mozzarella, taze fesleğen.",
-        price: 290,
-        image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=500&q=80",
-        isPopular: true,
-        prepTime: "12-15 dk",
-        calories: "520 kcal",
-        ingredients: ["Pizza hamuru", "San Marzano domates sosu", "Mozzarella peyniri", "Taze fesleğen", "Zeytinyağı"],
-        allergens: ["Gluten", "Süt ürünleri"],
-    },
-    {
-        id: "6",
-        categoryId: "pizzalar",
-        name: "Pepperoni",
-        description: "Baharatlı sucuk dilimleri, mozzarella, domates sosu.",
-        price: 330,
-        image: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=500&q=80",
-        isPopular: true,
-        prepTime: "12-15 dk",
-        calories: "580 kcal",
-        ingredients: ["Pizza hamuru", "Domates sosu", "Mozzarella", "Pepperoni sucuk dilimleri", "Kekik"],
-        allergens: ["Gluten", "Süt ürünleri"],
-    },
-    {
-        id: "7",
-        categoryId: "pizzalar",
-        name: "Dört Peynirli",
-        description: "Mozzarella, gorgonzola, parmesan, ricotta.",
-        price: 350,
-        image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=500&q=80",
-        isPopular: false,
-        prepTime: "12-15 dk",
-        calories: "620 kcal",
-        ingredients: ["Pizza hamuru", "Mozzarella", "Gorgonzola", "Parmesan", "Ricotta", "Bal"],
-        allergens: ["Gluten", "Süt ürünleri"],
-    },
-    {
-        id: "4",
-        categoryId: "icecekler",
-        name: "Coca-Cola Zero",
-        description: "330ml kutu.",
-        price: 60,
-        image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=500&q=80",
-        isPopular: false,
-        prepTime: "1 dk",
-        calories: "0 kcal",
-        ingredients: ["Karbonatlı su", "Renklendirici (E150d)", "Aspartam", "Fosforik asit"],
-        allergens: [],
-    },
-    {
-        id: "8",
-        categoryId: "icecekler",
-        name: "Ev Yapımı Limonata",
-        description: "Taze nane ile.",
-        price: 80,
-        image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80",
-        isPopular: true,
-        prepTime: "3-5 dk",
-        calories: "120 kcal",
-        ingredients: ["Taze limon suyu", "Şeker", "Su", "Taze nane yaprakları", "Buz"],
-        allergens: [],
-    },
-    {
-        id: "9",
-        categoryId: "icecekler",
-        name: "Ayran",
-        description: "300ml şişe, bol köpüklü.",
-        price: 40,
-        image: "https://images.unsplash.com/photo-1626132647523-66f5bf380027?auto=format&fit=crop&w=500&q=80",
-        isPopular: false,
-        prepTime: "1 dk",
-        calories: "75 kcal",
-        ingredients: ["Yoğurt", "Su", "Tuz"],
-        allergens: ["Süt ürünleri"],
-    },
-    {
-        id: "10",
-        categoryId: "tatlilar",
-        name: "San Sebastian Cheesecake",
-        description: "Belçika çikolatalı sos ile.",
-        price: 240,
-        image: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=500&q=80",
-        isPopular: true,
-        prepTime: "5 dk",
-        calories: "450 kcal",
-        ingredients: ["Krem peynir", "Yumurta", "Krema", "Şeker", "Un", "Belçika çikolatası"],
-        allergens: ["Gluten", "Süt ürünleri", "Yumurta"],
-    },
-    {
-        id: "11",
-        categoryId: "tatlilar",
-        name: "Çikolatalı Sufle",
-        description: "İçi akışkan, yanında dondurma ile.",
-        price: 250,
-        image: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?auto=format&fit=crop&w=500&q=80",
-        isPopular: false,
-        prepTime: "15-18 dk",
-        calories: "480 kcal",
-        ingredients: ["Bitter çikolata", "Tereyağı", "Yumurta", "Şeker", "Un", "Vanilya dondurması"],
-        allergens: ["Gluten", "Süt ürünleri", "Yumurta", "Soya"],
-    },
-    {
-        id: "12",
-        categoryId: "salatalar",
-        name: "Sezar Salata",
-        description: "Marul, parmesan, kruton, sezar sos.",
-        price: 180,
-        image: "",
-        isPopular: false,
-        prepTime: "8-10 dk",
-        calories: "320 kcal",
-        ingredients: ["Marul", "Parmesan peyniri", "Kruton", "Sezar sos", "Zeytinyağı"],
-        allergens: ["Gluten", "Süt ürünleri", "Yumurta", "Balık (ançüez)"],
-    },
-    {
-        id: "13",
-        categoryId: "salatalar",
-        name: "Akdeniz Salatası",
-        description: "Domates, salatalık, zeytin, beyaz peynir, zeytinyağı.",
-        price: 160,
-        image: "",
-        isPopular: true,
-        prepTime: "5-8 dk",
-        calories: "220 kcal",
-        ingredients: ["Domates", "Salatalık", "Siyah zeytin", "Beyaz peynir", "Zeytinyağı", "Limon"],
-        allergens: ["Süt ürünleri"],
-    },
-    {
-        id: "14",
-        categoryId: "baslangiclar",
-        name: "Çıtır Soğan Halkaları",
-        description: "Özel baharatlı, ranch sos ile.",
-        price: 120,
-        image: "",
-        isPopular: false,
-        prepTime: "8-10 dk",
-        calories: "380 kcal",
-        ingredients: ["Soğan", "Un", "Mısır unu", "Özel baharat karışımı", "Ranch sos"],
-        allergens: ["Gluten", "Süt ürünleri", "Yumurta"],
-    },
-    {
-        id: "15",
-        categoryId: "baslangiclar",
-        name: "Kanat Tabağı",
-        description: "8 adet acı soslu tavuk kanat.",
-        price: 200,
-        image: "",
-        isPopular: true,
-        prepTime: "15-20 dk",
-        calories: "520 kcal",
-        ingredients: ["Tavuk kanat (8 adet)", "Acı sos", "Tereyağı", "Sarımsak", "Havuç & kereviz çubukları"],
-        allergens: ["Süt ürünleri"],
-    },
-];
-
 function cn(...inputs: (string | undefined | null | false)[]) {
     return twMerge(clsx(inputs));
 }
 
-export default function MenuPage({ params }: { params: { slug: string } }) {
+export default function MenuPage({ params }: { params: Promise<{ slug: string }> }) {
+    const resolvedParams = use(params);
     const [activeCategory, setActiveCategory] = useState("");
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -329,9 +40,87 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
     const [reviewPhone, setReviewPhone] = useState("");
     const [reviewComment, setReviewComment] = useState("");
     const [categoryRatings, setCategoryRatings] = useState({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0 });
-    const [userReviews, setUserReviews] = useState<typeof REVIEWS.items>([]);
     const categoryNavRef = useRef<HTMLDivElement>(null);
     const isScrollingRef = useRef(false);
+
+    // State for API data
+    const [CATEGORIES, setCategories] = useState<{ id: string; name: string }[]>([]);
+    const [PRODUCTS, setProducts] = useState<Product[]>([]);
+    const [BUSINESS_INFO, setBusinessInfo] = useState({
+        name: "", description: "", image: "", address: "", phone: "",
+        email: "", website: "", instagram: "",
+        workingHours: [] as { day: string; hours: string }[],
+    });
+    const [REVIEWS, setReviews] = useState({
+        average: 0, totalCount: 0,
+        distribution: [{ stars: 5, count: 0 }, { stars: 4, count: 0 }, { stars: 3, count: 0 }, { stars: 2, count: 0 }, { stars: 1, count: 0 }],
+        items: [] as { id: string; name: string; date: string; rating: number; comment: string; helpful: number }[],
+    });
+    const [userReviews, setUserReviews] = useState<{ id: string; name: string; date: string; rating: number; comment: string; helpful: number }[]>([]);
+    const [dataLoaded, setDataLoaded] = useState(false);
+
+    // Fetch data from API
+    useEffect(() => {
+        fetch(`/api/restaurants/${resolvedParams.slug}`)
+            .then((r) => r.json())
+            .then((data) => {
+                if (data.error) return;
+                // Map categories
+                const cats = [{ id: "populer", name: "Popüler" }];
+                data.categories.forEach((c: { id: string; name: string }) => {
+                    cats.push({ id: c.id, name: c.name });
+                });
+                setCategories(cats);
+
+                // Map products
+                const prods: Product[] = data.products.map((p: { id: string; categoryId: string; name: string; description: string | null; price: number; discountPrice: number | null; image: string | null; isPopular: boolean; prepTime: string | null; calories: string | null }) => ({
+                    id: p.id,
+                    categoryId: p.categoryId,
+                    name: p.name,
+                    description: p.description || "",
+                    price: Number(p.discountPrice || p.price),
+                    image: p.image || "",
+                    isPopular: p.isPopular,
+                    prepTime: p.prepTime || "",
+                    calories: p.calories || "",
+                    ingredients: [],
+                    allergens: [],
+                }));
+                setProducts(prods);
+
+                // Map business info
+                const wh = (data.workingHours as { day: string; open: string; close: string; isOpen: boolean }[] || []).map((h: { day: string; open: string; close: string; isOpen: boolean }) => ({
+                    day: h.day,
+                    hours: h.isOpen ? `${h.open} - ${h.close}` : "Kapalı",
+                }));
+                setBusinessInfo({
+                    name: data.name,
+                    description: data.description || "",
+                    image: data.image || "",
+                    address: data.address || "",
+                    phone: data.phone || "",
+                    email: data.email || "",
+                    website: data.website || "",
+                    instagram: data.instagram || "",
+                    workingHours: wh,
+                });
+
+                // Map reviews
+                const reviewItems = (data.reviews as { id: string; authorName: string; rating: number; comment: string | null; helpfulCount: number; createdAt: string }[]).map((r: { id: string; authorName: string; rating: number; comment: string | null; helpfulCount: number; createdAt: string }) => {
+                    const d = new Date(r.createdAt);
+                    const now = new Date();
+                    const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+                    let dateStr = diffDays === 0 ? "Bugün" : diffDays === 1 ? "Dün" : diffDays < 7 ? `${diffDays} gün önce` : diffDays < 30 ? `${Math.floor(diffDays / 7)} hafta önce` : `${Math.floor(diffDays / 30)} ay önce`;
+                    return { id: r.id, name: r.authorName, date: dateStr, rating: r.rating, comment: r.comment || "", helpful: r.helpfulCount };
+                });
+                const totalCount = reviewItems.length;
+                const avgRating = totalCount ? reviewItems.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / totalCount : 0;
+                const dist = [5, 4, 3, 2, 1].map((s) => ({ stars: s, count: reviewItems.filter((r: { rating: number }) => r.rating === s).length }));
+                setReviews({ average: parseFloat(avgRating.toFixed(1)), totalCount, distribution: dist, items: reviewItems });
+                setDataLoaded(true);
+            })
+            .catch(() => { });
+    }, [resolvedParams.slug]);
 
     // Search Logic
     const searchResults = searchQuery
@@ -413,6 +202,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
 
     // Scroll spy: update active category based on visible section
     useEffect(() => {
+        if (!dataLoaded) return;
         const sectionIds = CATEGORIES.map((c) => c.id);
         const observers: IntersectionObserver[] = [];
 
@@ -437,7 +227,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
         });
 
         return () => observers.forEach((o) => o.disconnect());
-    }, []);
+    }, [dataLoaded, CATEGORIES]);
 
     // Show/hide scroll-to-top button + reset active at top
     useEffect(() => {
@@ -470,7 +260,7 @@ export default function MenuPage({ params }: { params: { slug: string } }) {
                     <button onClick={() => setIsProfileOpen(true)} className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors">
                         <Info size={20} />
                     </button>
-                    <span className="font-bold text-lg text-gray-900">Resital Lounge</span>
+                    <span className="font-bold text-lg text-gray-900">{BUSINESS_INFO.name || "Yükleniyor..."}</span>
                 </div>
 
                 {/* Right: Star Icon */}
