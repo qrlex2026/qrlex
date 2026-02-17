@@ -10,7 +10,8 @@ export default function PanelDashboard() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!restaurantId) return;
+        if (sessionLoading) return;
+        if (!restaurantId) { setLoading(false); return; }
         fetch(`/api/admin/stats?restaurantId=${restaurantId}`)
             .then((r) => r.json())
             .then((data) => {
@@ -23,7 +24,7 @@ export default function PanelDashboard() {
                 setLoading(false);
             })
             .catch(() => setLoading(false));
-    }, [restaurantId]);
+    }, [restaurantId, sessionLoading]);
 
     if (sessionLoading || loading) return <div className="text-center py-20 text-gray-500">Yükleniyor...</div>;
 
