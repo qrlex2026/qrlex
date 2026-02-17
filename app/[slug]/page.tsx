@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, use } from "react";
-import Image from "next/image";
+// Using regular img tags for external URLs
 import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -451,13 +451,15 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                 <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
                     {/* Business Image Section */}
                     <div className="relative w-full shrink-0" style={{ height: '45%' }}>
-                        <Image
-                            src={BUSINESS_INFO.image}
-                            alt={BUSINESS_INFO.name}
-                            fill
-                            className="object-cover"
-                            sizes="100vw"
-                        />
+                        {BUSINESS_INFO.image ? (
+                            <img
+                                src={BUSINESS_INFO.image}
+                                alt={BUSINESS_INFO.name}
+                                className="absolute inset-0 w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-200 to-gray-300" />
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                         {/* Back Button */}
                         <button
@@ -593,7 +595,7 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                                         <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
                                             <div
                                                 className="h-full bg-white rounded-full transition-all"
-                                                style={{ width: `${(d.count / REVIEWS.totalCount) * 100}%` }}
+                                                style={{ width: `${REVIEWS.totalCount > 0 ? (d.count / REVIEWS.totalCount) * 100 : 0}%` }}
                                             />
                                         </div>
                                         <span className="text-xs text-white/70 w-6">{d.count}</span>
@@ -804,12 +806,10 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                     {/* Product Image Section */}
                     <div className="relative w-full shrink-0" style={{ height: '45%' }}>
                         {selectedProduct.image ? (
-                            <Image
+                            <img
                                 src={selectedProduct.image}
                                 alt={selectedProduct.name}
-                                fill
-                                className="object-cover"
-                                sizes="100vw"
+                                className="absolute inset-0 w-full h-full object-cover"
                             />
                         ) : (
                             <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
