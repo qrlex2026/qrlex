@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Search, Plus, Trash2, Star, ToggleLeft, ToggleRight, Pencil, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, Plus, Trash2, Star, ToggleLeft, ToggleRight, Pencil, X, Upload } from "lucide-react";
 import { useSession } from "@/lib/useSession";
 
 interface Category { id: string; name: string; }
@@ -22,6 +22,9 @@ export default function PanelMenu() {
     const [editProduct, setEditProduct] = useState<Product | null>(null);
     const [form, setForm] = useState({ name: "", description: "", price: "", discountPrice: "", image: "", prepTime: "", calories: "", categoryId: "", isPopular: false, isActive: true });
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const fetchData = () => {
         if (!restaurantId) return;
@@ -50,6 +53,54 @@ export default function PanelMenu() {
     };
     const openAddModal = () => { setEditProduct(null); setForm({ name: "", description: "", price: "", discountPrice: "", image: "", prepTime: "", calories: "", categoryId: categories[0]?.id || "", isPopular: false, isActive: true }); setShowModal(true); };
     const openEditModal = (p: Product) => { setEditProduct(p); setForm({ name: p.name, description: p.description || "", price: String(p.price), discountPrice: p.discountPrice ? String(p.discountPrice) : "", image: p.image || "", prepTime: p.prepTime || "", calories: p.calories || "", categoryId: p.categoryId, isPopular: p.isPopular, isActive: p.isActive }); setShowModal(true); };
+
+    const handleFileUpload = async (file: File) => {
+        if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+            alert("Sadece resim ve video dosyaları yüklenebilir!");
+            return;
+        }
+        if (file.size > 50 * 1024 * 1024) {
+            alert("Dosya boyutu 50MB'dan küçük olmalı!");
+            return;
+        }
+        setUploading(true);
+        setUploadProgress(10);
+        try {
+            const fd = new FormData();
+            fd.append("file", file);
+            fd.append("folder", "products");
+            setUploadProgress(30);
+            const res = await fetch("/api/upload", { method: "POST", body: fd });
+            setUploadProgress(80);
+            const data = await res.json();
+            if (data.success) {
+                setForm((prev) => ({ ...prev, image: data.url }));
+                setUploadProgress(100);
+            } else {
+                alert("Yükleme hatası: " + (data.error || "Bilinmeyen hata"));
+            }
+        } catch {
+            alert("Yükleme başarısız!");
+        } finally {
+            setTimeout(() => { setUploading(false); setUploadProgress(0); }, 500);
+        }
+    };
+
+    const removeImage = async () => {
+        if (form.image) {
+            try {
+                await fetch("/api/upload", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: form.image }) });
+            } catch { /* ignore */ }
+        }
+        setForm((prev) => ({ ...prev, image: "" }));
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file) handleFileUpload(file);
+    };
+
     const handleSave = async () => {
         setSaving(true);
         const payload = { name: form.name, description: form.description || null, price: form.price, discountPrice: form.discountPrice || null, image: form.image || null, prepTime: form.prepTime || null, calories: form.calories || null, categoryId: form.categoryId, isPopular: form.isPopular, isActive: form.isActive };
@@ -97,7 +148,39 @@ export default function PanelMenu() {
                             <div><label className="text-xs text-gray-400 mb-1 block">Açıklama</label><textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 resize-none" /></div>
                             <div className="grid grid-cols-2 gap-3"><div><label className="text-xs text-gray-400 mb-1 block">Fiyat (₺) *</label><input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" /></div><div><label className="text-xs text-gray-400 mb-1 block">İndirimli Fiyat</label><input type="number" value={form.discountPrice} onChange={(e) => setForm({ ...form, discountPrice: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" /></div></div>
                             <div><label className="text-xs text-gray-400 mb-1 block">Kategori *</label><select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">{categories.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}</select></div>
-                            <div><label className="text-xs text-gray-400 mb-1 block">Resim URL</label><input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" /></div>
+                            {/* Image Upload */}
+                            <div>
+                                <label className="text-xs text-gray-400 mb-2 block">Ürün Resmi</label>
+                                {form.image ? (
+                                    <div className="relative group">
+                                        <img src={form.image} alt="Preview" className="w-full h-40 object-cover rounded-xl border border-gray-700" />
+                                        <button onClick={removeImage} className="absolute top-2 right-2 w-8 h-8 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} className="text-white" /></button>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDrop={handleDrop}
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-xl p-6 text-center cursor-pointer transition-colors"
+                                    >
+                                        {uploading ? (
+                                            <div>
+                                                <div className="w-full bg-gray-800 rounded-full h-2 mb-2">
+                                                    <div className="bg-emerald-500 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                                                </div>
+                                                <p className="text-xs text-gray-400">Yükleniyor... %{uploadProgress}</p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Upload size={24} className="mx-auto mb-2 text-gray-600" />
+                                                <p className="text-sm text-gray-400">Sürükle & bırak veya tıkla</p>
+                                                <p className="text-xs text-gray-600 mt-1">Max 50MB · JPG, PNG, WebP, MP4</p>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                                <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ""; }} />
+                            </div>
                             <div className="grid grid-cols-2 gap-3"><div><label className="text-xs text-gray-400 mb-1 block">Hazırlama Süresi</label><input value={form.prepTime} onChange={(e) => setForm({ ...form, prepTime: e.target.value })} placeholder="15-20 dk" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500" /></div><div><label className="text-xs text-gray-400 mb-1 block">Kalori</label><input value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="650 kcal" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500" /></div></div>
                             <div className="flex items-center gap-4"><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isPopular} onChange={(e) => setForm({ ...form, isPopular: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Popüler</span></label><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Aktif</span></label></div>
                             <button onClick={handleSave} disabled={saving || !form.name || !form.price || !form.categoryId} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-colors">{saving ? "Kaydediliyor..." : editProduct ? "Güncelle" : "Ekle"}</button>
