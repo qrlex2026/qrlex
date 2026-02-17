@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-const DEMO_RESTAURANT_ID = async () => {
+const getRestaurantId = async (req: NextRequest) => {
+    const id = req.nextUrl.searchParams.get("restaurantId");
+    if (id) return id;
     const r = await prisma.restaurant.findFirst();
     return r?.id || "";
 };
 
-// GET /api/admin/stats — Dashboard stats
-export async function GET() {
-    const restaurantId = await DEMO_RESTAURANT_ID();
+// GET /api/admin/stats
+export async function GET(req: NextRequest) {
+    const restaurantId = await getRestaurantId(req);
 
     const [productCount, categoryCount, reviewCount, reviews] = await Promise.all([
         prisma.product.count({ where: { restaurantId } }),
@@ -24,10 +26,5 @@ export async function GET() {
         ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
         : "0";
 
-    return NextResponse.json({
-        productCount,
-        categoryCount,
-        reviewCount,
-        avgRating,
-    });
+    return NextResponse.json({ productCount, categoryCount, reviewCount, avgRating });
 }

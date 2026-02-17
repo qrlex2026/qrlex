@@ -10,6 +10,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://qrlex.com"),
   title: "QRlex",
   description: "Modern QR Menu System",
 };

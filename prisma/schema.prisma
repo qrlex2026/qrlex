@@ -8,6 +8,20 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model User {
+  id           String   @id @default(uuid())
+  phone        String   @unique
+  password     String
+  name         String
+  role         String   @default("owner") // "superadmin" | "owner"
+  restaurantId String?  @map("restaurant_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  restaurant Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+
+  @@map("users")
+}
+
 model Restaurant {
   id           String   @id @default(uuid())
   name         String
@@ -20,12 +34,14 @@ model Restaurant {
   instagram    String?
   image        String?
   workingHours Json?    @map("working_hours")
+  theme        Json?    @map("theme")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   categories Category[]
   products   Product[]
   reviews    Review[]
+  users      User[]
 
   @@map("restaurants")
 }

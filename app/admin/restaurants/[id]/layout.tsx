@@ -1,26 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-    Store, LogOut, Menu, X, QrCode, ChevronRight,
+    LayoutDashboard, UtensilsCrossed, LayoutGrid, Settings, Star,
+    LogOut, Menu, X, QrCode, ChevronRight, ArrowLeft,
 } from "lucide-react";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function RestaurantLayout({
+    children,
+    params,
+}: {
+    children: React.ReactNode;
+    params: Promise<{ id: string }>;
+}) {
+    const resolvedParams = use(params);
+    const restaurantId = resolvedParams.id;
     const pathname = usePathname();
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [restaurantName, setRestaurantName] = useState("Yükleniyor...");
 
-    // Don't show layout on login page
-    if (pathname === "/admin/login") {
-        return <>{children}</>;
-    }
+    useEffect(() => {
+        fetch(`/api/admin/restaurants/${restaurantId}`)
+            .then((r) => r.json())
+            .then((data) => {
+                if (data.name) setRestaurantName(data.name);
+            });
+    }, [restaurantId]);
 
-    // Don't show super admin layout on restaurant management pages (they have their own layout)
-    if (pathname.startsWith("/admin/restaurants/") && pathname !== "/admin/restaurants/new") {
-        return <>{children}</>;
-    }
+    const basePath = `/admin/restaurants/${restaurantId}`;
+
+    const NAV_ITEMS = [
+        { href: basePath, label: "Dashboard", icon: LayoutDashboard },
+        { href: `${basePath}/menu`, label: "Menü Yönetimi", icon: UtensilsCrossed },
+        { href: `${basePath}/categories`, label: "Kategoriler", icon: LayoutGrid },
+        { href: `${basePath}/qr-code`, label: "QR Kod", icon: QrCode },
+        { href: `${basePath}/reviews`, label: "Yorumlar", icon: Star },
+        { href: `${basePath}/settings`, label: "Ayarlar", icon: Settings },
+    ];
 
     const handleLogout = async () => {
         await fetch("/api/auth/logout", { method: "POST" });
@@ -28,21 +47,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         router.refresh();
     };
 
-    const NAV_ITEMS = [
-        { href: "/admin", label: "Restoranlar", icon: Store },
-    ];
-
     const SidebarContent = () => (
         <div className="flex flex-col h-full">
-            {/* Logo */}
+            {/* Logo + Back */}
             <div className="px-5 py-6 border-b border-gray-800">
+                <Link href="/admin" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4 text-xs">
+                    <ArrowLeft size={14} />
+                    Tüm Restoranlar
+                </Link>
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-                        <QrCode size={20} className="text-white" />
+                        <span className="text-white text-sm font-bold">
+                            {restaurantName.charAt(0).toUpperCase()}
+                        </span>
                     </div>
                     <div>
-                        <h1 className="text-base font-bold text-white">QRlex</h1>
-                        <p className="text-[11px] text-gray-500">Super Admin</p>
+                        <h1 className="text-base font-bold text-white truncate max-w-[160px]">{restaurantName}</h1>
+                        <p className="text-[11px] text-gray-500">Yönetim Paneli</p>
                     </div>
                 </div>
             </div>
@@ -72,8 +93,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Bottom: Logout */}
             <div className="px-3 pb-4 border-t border-gray-800 pt-4 space-y-2">
                 <div className="px-3 py-2">
-                    <p className="text-xs text-gray-500 mb-0.5">Hoşgeldiniz</p>
-                    <p className="text-sm font-semibold text-white">Super Admin</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Aktif İşletme</p>
+                    <p className="text-sm font-semibold text-white truncate">{restaurantName}</p>
                 </div>
                 <button
                     onClick={handleLogout}
@@ -122,7 +143,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         </button>
                         <div>
                             <h2 className="text-base font-bold text-white">
-                                {NAV_ITEMS.find((n) => n.href === pathname)?.label || "Restoranlar"}
+                                {NAV_ITEMS.find((n) => n.href === pathname)?.label || "Yönetim"}
                             </h2>
                         </div>
                     </div>

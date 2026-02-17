@@ -59,6 +59,10 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
     const [userReviews, setUserReviews] = useState<{ id: string; name: string; date: string; rating: number; comment: string; helpful: number }[]>([]);
     const [dataLoaded, setDataLoaded] = useState(false);
 
+    // Theme defaults
+    const defaultTheme = { pageBg: "#f9fafb", fontFamily: "Inter", headerBg: "#ffffff", headerGradientFrom: "#f3e8ff", headerGradientTo: "#e0f2fe", categoryActiveBg: "#000000", categoryActiveText: "#ffffff", categoryInactiveBg: "#e5e7eb", categoryInactiveText: "#374151", categoryRadius: "9999", searchBg: "#f3f4f6", searchBorder: "#e5e7eb", searchText: "#6b7280", cardBg: "#ffffff", cardBorder: "#f3f4f6", cardRadius: "12", cardShadow: "sm", cardImageRadius: "8", productNameColor: "#111827", productNameSize: "16", productNameWeight: "700", productDescColor: "#6b7280", productDescSize: "12", priceColor: "#000000", priceSize: "18", priceWeight: "700", discountColor: "#10b981", oldPriceColor: "#9ca3af", categoryTitleColor: "#111827", categoryTitleSize: "24", categoryTitleWeight: "700", popularBadgeBg: "#fef3c7", popularBadgeText: "#92400e", bottomNavBg: "#ffffff", bottomNavActive: "#000000", bottomNavInactive: "#9ca3af", accentColor: "#000000" };
+    const [T, setT] = useState(defaultTheme);
+
     // Fetch data from API
     useEffect(() => {
         fetch(`/api/restaurants/${resolvedParams.slug}`)
@@ -117,6 +121,10 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                 const avgRating = totalCount ? reviewItems.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / totalCount : 0;
                 const dist = [5, 4, 3, 2, 1].map((s) => ({ stars: s, count: reviewItems.filter((r: { rating: number }) => r.rating === s).length }));
                 setReviews({ average: parseFloat(avgRating.toFixed(1)), totalCount, distribution: dist, items: reviewItems });
+
+                // Load theme
+                if (data.theme) setT({ ...defaultTheme, ...data.theme });
+
                 setDataLoaded(true);
             })
             .catch(() => { });
@@ -251,8 +259,20 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
         return () => clearInterval(timer);
     }, []);
 
+    // Load custom font
+    useEffect(() => {
+        if (T.fontFamily && T.fontFamily !== "Inter") {
+            const link = document.createElement("link");
+            link.href = `https://fonts.googleapis.com/css2?family=${T.fontFamily.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
+            link.rel = "stylesheet";
+            document.head.appendChild(link);
+        }
+    }, [T.fontFamily]);
+
+    const getShadow = (s: string) => { switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; case 'xl': return '0 20px 25px -5px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } };
+
     return (
-        <div className="min-h-screen bg-gray-50 pb-20 overflow-x-clip font-sans">
+        <div className="min-h-screen pb-20 overflow-x-clip" style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}>
             {/* Custom Header */}
             <div className="h-[60px] bg-white flex items-center justify-between px-4 shadow-sm">
                 {/* Left: Info Icon + Name */}
@@ -305,10 +325,11 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
             </div>
 
             {/* Search Trigger */}
-            <div className="px-4 pt-4 pb-2 sticky top-0 z-20 bg-gray-50">
+            <div className="px-4 pt-4 pb-2 sticky top-0 z-20" style={{ backgroundColor: T.pageBg }}>
                 <div
                     onClick={() => setIsSearchOpen(true)}
-                    className="w-full bg-gray-100 h-10 rounded-lg flex items-center px-3 text-gray-500 gap-2 cursor-pointer border border-gray-200 shadow-sm"
+                    className="w-full h-10 rounded-lg flex items-center px-3 gap-2 cursor-pointer shadow-sm"
+                    style={{ backgroundColor: T.searchBg, border: `1px solid ${T.searchBorder}`, color: T.searchText }}
                 >
                     <Search size={18} />
                     <span className="text-sm">Ürün ara...</span>
@@ -316,18 +337,18 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
             </div>
 
             {/* Sticky Category Navbar */}
-            <div ref={categoryNavRef} className="sticky top-[56px] z-10 bg-gray-50 overflow-x-auto no-scrollbar py-3 px-4 flex gap-2">
+            <div ref={categoryNavRef} className="sticky top-[56px] z-10 overflow-x-auto no-scrollbar py-3 px-4 flex gap-2" style={{ backgroundColor: T.pageBg }}>
                 {CATEGORIES.map((cat) => (
                     <button
                         key={cat.id}
                         data-cat={cat.id}
                         onClick={() => scrollToCategory(cat.id)}
-                        className={cn(
-                            "whitespace-nowrap text-sm font-medium transition-all px-4 py-2 rounded-full",
-                            activeCategory === cat.id
-                                ? "bg-black text-white"
-                                : "bg-gray-200 text-gray-700"
-                        )}
+                        className="whitespace-nowrap text-sm font-medium transition-all px-4 py-2"
+                        style={{
+                            backgroundColor: activeCategory === cat.id ? T.categoryActiveBg : T.categoryInactiveBg,
+                            color: activeCategory === cat.id ? T.categoryActiveText : T.categoryInactiveText,
+                            borderRadius: `${T.categoryRadius}px`,
+                        }}
                     >
                         {cat.name}
                     </button>
@@ -348,7 +369,7 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                         <div key={cat.id} id={cat.id}>
                             {/* Category Header */}
                             <div className="px-4 pt-6 pb-3">
-                                <h2 className="text-2xl font-bold text-gray-900">{cat.name}</h2>
+                                <h2 style={{ color: T.categoryTitleColor, fontSize: `${T.categoryTitleSize}px`, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
                             </div>
 
                             <div className="px-4 space-y-4">
@@ -356,25 +377,26 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                                     <div
                                         key={product.id}
                                         onClick={() => setSelectedProduct(product)}
-                                        className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-4 h-32 active:scale-[0.98] transition-transform cursor-pointer"
+                                        className="p-3 flex gap-4 h-32 active:scale-[0.98] transition-transform cursor-pointer"
+                                        style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}
                                     >
                                         {/* Image */}
                                         <div className="relative w-24 h-full shrink-0">
-                                            <div className="w-full h-full bg-gray-200 rounded-lg" />
+                                            <div className="w-full h-full bg-gray-200" style={{ borderRadius: `${T.cardImageRadius}px` }} />
                                         </div>
 
                                         {/* Content */}
                                         <div className="flex-1 flex flex-col justify-between py-1">
                                             <div>
-                                                <h3 className="font-bold text-gray-900 line-clamp-1">
+                                                <h3 className="line-clamp-1" style={{ color: T.productNameColor, fontSize: `${T.productNameSize}px`, fontWeight: T.productNameWeight }}>
                                                     {product.name}
                                                 </h3>
-                                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                                <p className="mt-1 line-clamp-2" style={{ color: T.productDescColor, fontSize: `${T.productDescSize}px` }}>
                                                     {product.description}
                                                 </p>
                                             </div>
                                             <div className="flex items-center justify-between mt-2">
-                                                <span className="font-bold text-lg text-black">
+                                                <span style={{ color: T.priceColor, fontSize: `${T.priceSize}px`, fontWeight: T.priceWeight }}>
                                                     {product.price} TL
                                                 </span>
                                             </div>
