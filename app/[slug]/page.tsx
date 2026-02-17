@@ -67,8 +67,12 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
     // Fetch data from API
     useEffect(() => {
         fetch(`/api/restaurants/${resolvedParams.slug}`)
-            .then((r) => r.json())
+            .then((r) => {
+                if (!r.ok) { setNotFound(true); return null; }
+                return r.json();
+            })
             .then((data) => {
+                if (!data) return;
                 if (data.error) { setNotFound(true); return; }
                 // Map categories
                 const cats = [{ id: "populer", name: "Popüler" }];
@@ -146,6 +150,18 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                         <ChevronLeft size={18} />
                         Ana Sayfaya Dön
                     </a>
+                </div>
+            </div>
+        );
+    }
+
+    // Loading state
+    if (!dataLoaded && !notFound) {
+        return (
+            <div className="min-h-dvh bg-gray-950 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-3 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-gray-500 text-sm">Yükleniyor...</p>
                 </div>
             </div>
         );
