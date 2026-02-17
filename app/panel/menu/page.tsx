@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Plus, Trash2, Star, ToggleLeft, ToggleRight, Pencil, X, Upload } from "lucide-react";
 import { useSession } from "@/lib/useSession";
+import { compressVideo } from "@/lib/videoCompress";
 
 interface Category { id: string; name: string; }
 interface Product {
@@ -26,6 +27,7 @@ export default function PanelMenu() {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [videoUploading, setVideoUploading] = useState(false);
     const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+    const [videoStatus, setVideoStatus] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -94,30 +96,43 @@ export default function PanelMenu() {
             alert("Sadece video dosyaları yüklenebilir!");
             return;
         }
-        if (file.size > 100 * 1024 * 1024) {
-            alert("Video boyutu 100MB'dan küçük olmalı!");
+        if (file.size > 200 * 1024 * 1024) {
+            alert("Video boyutu 200MB'dan küçük olmalı!");
             return;
         }
         setVideoUploading(true);
-        setVideoUploadProgress(10);
+        setVideoUploadProgress(5);
         try {
+            // Phase 1: Compress video (0-60%)
+            setVideoStatus("FFmpeg yükleniyor...");
+            const compressed = await compressVideo(file, (p) => {
+                setVideoUploadProgress(Math.round(p * 0.6)); // 0-60%
+                if (p > 0) setVideoStatus(`Sıkıştırılıyor... %${p}`);
+            });
+            const savedPct = Math.round((1 - compressed.size / file.size) * 100);
+            setVideoStatus(`Sıkıştırıldı! (${(file.size / 1024 / 1024).toFixed(1)}MB → ${(compressed.size / 1024 / 1024).toFixed(1)}MB, %${savedPct} küçüldü)`);
+
+            // Phase 2: Upload compressed video (60-100%)
+            setVideoUploadProgress(65);
+            setVideoStatus("Yükleniyor...");
             const fd = new FormData();
-            fd.append("file", file);
+            fd.append("file", compressed);
             fd.append("folder", "videos");
-            setVideoUploadProgress(30);
             const res = await fetch("/api/upload", { method: "POST", body: fd });
-            setVideoUploadProgress(80);
+            setVideoUploadProgress(90);
             const data = await res.json();
             if (data.success) {
                 setForm((prev) => ({ ...prev, video: data.url }));
                 setVideoUploadProgress(100);
+                setVideoStatus("Yüklendi ✓");
             } else {
                 alert("Video yükleme hatası: " + (data.error || "Bilinmeyen hata"));
             }
-        } catch {
-            alert("Video yükleme başarısız!");
+        } catch (err) {
+            console.error("Video compression/upload error:", err);
+            alert("Video işleme başarısız!");
         } finally {
-            setTimeout(() => { setVideoUploading(false); setVideoUploadProgress(0); }, 500);
+            setTimeout(() => { setVideoUploading(false); setVideoUploadProgress(0); setVideoStatus(""); }, 1500);
         }
     };
 
@@ -245,13 +260,13 @@ export default function PanelMenu() {
                                                 <div className="w-full bg-gray-800 rounded-full h-2 mb-2">
                                                     <div className="bg-emerald-500 h-2 rounded-full transition-all duration-300" style={{ width: `${videoUploadProgress}%` }} />
                                                 </div>
-                                                <p className="text-xs text-gray-400">Video yükleniyor... %{videoUploadProgress}</p>
+                                                <p className="text-xs text-gray-400">{videoStatus || `İşleniyor... %${videoUploadProgress}`}</p>
                                             </div>
                                         ) : (
                                             <>
                                                 <Upload size={20} className="mx-auto mb-1 text-gray-600" />
                                                 <p className="text-xs text-gray-400">Video sürükle veya tıkla</p>
-                                                <p className="text-[10px] text-gray-600 mt-1">Max 100MB · MP4, MOV, WebM</p>
+                                                <p className="text-[10px] text-gray-600 mt-1">Max 200MB · Otomatik sıkıştırılır (720p)</p>
                                             </>
                                         )}
                                     </div>
