@@ -6,7 +6,7 @@ import { useSession } from "@/lib/useSession";
 interface Category { id: string; name: string; }
 interface Product {
     id: string; name: string; description: string | null; price: number;
-    discountPrice: number | null; image: string | null; prepTime: string | null;
+    discountPrice: number | null; image: string | null; video: string | null; prepTime: string | null;
     calories: string | null; isPopular: boolean; isActive: boolean;
     categoryId: string; category: Category;
 }
@@ -20,11 +20,14 @@ export default function PanelMenu() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editProduct, setEditProduct] = useState<Product | null>(null);
-    const [form, setForm] = useState({ name: "", description: "", price: "", discountPrice: "", image: "", prepTime: "", calories: "", categoryId: "", isPopular: false, isActive: true });
+    const [form, setForm] = useState({ name: "", description: "", price: "", discountPrice: "", image: "", video: "", prepTime: "", calories: "", categoryId: "", isPopular: false, isActive: true });
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [videoUploading, setVideoUploading] = useState(false);
+    const [videoUploadProgress, setVideoUploadProgress] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const videoInputRef = useRef<HTMLInputElement>(null);
 
     const fetchData = () => {
         if (!restaurantId) return;
@@ -51,12 +54,12 @@ export default function PanelMenu() {
         await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
         setProducts((prev) => prev.filter((p) => p.id !== id));
     };
-    const openAddModal = () => { setEditProduct(null); setForm({ name: "", description: "", price: "", discountPrice: "", image: "", prepTime: "", calories: "", categoryId: categories[0]?.id || "", isPopular: false, isActive: true }); setShowModal(true); };
-    const openEditModal = (p: Product) => { setEditProduct(p); setForm({ name: p.name, description: p.description || "", price: String(p.price), discountPrice: p.discountPrice ? String(p.discountPrice) : "", image: p.image || "", prepTime: p.prepTime || "", calories: p.calories || "", categoryId: p.categoryId, isPopular: p.isPopular, isActive: p.isActive }); setShowModal(true); };
+    const openAddModal = () => { setEditProduct(null); setForm({ name: "", description: "", price: "", discountPrice: "", image: "", video: "", prepTime: "", calories: "", categoryId: categories[0]?.id || "", isPopular: false, isActive: true }); setShowModal(true); };
+    const openEditModal = (p: Product) => { setEditProduct(p); setForm({ name: p.name, description: p.description || "", price: String(p.price), discountPrice: p.discountPrice ? String(p.discountPrice) : "", image: p.image || "", video: p.video || "", prepTime: p.prepTime || "", calories: p.calories || "", categoryId: p.categoryId, isPopular: p.isPopular, isActive: p.isActive }); setShowModal(true); };
 
     const handleFileUpload = async (file: File) => {
-        if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
-            alert("Sadece resim ve video dosyaları yüklenebilir!");
+        if (!file.type.startsWith("image/")) {
+            alert("Sadece resim dosyaları yüklenebilir!");
             return;
         }
         if (file.size > 50 * 1024 * 1024) {
@@ -86,6 +89,38 @@ export default function PanelMenu() {
         }
     };
 
+    const handleVideoUpload = async (file: File) => {
+        if (!file.type.startsWith("video/")) {
+            alert("Sadece video dosyaları yüklenebilir!");
+            return;
+        }
+        if (file.size > 100 * 1024 * 1024) {
+            alert("Video boyutu 100MB'dan küçük olmalı!");
+            return;
+        }
+        setVideoUploading(true);
+        setVideoUploadProgress(10);
+        try {
+            const fd = new FormData();
+            fd.append("file", file);
+            fd.append("folder", "videos");
+            setVideoUploadProgress(30);
+            const res = await fetch("/api/upload", { method: "POST", body: fd });
+            setVideoUploadProgress(80);
+            const data = await res.json();
+            if (data.success) {
+                setForm((prev) => ({ ...prev, video: data.url }));
+                setVideoUploadProgress(100);
+            } else {
+                alert("Video yükleme hatası: " + (data.error || "Bilinmeyen hata"));
+            }
+        } catch {
+            alert("Video yükleme başarısız!");
+        } finally {
+            setTimeout(() => { setVideoUploading(false); setVideoUploadProgress(0); }, 500);
+        }
+    };
+
     const removeImage = async () => {
         if (form.image) {
             try {
@@ -93,6 +128,15 @@ export default function PanelMenu() {
             } catch { /* ignore */ }
         }
         setForm((prev) => ({ ...prev, image: "" }));
+    };
+
+    const removeVideo = async () => {
+        if (form.video) {
+            try {
+                await fetch("/api/upload", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: form.video }) });
+            } catch { /* ignore */ }
+        }
+        setForm((prev) => ({ ...prev, video: "" }));
     };
 
     const handleDrop = (e: React.DragEvent) => {
@@ -103,7 +147,7 @@ export default function PanelMenu() {
 
     const handleSave = async () => {
         setSaving(true);
-        const payload = { name: form.name, description: form.description || null, price: form.price, discountPrice: form.discountPrice || null, image: form.image || null, prepTime: form.prepTime || null, calories: form.calories || null, categoryId: form.categoryId, isPopular: form.isPopular, isActive: form.isActive };
+        const payload = { name: form.name, description: form.description || null, price: form.price, discountPrice: form.discountPrice || null, image: form.image || null, video: form.video || null, prepTime: form.prepTime || null, calories: form.calories || null, categoryId: form.categoryId, isPopular: form.isPopular, isActive: form.isActive };
         if (editProduct) { await fetch(`/api/admin/products/${editProduct.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); }
         else { await fetch(`/api/admin/products?restaurantId=${restaurantId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); }
         setShowModal(false); setSaving(false); fetchData();
@@ -179,7 +223,40 @@ export default function PanelMenu() {
                                         )}
                                     </div>
                                 )}
-                                <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ""; }} />
+                                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ""; }} />
+                            </div>
+                            {/* Video Upload */}
+                            <div>
+                                <label className="text-xs text-gray-400 mb-2 block">Ürün Videosu</label>
+                                {form.video ? (
+                                    <div className="relative group">
+                                        <video src={form.video} className="w-full h-40 object-cover rounded-xl border border-gray-700" muted playsInline />
+                                        <button onClick={removeVideo} className="absolute top-2 right-2 w-8 h-8 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} className="text-white" /></button>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleVideoUpload(f); }}
+                                        onClick={() => videoInputRef.current?.click()}
+                                        className="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-xl p-4 text-center cursor-pointer transition-colors"
+                                    >
+                                        {videoUploading ? (
+                                            <div>
+                                                <div className="w-full bg-gray-800 rounded-full h-2 mb-2">
+                                                    <div className="bg-emerald-500 h-2 rounded-full transition-all duration-300" style={{ width: `${videoUploadProgress}%` }} />
+                                                </div>
+                                                <p className="text-xs text-gray-400">Video yükleniyor... %{videoUploadProgress}</p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Upload size={20} className="mx-auto mb-1 text-gray-600" />
+                                                <p className="text-xs text-gray-400">Video sürükle veya tıkla</p>
+                                                <p className="text-[10px] text-gray-600 mt-1">Max 100MB · MP4, MOV, WebM</p>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                                <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleVideoUpload(f); e.target.value = ""; }} />
                             </div>
                             <div className="grid grid-cols-2 gap-3"><div><label className="text-xs text-gray-400 mb-1 block">Hazırlama Süresi</label><input value={form.prepTime} onChange={(e) => setForm({ ...form, prepTime: e.target.value })} placeholder="15-20 dk" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500" /></div><div><label className="text-xs text-gray-400 mb-1 block">Kalori</label><input value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="650 kcal" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500" /></div></div>
                             <div className="flex items-center gap-4"><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isPopular} onChange={(e) => setForm({ ...form, isPopular: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Popüler</span></label><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Aktif</span></label></div>

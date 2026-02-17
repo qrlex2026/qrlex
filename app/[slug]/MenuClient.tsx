@@ -14,6 +14,7 @@ type Product = {
     price: number;
     discountPrice?: number | null;
     image: string;
+    video: string;
     isPopular: boolean;
     prepTime: string;
     calories: string;
@@ -394,7 +395,7 @@ export default function MenuClient({
                                             className="p-3 flex gap-4 h-32 active:scale-[0.98] transition-transform cursor-pointer"
                                             style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}
                                         >
-                                            {/* Image */}
+                                            {/* Image / Video Preview */}
                                             <div className="relative w-24 h-full shrink-0 overflow-hidden" style={{ borderRadius: `${T.cardImageRadius}px` }}>
                                                 {product.image ? (
                                                     <img
@@ -406,6 +407,11 @@ export default function MenuClient({
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                                                         <span className="text-gray-400 text-2xl">🍽️</span>
+                                                    </div>
+                                                )}
+                                                {product.video && (
+                                                    <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
+                                                        <span className="text-white text-[10px] ml-0.5">▶</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -791,9 +797,20 @@ export default function MenuClient({
                 {/* Product Detail Overlay */}
                 {selectedProduct && (
                     <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
-                        {/* Product Image Section */}
+                        {/* Product Media Section */}
                         <div className="relative w-full shrink-0" style={{ height: '45%' }}>
-                            {selectedProduct.image ? (
+                            {selectedProduct.video ? (
+                                <video
+                                    src={selectedProduct.video}
+                                    poster={selectedProduct.image || undefined}
+                                    autoPlay
+                                    muted
+                                    loop
+                                    playsInline
+                                    controls
+                                    className="absolute inset-0 w-full h-full object-cover"
+                                />
+                            ) : selectedProduct.image ? (
                                 <img
                                     src={selectedProduct.image}
                                     alt={selectedProduct.name}

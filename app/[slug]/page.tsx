@@ -47,6 +47,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
         description: p.description || "",
         price: Number(p.discountPrice || p.price),
         image: p.image || "",
+        video: p.video || "",
         isPopular: p.isPopular,
         prepTime: p.prepTime || "",
         calories: p.calories || "",
