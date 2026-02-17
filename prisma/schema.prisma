@@ -9,23 +9,22 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  phone        String   @unique
+  id           String      @id @default(uuid())
+  phone        String      @unique
   password     String
   name         String
-  role         String   @default("owner") // "superadmin" | "owner"
-  restaurantId String?  @map("restaurant_id")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  restaurant Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+  role         String      @default("owner")
+  restaurantId String?     @map("restaurant_id")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
 
   @@map("users")
 }
 
 model Restaurant {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   name         String
-  slug         String   @unique
+  slug         String     @unique
   description  String?
   address      String?
   phone        String?
@@ -33,64 +32,60 @@ model Restaurant {
   website      String?
   instagram    String?
   image        String?
-  workingHours Json?    @map("working_hours")
-  theme        Json?    @map("theme")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  categories Category[]
-  products   Product[]
-  reviews    Review[]
-  users      User[]
+  workingHours Json?      @map("working_hours")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  theme        Json?      @map("theme")
+  categories   Category[]
+  products     Product[]
+  reviews      Review[]
+  users        User[]
 
   @@map("restaurants")
 }
 
 model Category {
-  id           String  @id @default(uuid())
-  restaurantId String  @map("restaurant_id")
+  id           String     @id @default(uuid())
+  restaurantId String     @map("restaurant_id")
   name         String
-  sortOrder    Int     @default(0) @map("sort_order")
-  isActive     Boolean @default(true) @map("is_active")
-
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  products   Product[]
+  sortOrder    Int        @default(0) @map("sort_order")
+  isActive     Boolean    @default(true) @map("is_active")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  products     Product[]
 
   @@map("categories")
 }
 
 model Product {
-  id            String   @id @default(uuid())
-  restaurantId  String   @map("restaurant_id")
-  categoryId    String   @map("category_id")
+  id            String     @id @default(uuid())
+  restaurantId  String     @map("restaurant_id")
+  categoryId    String     @map("category_id")
   name          String
   description   String?
-  price         Decimal  @db.Decimal(10, 2)
-  discountPrice Decimal? @map("discount_price") @db.Decimal(10, 2)
+  price         Decimal    @db.Decimal(10, 2)
+  discountPrice Decimal?   @map("discount_price") @db.Decimal(10, 2)
   image         String?
-  prepTime      String?  @map("prep_time")
+  prepTime      String?    @map("prep_time")
   calories      String?
-  isPopular     Boolean  @default(false) @map("is_popular")
-  isActive      Boolean  @default(true) @map("is_active")
-  sortOrder     Int      @default(0) @map("sort_order")
-  createdAt     DateTime @default(now()) @map("created_at")
-
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  isPopular     Boolean    @default(false) @map("is_popular")
+  isActive      Boolean    @default(true) @map("is_active")
+  sortOrder     Int        @default(0) @map("sort_order")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  category      Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@map("products")
 }
 
 model Review {
-  id           String   @id @default(uuid())
-  restaurantId String   @map("restaurant_id")
-  authorName   String   @map("author_name")
+  id           String     @id @default(uuid())
+  restaurantId String     @map("restaurant_id")
+  authorName   String     @map("author_name")
   rating       Int
   comment      String?
-  helpfulCount Int      @default(0) @map("helpful_count")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  helpfulCount Int        @default(0) @map("helpful_count")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@map("reviews")
 }
