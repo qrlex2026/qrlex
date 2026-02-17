@@ -135,38 +135,6 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
             .catch(() => { setNotFound(true); });
     }, [resolvedParams.slug]);
 
-    // 404 Page
-    if (notFound) {
-        return (
-            <div className="min-h-dvh bg-gray-950 flex items-center justify-center p-6">
-                <div className="text-center max-w-md">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-violet-500/20">
-                        <AlertTriangle size={36} className="text-white" />
-                    </div>
-                    <h1 className="text-4xl font-bold text-white mb-3">404</h1>
-                    <h2 className="text-xl font-semibold text-gray-300 mb-2">Restoran Bulunamadı</h2>
-                    <p className="text-gray-500 text-sm mb-8">Aradığınız restoran mevcut değil veya kaldırılmış olabilir.</p>
-                    <a href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-violet-500/25">
-                        <ChevronLeft size={18} />
-                        Ana Sayfaya Dön
-                    </a>
-                </div>
-            </div>
-        );
-    }
-
-    // Loading state
-    if (!dataLoaded && !notFound) {
-        return (
-            <div className="min-h-dvh bg-gray-950 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-12 h-12 border-3 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-gray-500 text-sm">Yükleniyor...</p>
-                </div>
-            </div>
-        );
-    }
-
     // Search Logic
     const searchResults = searchQuery
         ? PRODUCTS.filter(
@@ -307,6 +275,38 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
     }, [T.fontFamily]);
 
     const getShadow = (s: string) => { switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; case 'xl': return '0 20px 25px -5px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } };
+
+    // 404 Page
+    if (notFound) {
+        return (
+            <div className="min-h-dvh bg-gray-950 flex items-center justify-center p-6">
+                <div className="text-center max-w-md">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-violet-500/20">
+                        <AlertTriangle size={36} className="text-white" />
+                    </div>
+                    <h1 className="text-4xl font-bold text-white mb-3">404</h1>
+                    <h2 className="text-xl font-semibold text-gray-300 mb-2">Restoran Bulunamadı</h2>
+                    <p className="text-gray-500 text-sm mb-8">Aradığınız restoran mevcut değil veya kaldırılmış olabilir.</p>
+                    <a href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-violet-500/25">
+                        <ChevronLeft size={18} />
+                        Ana Sayfaya Dön
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
+    // Loading state
+    if (!dataLoaded && !notFound) {
+        return (
+            <div className="min-h-dvh bg-gray-950 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-3 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-gray-500 text-sm">Yükleniyor...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen pb-20 overflow-x-clip" style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}>
