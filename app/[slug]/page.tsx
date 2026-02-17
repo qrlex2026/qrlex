@@ -58,6 +58,7 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
     });
     const [userReviews, setUserReviews] = useState<{ id: string; name: string; date: string; rating: number; comment: string; helpful: number }[]>([]);
     const [dataLoaded, setDataLoaded] = useState(false);
+    const [notFound, setNotFound] = useState(false);
 
     // Theme defaults
     const defaultTheme = { pageBg: "#f9fafb", fontFamily: "Inter", headerBg: "#ffffff", headerGradientFrom: "#f3e8ff", headerGradientTo: "#e0f2fe", categoryActiveBg: "#000000", categoryActiveText: "#ffffff", categoryInactiveBg: "#e5e7eb", categoryInactiveText: "#374151", categoryRadius: "9999", searchBg: "#f3f4f6", searchBorder: "#e5e7eb", searchText: "#6b7280", cardBg: "#ffffff", cardBorder: "#f3f4f6", cardRadius: "12", cardShadow: "sm", cardImageRadius: "8", productNameColor: "#111827", productNameSize: "16", productNameWeight: "700", productDescColor: "#6b7280", productDescSize: "12", priceColor: "#000000", priceSize: "18", priceWeight: "700", discountColor: "#10b981", oldPriceColor: "#9ca3af", categoryTitleColor: "#111827", categoryTitleSize: "24", categoryTitleWeight: "700", popularBadgeBg: "#fef3c7", popularBadgeText: "#92400e", bottomNavBg: "#ffffff", bottomNavActive: "#000000", bottomNavInactive: "#9ca3af", accentColor: "#000000" };
@@ -68,7 +69,7 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
         fetch(`/api/restaurants/${resolvedParams.slug}`)
             .then((r) => r.json())
             .then((data) => {
-                if (data.error) return;
+                if (data.error) { setNotFound(true); return; }
                 // Map categories
                 const cats = [{ id: "populer", name: "Popüler" }];
                 data.categories.forEach((c: { id: string; name: string }) => {
@@ -127,8 +128,28 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
 
                 setDataLoaded(true);
             })
-            .catch(() => { });
+            .catch(() => { setNotFound(true); });
     }, [resolvedParams.slug]);
+
+    // 404 Page
+    if (notFound) {
+        return (
+            <div className="min-h-dvh bg-gray-950 flex items-center justify-center p-6">
+                <div className="text-center max-w-md">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-violet-500/20">
+                        <AlertTriangle size={36} className="text-white" />
+                    </div>
+                    <h1 className="text-4xl font-bold text-white mb-3">404</h1>
+                    <h2 className="text-xl font-semibold text-gray-300 mb-2">Restoran Bulunamadı</h2>
+                    <p className="text-gray-500 text-sm mb-8">Aradığınız restoran mevcut değil veya kaldırılmış olabilir.</p>
+                    <a href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-violet-500/25">
+                        <ChevronLeft size={18} />
+                        Ana Sayfaya Dön
+                    </a>
+                </div>
+            </div>
+        );
+    }
 
     // Search Logic
     const searchResults = searchQuery
