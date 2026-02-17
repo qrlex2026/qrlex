@@ -13,7 +13,16 @@ export default function PanelDashboard() {
         if (!restaurantId) return;
         fetch(`/api/admin/stats?restaurantId=${restaurantId}`)
             .then((r) => r.json())
-            .then((data) => { setStats(data); setLoading(false); });
+            .then((data) => {
+                setStats({
+                    products: data.productCount || 0,
+                    categories: data.categoryCount || 0,
+                    reviews: data.reviewCount || 0,
+                    avgRating: Number(data.avgRating) || 0,
+                });
+                setLoading(false);
+            })
+            .catch(() => setLoading(false));
     }, [restaurantId]);
 
     if (sessionLoading || loading) return <div className="text-center py-20 text-gray-500">Yükleniyor...</div>;
