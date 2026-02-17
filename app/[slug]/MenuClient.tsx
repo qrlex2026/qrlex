@@ -807,7 +807,6 @@ export default function MenuClient({
                                     muted
                                     loop
                                     playsInline
-                                    controls
                                     className="absolute inset-0 w-full h-full object-cover"
                                 />
                             ) : selectedProduct.image ? (

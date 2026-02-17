@@ -245,7 +245,7 @@ export default function PanelMenu() {
                                 <label className="text-xs text-gray-400 mb-2 block">Ürün Videosu</label>
                                 {form.video ? (
                                     <div className="relative group">
-                                        <video src={form.video} className="w-full h-40 object-cover rounded-xl border border-gray-700" muted playsInline />
+                                        <video src={form.video} className="w-full h-40 object-cover rounded-xl border border-gray-700" autoPlay muted loop playsInline />
                                         <button onClick={removeVideo} className="absolute top-2 right-2 w-8 h-8 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} className="text-white" /></button>
                                     </div>
                                 ) : (
