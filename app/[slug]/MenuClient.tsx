@@ -205,15 +205,7 @@ export default function MenuClient({
         return () => clearInterval(timer);
     }, []);
 
-    // Load custom font
-    useEffect(() => {
-        if (T.fontFamily && T.fontFamily !== "Inter") {
-            const link = document.createElement("link");
-            link.href = `https://fonts.googleapis.com/css2?family=${T.fontFamily.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
-            link.rel = "stylesheet";
-            document.head.appendChild(link);
-        }
-    }, [T.fontFamily]);
+
 
     const getShadow = (s: string) => { switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; case 'xl': return '0 20px 25px -5px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } };
 

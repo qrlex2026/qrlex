@@ -92,14 +92,29 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
 
     const theme = { ...defaultTheme, ...(restaurant.theme as Record<string, string> || {}) };
 
+    // Build Google Fonts URL for server-side injection
+    const fontFamily = theme.fontFamily || "Inter";
+    const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
+
     return (
-        <MenuClient
-            initialCategories={categories}
-            initialProducts={products}
-            initialBusinessInfo={businessInfo}
-            initialReviews={reviews}
-            initialTheme={theme}
-            slug={slug}
-        />
+        <>
+            {/* Inject critical CSS and font BEFORE any content renders */}
+            {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+            <link rel="stylesheet" href={fontUrl} />
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                body { background-color: ${theme.pageBg} !important; margin: 0; }
+                html { background-color: ${theme.pageBg} !important; }
+            `}} />
+            <MenuClient
+                initialCategories={categories}
+                initialProducts={products}
+                initialBusinessInfo={businessInfo}
+                initialReviews={reviews}
+                initialTheme={theme}
+                slug={slug}
+            />
+        </>
     );
 }
+
