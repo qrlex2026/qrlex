@@ -4,60 +4,74 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
 let ffmpeg: FFmpeg | null = null;
+let ffmpegLoaded = false;
 
 export async function compressVideo(
     file: File,
     onProgress?: (progress: number) => void
 ): Promise<File> {
-    // Load FFmpeg WASM if not loaded
-    if (!ffmpeg) {
-        ffmpeg = new FFmpeg();
-        const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
+    try {
+        // Load FFmpeg WASM if not loaded
+        if (!ffmpeg || !ffmpegLoaded) {
+            ffmpeg = new FFmpeg();
+            const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
 
-        await ffmpeg.load({
-            coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-            wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+            await ffmpeg.load({
+                coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+                wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+            });
+            ffmpegLoaded = true;
+        }
+
+        // Track progress
+        ffmpeg.on("progress", ({ progress }) => {
+            onProgress?.(Math.min(Math.round(progress * 100), 100));
         });
+
+        const inputName = "input" + getExtension(file.name);
+        const outputName = "output.mp4";
+
+        // Write input file
+        await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+        // Compress: 720p max, H.264, CRF 28
+        await ffmpeg.exec([
+            "-i", inputName,
+            "-vf", "scale='min(720,iw)':-2",
+            "-c:v", "libx264",
+            "-preset", "fast",
+            "-crf", "28",
+            "-c:a", "aac",
+            "-b:a", "96k",
+            "-movflags", "+faststart",
+            "-y",
+            outputName,
+        ]);
+
+        // Read output
+        const data = await ffmpeg.readFile(outputName) as Uint8Array;
+        const blob = new Blob([new Uint8Array(data)], { type: "video/mp4" });
+
+        // Cleanup
+        try {
+            await ffmpeg.deleteFile(inputName);
+            await ffmpeg.deleteFile(outputName);
+        } catch { /* ignore cleanup errors */ }
+
+        // Only use compressed if it's actually smaller
+        if (blob.size >= file.size) {
+            console.log("Compressed file is not smaller, using original");
+            return file;
+        }
+
+        return new File([blob], file.name.replace(/\.[^.]+$/, ".mp4"), {
+            type: "video/mp4",
+        });
+    } catch (error) {
+        console.error("Video compression failed, using original file:", error);
+        // Return original on any error
+        return file;
     }
-
-    // Track progress
-    ffmpeg.on("progress", ({ progress }) => {
-        onProgress?.(Math.round(progress * 100));
-    });
-
-    const inputName = "input" + getExtension(file.name);
-    const outputName = "output.mp4";
-
-    // Write input file
-    await ffmpeg.writeFile(inputName, await fetchFile(file));
-
-    // Compress: 720p max, 1Mbps, H.264, fast preset
-    await ffmpeg.exec([
-        "-i", inputName,
-        "-vf", "scale='min(720,iw)':-2",      // Max 720p width, keep aspect
-        "-c:v", "libx264",                       // H.264 codec
-        "-preset", "fast",                        // Fast encoding
-        "-crf", "28",                             // Quality (23=default, 28=smaller)
-        "-c:a", "aac",                            // AAC audio
-        "-b:a", "96k",                            // Audio bitrate
-        "-movflags", "+faststart",                // Web optimized
-        "-y",                                      // Overwrite
-        outputName,
-    ]);
-
-    // Read output
-    const data = await ffmpeg.readFile(outputName) as Uint8Array;
-    const blob = new Blob([new Uint8Array(data)], { type: "video/mp4" });
-
-    // Cleanup
-    await ffmpeg.deleteFile(inputName);
-    await ffmpeg.deleteFile(outputName);
-
-    const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, ".mp4"), {
-        type: "video/mp4",
-    });
-
-    return compressedFile;
 }
 
 function getExtension(filename: string): string {
