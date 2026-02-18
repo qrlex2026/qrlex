@@ -409,15 +409,15 @@ export default function MenuClient({
                             {/* DİL Button */}
                             <button
                                 onClick={() => setShowLangPicker(true)}
-                                className="flex-1 py-3.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-bold tracking-wider text-center hover:bg-white/20 active:scale-[0.97] transition-all"
+                                className="flex-1 py-3.5 rounded-xl bg-white/10 backdrop-blur-md text-white text-sm font-bold tracking-wider text-center hover:bg-white/20 active:scale-[0.97] transition-all"
                                 style={{ animation: 'fadeInUp 0.5s ease-out 0.2s both' }}
                             >
-                                DİL
+                                LANGUAGE
                             </button>
 
                             {/* KAMPANYALAR Button */}
                             <button
-                                className="flex-1 py-3.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-bold tracking-wider text-center hover:bg-white/20 active:scale-[0.97] transition-all"
+                                className="flex-1 py-3.5 rounded-xl bg-white/10 backdrop-blur-md text-white text-sm font-bold tracking-wider text-center hover:bg-white/20 active:scale-[0.97] transition-all"
                                 style={{ animation: 'fadeInUp 0.5s ease-out 0.3s both' }}
                             >
                                 KAMPANYALAR
