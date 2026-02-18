@@ -602,7 +602,23 @@ export default function MenuClient({
                                         >
                                             {/* Image / Video Preview */}
                                             <div className="relative w-24 h-full shrink-0 overflow-hidden" style={{ borderRadius: `${T.cardImageRadius}px` }}>
-                                                {product.image ? (
+                                                {product.video ? (
+                                                    <>
+                                                        <video
+                                                            src={product.video}
+                                                            poster={product.image || undefined}
+                                                            muted
+                                                            autoPlay
+                                                            loop
+                                                            playsInline
+                                                            preload="auto"
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
+                                                            <span className="text-white text-[10px] ml-0.5">▶</span>
+                                                        </div>
+                                                    </>
+                                                ) : product.image ? (
                                                     <img
                                                         src={product.image}
                                                         alt={product.name}
@@ -612,11 +628,6 @@ export default function MenuClient({
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                                                         <span className="text-gray-400 text-2xl">🍽️</span>
-                                                    </div>
-                                                )}
-                                                {product.video && (
-                                                    <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
-                                                        <span className="text-white text-[10px] ml-0.5">▶</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -1012,6 +1023,7 @@ export default function MenuClient({
                                     muted
                                     loop
                                     playsInline
+                                    preload="auto"
                                     className="absolute inset-0 w-full h-full object-cover"
                                 />
                             ) : selectedProduct.image ? (

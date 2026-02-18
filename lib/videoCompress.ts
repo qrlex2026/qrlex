@@ -34,15 +34,15 @@ export async function compressVideo(
         // Write input file
         await ffmpeg.writeFile(inputName, await fetchFile(file));
 
-        // Compress: 720p max, H.264, CRF 28
+        // Compress: 480p max, H.264, CRF 32 (aggressive for QR menu)
         await ffmpeg.exec([
             "-i", inputName,
-            "-vf", "scale='min(720,iw)':-2",
+            "-vf", "scale='min(480,iw)':-2",
             "-c:v", "libx264",
             "-preset", "fast",
-            "-crf", "28",
+            "-crf", "32",
             "-c:a", "aac",
-            "-b:a", "96k",
+            "-b:a", "64k",
             "-movflags", "+faststart",
             "-y",
             outputName,
