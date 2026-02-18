@@ -391,12 +391,12 @@ export default function MenuClient({
                     </div>
 
                     {/* Bottom Navigation */}
-                    <div className="relative z-10 pb-8">
+                    <div className="relative z-10 pb-8" style={{ padding: '0 15px 32px 15px' }}>
                         {/* Gray Separator Line */}
-                        <div className="mx-8 mb-5 h-px bg-white/20" />
+                        <div className="mb-5 h-px bg-white/20" />
 
                         {/* 3 Buttons */}
-                        <div className="flex items-center justify-center gap-4 px-6">
+                        <div className="flex items-center justify-center gap-3">
                             {/* MENÜ Button */}
                             <button
                                 onClick={() => selectLanguage('tr')}
