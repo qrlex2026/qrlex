@@ -448,13 +448,13 @@ export default function MenuClient({
 
                             {/* Language Sheet - 40% height */}
                             <div
-                                className="bg-[#1a1a1a] rounded-t-2xl px-4 pt-4 pb-6 overflow-hidden"
-                                style={{ height: '40vh', animation: 'slideUp 0.35s ease-out' }}
+                                className="bg-[#1a1a1a] rounded-t-2xl px-4 pt-4 flex flex-col"
+                                style={{ height: '40dvh', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', animation: 'slideUp 0.35s ease-out' }}
                             >
                                 {/* Handle bar */}
-                                <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
+                                <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-3 shrink-0" />
 
-                                <div className="flex flex-wrap gap-2.5 justify-center">
+                                <div className="flex-1 flex flex-wrap gap-2.5 justify-center content-center overflow-y-auto">
                                     {languages.map((lang) => (
                                         <button
                                             key={lang.code}
@@ -462,12 +462,12 @@ export default function MenuClient({
                                                 setShowLangPicker(false);
                                                 selectLanguage(lang.code);
                                             }}
-                                            className={`flex items-center gap-2.5 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${selectedLang === lang.code
-                                                    ? 'bg-white text-black'
-                                                    : 'bg-white/10 text-white hover:bg-white/20'
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${selectedLang === lang.code
+                                                ? 'bg-white text-black'
+                                                : 'bg-white/10 text-white hover:bg-white/20'
                                                 }`}
                                         >
-                                            <span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-sm leading-none">{lang.flag}</span>
+                                            <span className="text-base">{lang.flag}</span>
                                             <span>{lang.name}</span>
                                         </button>
                                     ))}
