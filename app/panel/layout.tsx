@@ -5,11 +5,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
     LayoutDashboard, UtensilsCrossed, LayoutGrid, Settings,
-    Star, LogOut, Menu, X, QrCode, ChevronRight, Paintbrush,
+    Star, LogOut, Menu, X, QrCode, ChevronRight, Paintbrush, BarChart3,
 } from "lucide-react";
 
 const NAV_ITEMS = [
     { href: "/panel", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/panel/analytics", label: "İstatistikler", icon: BarChart3 },
     { href: "/panel/menu", label: "Menü Yönetimi", icon: UtensilsCrossed },
     { href: "/panel/categories", label: "Kategoriler", icon: LayoutGrid },
     { href: "/panel/qr-code", label: "QR Kod", icon: QrCode },

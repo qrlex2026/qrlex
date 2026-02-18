@@ -39,6 +39,7 @@ type MenuClientProps = {
     };
     initialTheme: Record<string, string>;
     slug: string;
+    restaurantId: string;
 };
 
 function cn(...inputs: (string | undefined | null | false)[]) {
@@ -52,6 +53,7 @@ export default function MenuClient({
     initialReviews,
     initialTheme,
     slug,
+    restaurantId,
 }: MenuClientProps) {
     const [activeCategory, setActiveCategory] = useState("");
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -59,6 +61,62 @@ export default function MenuClient({
     const [searchQuery, setSearchQuery] = useState("");
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+    // ======= Analytics Tracking =======
+    const sessionIdRef = useRef<string>('');
+    const pageViewIdRef = useRef<string>('');
+    const startTimeRef = useRef<number>(Date.now());
+
+    useEffect(() => {
+        // Generate unique session ID
+        const sid = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+        sessionIdRef.current = sid;
+        startTimeRef.current = Date.now();
+
+        // Record page view (QR scan)
+        fetch('/api/analytics/pageview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                restaurantId,
+                sessionId: sid,
+                userAgent: navigator.userAgent,
+            }),
+        }).then(r => r.json()).then(d => {
+            if (d.id) pageViewIdRef.current = d.id;
+        }).catch(() => { });
+
+        // Track session duration on exit
+        const sendDuration = () => {
+            if (!pageViewIdRef.current) return;
+            const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
+            navigator.sendBeacon('/api/analytics/pageview', JSON.stringify({
+                id: pageViewIdRef.current,
+                duration,
+            }));
+        };
+
+        window.addEventListener('beforeunload', sendDuration);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') sendDuration();
+        });
+
+        return () => window.removeEventListener('beforeunload', sendDuration);
+    }, [restaurantId]);
+
+
+
+    const trackProductView = (productId: string) => {
+        fetch('/api/analytics/product-view', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                restaurantId,
+                productId,
+                sessionId: sessionIdRef.current,
+            }),
+        }).catch(() => { });
+    };
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isReviewsOpen, setIsReviewsOpen] = useState(false);
     const [isWriteReviewOpen, setIsWriteReviewOpen] = useState(false);
@@ -275,6 +333,14 @@ export default function MenuClient({
     const selectLanguage = async (lang: string) => {
         setSelectedLang(lang);
 
+        // Track language for analytics
+        if (pageViewIdRef.current) {
+            fetch('/api/analytics/pageview', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: pageViewIdRef.current, language: lang }),
+            }).catch(() => { });
+        }
         if (lang === "tr") {
             // Turkish = no translation needed
             setTranslatedCategories(initialCategories);
@@ -606,7 +672,7 @@ export default function MenuClient({
                                     {products.map((product) => (
                                         <div
                                             key={product.id}
-                                            onClick={() => setSelectedProduct(product)}
+                                            onClick={() => { setSelectedProduct(product); trackProductView(product.id); }}
                                             className="p-3 flex gap-4 h-32 active:scale-[0.98] transition-transform cursor-pointer"
                                             style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}
                                         >

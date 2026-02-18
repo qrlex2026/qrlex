@@ -40,6 +40,8 @@ model Restaurant {
   products     Product[]
   reviews      Review[]
   users        User[]
+  pageViews    PageView[]
+  productViews ProductView[]
 
   @@map("restaurants")
 }
@@ -74,6 +76,7 @@ model Product {
   createdAt     DateTime   @default(now()) @map("created_at")
   category      Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  productViews  ProductView[]
 
   @@map("products")
 }
@@ -89,4 +92,29 @@ model Review {
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@map("reviews")
+}
+
+model PageView {
+  id           String     @id @default(uuid())
+  restaurantId String     @map("restaurant_id")
+  sessionId    String     @map("session_id")
+  duration     Int?       // seconds on page
+  language     String?
+  userAgent    String?    @map("user_agent")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@map("page_views")
+}
+
+model ProductView {
+  id           String     @id @default(uuid())
+  restaurantId String     @map("restaurant_id")
+  productId    String     @map("product_id")
+  sessionId    String     @map("session_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_views")
 }

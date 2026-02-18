@@ -114,6 +114,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
                 initialReviews={reviews}
                 initialTheme={theme}
                 slug={slug}
+                restaurantId={restaurant.id}
             />
         </>
     );
