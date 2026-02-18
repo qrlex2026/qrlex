@@ -391,7 +391,7 @@ export default function MenuClient({
                     </div>
 
                     {/* Bottom Navigation */}
-                    <div className="relative z-10 pb-8" style={{ padding: '0 15px 32px 15px' }}>
+                    <div className="relative z-10 pb-8" style={{ padding: '0 13px 32px 13px' }}>
                         {/* Gray Separator Line */}
                         <div className="mb-5 h-px bg-white/20" />
 
