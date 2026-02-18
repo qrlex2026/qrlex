@@ -214,6 +214,12 @@ export default function MenuClient({
     const [showLangSplash, setShowLangSplash] = useState(true);
     const [splashFading, setSplashFading] = useState(false);
     const [showLangPicker, setShowLangPicker] = useState(false);
+
+    // Lock body scroll when welcome screen is visible
+    useEffect(() => {
+        document.body.style.overflow = showLangSplash ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [showLangSplash]);
     const [selectedLang, setSelectedLang] = useState("tr");
     const [isTranslating, setIsTranslating] = useState(false);
     const [translatedCategories, setTranslatedCategories] = useState<{ id: string; name: string }[]>(initialCategories);
@@ -252,9 +258,19 @@ export default function MenuClient({
         flavorFeast: { tr: "Lezzet Şöleni Başlıyor", en: "Flavor Feast Begins", de: "Geschmacksfest beginnt", fr: "La fête des saveurs commence", it: "La festa del sapore inizia", es: "La fiesta de sabores comienza", pt: "A festa de sabores começa", ro: "Festivalul gustului începe", sq: "Festa e shijes fillon", el: "Γιορτή γεύσεων αρχίζει", ka: "გემოს ზეიმი იწყება", ru: "Праздник вкусов начинается", uk: "Свято смаків починається", az: "Dad bayramı başlayır", hi: "स्वाद का उत्सव शुरू", ar: "مهرجان النكهات يبدأ", fa: "جشن طعم آغاز می‌شود", zh: "美味盛宴开始", ko: "맛의 향연이 시작됩니다", ja: "味の饗宴が始まる", id: "Pesta rasa dimulai" },
         freshNatural: { tr: "Taze & Doğal", en: "Fresh & Natural", de: "Frisch & Natürlich", fr: "Frais & Naturel", it: "Fresco & Naturale", es: "Fresco & Natural", pt: "Fresco & Natural", ro: "Proaspăt & Natural", sq: "I freskët & Natyral", el: "Φρέσκο & Φυσικό", ka: "ახალი & ბუნებრივი", ru: "Свежий & Натуральный", uk: "Свіжий & Натуральний", az: "Təzə & Təbii", hi: "ताज़ा और प्राकृतिक", ar: "طازج وطبيعي", fa: "تازه و طبیعی", zh: "新鲜 & 天然", ko: "신선 & 자연", ja: "新鮮 & ナチュラル", id: "Segar & Alami" },
         bestOfSeason: { tr: "Mevsimin En İyileri", en: "Best of the Season", de: "Das Beste der Saison", fr: "Le meilleur de la saison", it: "Il meglio della stagione", es: "Lo mejor de la temporada", pt: "O melhor da estação", ro: "Cele mai bune ale sezonului", sq: "Më të mirat e sezonit", el: "Τα καλύτερα της σεζόν", ka: "სეზონის საუკეთესო", ru: "Лучшее в сезоне", uk: "Найкраще сезону", az: "Mövsümün ən yaxşıları", hi: "मौसम के सर्वश्रेष्ठ", ar: "أفضل ما في الموسم", fa: "بهترین‌های فصل", zh: "当季最佳", ko: "시즌 베스트", ja: "季節のベスト", id: "Terbaik musim ini" },
+        welcome: { tr: "Hoşgeldiniz", en: "Welcome", de: "Willkommen", fr: "Bienvenue", it: "Benvenuto", es: "Bienvenido", pt: "Bem-vindo", ro: "Bun venit", sq: "Mirësevini", el: "Καλωσήρθατε", ka: "მოგესალმებით", ru: "Добро пожаловать", uk: "Ласкаво просимо", az: "Xoş gəlmisiniz", hi: "स्वागत है", ar: "أهلاً وسهلاً", fa: "خوش آمدید", zh: "欢迎", ko: "환영합니다", ja: "ようこそ", id: "Selamat datang" },
+        btnMenu: { tr: "MENÜ", en: "MENU", de: "MENÜ", fr: "MENU", it: "MENU", es: "MENÚ", pt: "MENU", ro: "MENIU", sq: "MENU", el: "ΜΕΝΟΥ", ka: "მენიუ", ru: "МЕНЮ", uk: "МЕНЮ", az: "MENÜ", hi: "मेन्यू", ar: "القائمة", fa: "منو", zh: "菜单", ko: "메뉴", ja: "メニュー", id: "MENU" },
+        btnLanguage: { tr: "DİL", en: "LANGUAGE", de: "SPRACHE", fr: "LANGUE", it: "LINGUA", es: "IDIOMA", pt: "IDIOMA", ro: "LIMBĂ", sq: "GJUHA", el: "ΓΛΩΣΣΑ", ka: "ენა", ru: "ЯЗЫК", uk: "МОВА", az: "DİL", hi: "भाषा", ar: "اللغة", fa: "زبان", zh: "语言", ko: "언어", ja: "言語", id: "BAHASA" },
+        btnCampaigns: { tr: "KAMPANYALAR", en: "CAMPAIGNS", de: "AKTIONEN", fr: "PROMOTIONS", it: "PROMOZIONI", es: "CAMPAÑAS", pt: "PROMOÇÕES", ro: "CAMPANII", sq: "FUSHATA", el: "ΠΡΟΣΦΟΡΕΣ", ka: "აქციები", ru: "АКЦИИ", uk: "АКЦІЇ", az: "KAMPANİYALAR", hi: "ऑफ़र", ar: "العروض", fa: "پیشنهادات", zh: "优惠", ko: "캐페인", ja: "キャンペーン", id: "PROMO" },
     };
 
     const t = (key: string) => uiStrings[key]?.[selectedLang] || uiStrings[key]?.["tr"] || key;
+
+    // Close welcome screen and go to menu
+    const goToMenu = () => {
+        setSplashFading(true);
+        setTimeout(() => setShowLangSplash(false), 400);
+    };
 
     const selectLanguage = async (lang: string) => {
         setSelectedLang(lang);
@@ -263,14 +279,10 @@ export default function MenuClient({
             // Turkish = no translation needed
             setTranslatedCategories(initialCategories);
             setTranslatedProducts(initialProducts);
-            setSplashFading(true);
-            setTimeout(() => setShowLangSplash(false), 400);
             return;
         }
 
-        // Show loading, then translate
-        setSplashFading(true);
-        setTimeout(() => setShowLangSplash(false), 400);
+        // Translate menu data in background (stay on welcome screen)
         setIsTranslating(true);
 
         try {
@@ -352,7 +364,7 @@ export default function MenuClient({
             {/* Welcome Screen */}
             {showLangSplash && (
                 <div
-                    className={`fixed inset-0 z-[100] flex flex-col transition-opacity duration-500 ${splashFading ? 'opacity-0' : 'opacity-100'}`}
+                    className={`fixed inset-0 z-[100] flex flex-col overflow-hidden bg-black transition-opacity duration-500 ${splashFading ? 'opacity-0' : 'opacity-100'}`}
                     style={{ fontFamily: T.fontFamily }}
                 >
                     {/* Fullscreen Video Background */}
@@ -385,9 +397,7 @@ export default function MenuClient({
                             </div>
                         )}
                         <h1 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg">{BUSINESS_INFO.name}</h1>
-                        {BUSINESS_INFO.description && (
-                            <p className="text-white/60 text-sm mt-2 max-w-[280px] text-center line-clamp-2">{BUSINESS_INFO.description}</p>
-                        )}
+                        <p className="text-white/50 text-lg mt-3 font-light tracking-wide">{t('welcome')}</p>
                     </div>
 
                     {/* Bottom Navigation */}
@@ -399,20 +409,20 @@ export default function MenuClient({
                         <div className="flex items-center justify-center gap-3">
                             {/* MENÜ Button */}
                             <button
-                                onClick={() => selectLanguage('tr')}
+                                onClick={goToMenu}
                                 className="flex-1 py-3.5 rounded-xl bg-white text-black text-sm font-bold tracking-wider text-center hover:bg-gray-100 active:scale-[0.97] transition-all shadow-lg"
                                 style={{ animation: 'fadeInUp 0.5s ease-out 0.1s both' }}
                             >
                                 MENÜ
                             </button>
 
-                            {/* DİL Button */}
+                            {/* LANGUAGE Button */}
                             <button
                                 onClick={() => setShowLangPicker(true)}
                                 className="flex-1 py-3.5 rounded-xl bg-white/10 backdrop-blur-md text-white text-sm font-bold tracking-wider text-center hover:bg-white/20 active:scale-[0.97] transition-all"
                                 style={{ animation: 'fadeInUp 0.5s ease-out 0.2s both' }}
                             >
-                                LANGUAGE
+                                {t('btnLanguage')}
                             </button>
 
                             {/* KAMPANYALAR Button */}
@@ -420,7 +430,7 @@ export default function MenuClient({
                                 className="flex-1 py-3.5 rounded-xl bg-white/10 backdrop-blur-md text-white text-sm font-bold tracking-wider text-center hover:bg-white/20 active:scale-[0.97] transition-all"
                                 style={{ animation: 'fadeInUp 0.5s ease-out 0.3s both' }}
                             >
-                                KAMPANYALAR
+                                {t('btnCampaigns')}
                             </button>
                         </div>
 
@@ -432,33 +442,33 @@ export default function MenuClient({
 
                     {/* Language Picker Overlay */}
                     {showLangPicker && (
-                        <div className="absolute inset-0 z-20 flex flex-col bg-black/70 backdrop-blur-sm" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                        <div className="absolute inset-0 z-20 flex flex-col" style={{ animation: 'fadeIn 0.3s ease-out' }}>
                             {/* Close area */}
-                            <div className="flex-1" onClick={() => setShowLangPicker(false)} />
+                            <div className="flex-1 bg-black/50" onClick={() => setShowLangPicker(false)} />
 
-                            {/* Language Sheet */}
+                            {/* Language Sheet - 40% height */}
                             <div
-                                className="bg-white rounded-t-3xl px-6 pt-6 pb-8 max-h-[70vh] overflow-y-auto"
-                                style={{ animation: 'slideUp 0.35s ease-out' }}
+                                className="bg-[#1a1a1a] rounded-t-2xl px-4 pt-4 pb-6 overflow-hidden"
+                                style={{ height: '40vh', animation: 'slideUp 0.35s ease-out' }}
                             >
                                 {/* Handle bar */}
-                                <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
-                                <h3 className="text-lg font-bold text-gray-900 text-center mb-1">Dil Seçin</h3>
-                                <p className="text-xs text-gray-400 text-center mb-5">Select Language</p>
+                                <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
 
-                                <div className="grid grid-cols-2 gap-2.5">
-                                    {languages.map((lang, i) => (
+                                <div className="flex flex-wrap gap-2.5 justify-center">
+                                    {languages.map((lang) => (
                                         <button
                                             key={lang.code}
                                             onClick={() => {
                                                 setShowLangPicker(false);
                                                 selectLanguage(lang.code);
                                             }}
-                                            className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:bg-gray-100 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                                            style={{ animationDelay: `${i * 30}ms`, animation: 'fadeInUp 0.3s ease-out both' }}
+                                            className={`flex items-center gap-2.5 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${selectedLang === lang.code
+                                                    ? 'bg-white text-black'
+                                                    : 'bg-white/10 text-white hover:bg-white/20'
+                                                }`}
                                         >
-                                            <span className="text-xl">{lang.flag}</span>
-                                            <span className="text-sm font-semibold text-gray-800">{lang.name}</span>
+                                            <span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-sm leading-none">{lang.flag}</span>
+                                            <span>{lang.name}</span>
                                         </button>
                                     ))}
                                 </div>

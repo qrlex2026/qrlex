@@ -20,23 +20,35 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ translations: texts });
         }
 
-        // Batch translate all non-empty texts
-        const results = await translate(
-            nonEmpty.map((item: { text: string; index: number }) => item.text),
-            { from: "tr", to: target }
-        );
+        // Retry logic for google-translate-api flakiness
+        let lastError: unknown = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                const results = await translate(
+                    nonEmpty.map((item: { text: string; index: number }) => item.text),
+                    { from: "tr", to: target }
+                );
 
-        // Build result array with original indices
-        const translations = [...texts];
-        const resultArray = Array.isArray(results) ? results : [results];
+                const translations = [...texts];
+                const resultArray = Array.isArray(results) ? results : [results];
 
-        nonEmpty.forEach((item: { text: string; index: number }, idx: number) => {
-            translations[item.index] = resultArray[idx]?.text || item.text;
-        });
+                nonEmpty.forEach((item: { text: string; index: number }, idx: number) => {
+                    translations[item.index] = resultArray[idx]?.text || item.text;
+                });
 
-        return NextResponse.json({ translations });
+                return NextResponse.json({ translations });
+            } catch (err) {
+                lastError = err;
+                // Wait before retry (200ms, 500ms)
+                if (attempt < 2) await new Promise(r => setTimeout(r, (attempt + 1) * 200));
+            }
+        }
+
+        console.error("Translation failed after 3 attempts:", lastError);
+        // Return originals instead of erroring — graceful fallback
+        return NextResponse.json({ translations: texts });
     } catch (error) {
         console.error("Translation error:", error);
-        return NextResponse.json({ error: "Translation failed" }, { status: 500 });
+        return NextResponse.json({ translations: [] }, { status: 500 });
     }
 }
