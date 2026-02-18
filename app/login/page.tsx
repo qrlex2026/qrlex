@@ -150,7 +150,13 @@ export default function OwnerLoginPage() {
                         </>
                     )}
                 </div>
-                <p className="text-center text-gray-600 text-xs mt-6">© 2026 QRlex — Tüm hakları saklıdır.</p>
+                <div className="text-center mt-5">
+                    <p className="text-sm text-gray-500">
+                        Hesabınız yok mu?{" "}
+                        <Link href="/register" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">Kayıt Ol</Link>
+                    </p>
+                </div>
+                <p className="text-center text-gray-600 text-xs mt-4">© 2026 QRlex — Tüm hakları saklıdır.</p>
             </div>
         </div>
     );
