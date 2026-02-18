@@ -4,18 +4,20 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-    LayoutDashboard, UtensilsCrossed, LayoutGrid, Settings,
+    LayoutDashboard, UtensilsCrossed, Settings,
     Star, LogOut, Menu, X, QrCode, ChevronRight, Paintbrush, BarChart3,
+    UserCircle, CreditCard,
 } from "lucide-react";
 
 const NAV_ITEMS = [
     { href: "/panel", label: "Dashboard", icon: LayoutDashboard },
     { href: "/panel/analytics", label: "İstatistikler", icon: BarChart3 },
     { href: "/panel/menu", label: "Menü Yönetimi", icon: UtensilsCrossed },
-    { href: "/panel/categories", label: "Kategoriler", icon: LayoutGrid },
     { href: "/panel/qr-code", label: "QR Kod", icon: QrCode },
     { href: "/panel/design", label: "Tasarım", icon: Paintbrush },
     { href: "/panel/reviews", label: "Yorumlar", icon: Star },
+    { href: "/panel/profile", label: "Profil", icon: UserCircle },
+    { href: "/panel/payments", label: "Ödemeler", icon: CreditCard },
     { href: "/panel/settings", label: "Ayarlar", icon: Settings },
 ];
 
