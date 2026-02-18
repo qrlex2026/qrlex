@@ -103,20 +103,34 @@ export default function PanelMenu() {
         setVideoUploading(true);
         setVideoUploadProgress(5);
         try {
-            // Phase 1: Compress video (0-60%)
+            // Phase 1: Compress video + extract thumbnail (0-50%)
             setVideoStatus("FFmpeg yükleniyor...");
-            const compressed = await compressVideo(file, (p) => {
-                setVideoUploadProgress(Math.round(p * 0.6)); // 0-60%
+            const result = await compressVideo(file, (p) => {
+                setVideoUploadProgress(Math.round(p * 0.5)); // 0-50%
                 if (p > 0) setVideoStatus(`Sıkıştırılıyor... %${p}`);
             });
-            const savedPct = Math.round((1 - compressed.size / file.size) * 100);
-            setVideoStatus(`Sıkıştırıldı! (${(file.size / 1024 / 1024).toFixed(1)}MB → ${(compressed.size / 1024 / 1024).toFixed(1)}MB, %${savedPct} küçüldü)`);
+            const savedPct = Math.round((1 - result.video.size / file.size) * 100);
+            setVideoStatus(`Sıkıştırıldı! (${(file.size / 1024 / 1024).toFixed(1)}MB → ${(result.video.size / 1024 / 1024).toFixed(1)}MB, %${savedPct} küçüldü)`);
 
-            // Phase 2: Upload compressed video (60-100%)
-            setVideoUploadProgress(65);
-            setVideoStatus("Yükleniyor...");
+            // Phase 2: Upload thumbnail as product image (50-65%)
+            if (result.thumbnail && !form.image) {
+                setVideoUploadProgress(55);
+                setVideoStatus("Thumbnail yükleniyor...");
+                const thumbFd = new FormData();
+                thumbFd.append("file", result.thumbnail);
+                thumbFd.append("folder", "products");
+                const thumbRes = await fetch("/api/upload", { method: "POST", body: thumbFd });
+                const thumbData = await thumbRes.json();
+                if (thumbData.success) {
+                    setForm((prev) => ({ ...prev, image: thumbData.url }));
+                }
+            }
+
+            // Phase 3: Upload compressed video (65-100%)
+            setVideoUploadProgress(70);
+            setVideoStatus("Video yükleniyor...");
             const fd = new FormData();
-            fd.append("file", compressed);
+            fd.append("file", result.video);
             fd.append("folder", "videos");
             const res = await fetch("/api/upload", { method: "POST", body: fd });
             setVideoUploadProgress(90);
@@ -266,7 +280,7 @@ export default function PanelMenu() {
                                             <>
                                                 <Upload size={20} className="mx-auto mb-1 text-gray-600" />
                                                 <p className="text-xs text-gray-400">Video sürükle veya tıkla</p>
-                                                <p className="text-[10px] text-gray-600 mt-1">Max 200MB · Otomatik sıkıştırılır (720p)</p>
+                                                <p className="text-[10px] text-gray-600 mt-1">Max 200MB · Otomatik sıkıştırılır (480p)</p>
                                             </>
                                         )}
                                     </div>
