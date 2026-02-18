@@ -210,80 +210,285 @@ export default function MenuClient({
 
     const getShadow = (s: string) => { switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; case 'xl': return '0 20px 25px -5px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } };
 
-    // Language splash screen
+    // Language splash screen - always show on every visit (localStorage disabled for testing)
     const [showLangSplash, setShowLangSplash] = useState(true);
     const [splashFading, setSplashFading] = useState(false);
+    const [showLangPicker, setShowLangPicker] = useState(false);
+    const [selectedLang, setSelectedLang] = useState("tr");
+    const [isTranslating, setIsTranslating] = useState(false);
+    const [translatedCategories, setTranslatedCategories] = useState<{ id: string; name: string }[]>(initialCategories);
+    const [translatedProducts, setTranslatedProducts] = useState<Product[]>(initialProducts);
 
-    useEffect(() => {
-        const saved = localStorage.getItem(`qrlex-lang-${slug}`);
-        if (saved) setShowLangSplash(false);
-    }, [slug]);
+    // Static UI strings dictionary
+    const uiStrings: Record<string, Record<string, string>> = {
+        searchPlaceholder: { tr: "Ürün ara...", en: "Search products...", de: "Produkte suchen...", fr: "Rechercher...", it: "Cerca prodotti...", es: "Buscar productos...", pt: "Pesquisar produtos...", ro: "Căutare produse...", sq: "Kërko produkte...", el: "Αναζήτηση προϊόντων...", ka: "პროდუქტების ძიება...", ru: "Поиск продуктов...", uk: "Пошук продуктів...", az: "Məhsul axtar...", hi: "उत्पाद खोजें...", ar: "...البحث عن المنتجات", fa: "...جستجوی محصولات", zh: "搜索产品...", ko: "상품 검색...", ja: "商品を検索...", id: "Cari produk..." },
+        popular: { tr: "Popüler", en: "Popular", de: "Beliebt", fr: "Populaire", it: "Popolare", es: "Popular", pt: "Popular", ro: "Popular", sq: "Popullore", el: "Δημοφιλή", ka: "პოპულარული", ru: "Популярное", uk: "Популярне", az: "Populyar", hi: "लोकप्रिय", ar: "شائع", fa: "محبوب", zh: "热门", ko: "인기", ja: "人気", id: "Populer" },
+        workingHours: { tr: "🕐 Çalışma Saatleri", en: "🕐 Working Hours", de: "🕐 Öffnungszeiten", fr: "🕐 Horaires", it: "🕐 Orari", es: "🕐 Horario", pt: "🕐 Horário", ro: "🕐 Program", sq: "🕐 Orari", el: "🕐 Ωράριο", ka: "🕐 სამუშაო საათები", ru: "🕐 Часы работы", uk: "🕐 Години роботи", az: "🕐 İş saatları", hi: "🕐 कार्य समय", ar: "🕐 ساعات العمل", fa: "🕐 ساعات کاری", zh: "🕐 营业时间", ko: "🕐 영업시간", ja: "🕐 営業時間", id: "🕐 Jam Kerja" },
+        today: { tr: "Bugün", en: "Today", de: "Heute", fr: "Aujourd'hui", it: "Oggi", es: "Hoy", pt: "Hoje", ro: "Azi", sq: "Sot", el: "Σήμερα", ka: "დღეს", ru: "Сегодня", uk: "Сьогодні", az: "Bu gün", hi: "आज", ar: "اليوم", fa: "امروز", zh: "今天", ko: "오늘", ja: "今日", id: "Hari ini" },
+        address: { tr: "Adres", en: "Address", de: "Adresse", fr: "Adresse", it: "Indirizzo", es: "Dirección", pt: "Endereço", ro: "Adresă", sq: "Adresa", el: "Διεύθυνση", ka: "მისამართი", ru: "Адрес", uk: "Адреса", az: "Ünvan", hi: "पता", ar: "العنوان", fa: "آدرس", zh: "地址", ko: "주소", ja: "住所", id: "Alamat" },
+        phone: { tr: "Telefon", en: "Phone", de: "Telefon", fr: "Téléphone", it: "Telefono", es: "Teléfono", pt: "Telefone", ro: "Telefon", sq: "Telefon", el: "Τηλέφωνο", ka: "ტელეფონი", ru: "Телефон", uk: "Телефон", az: "Telefon", hi: "फ़ोन", ar: "الهاتف", fa: "تلفن", zh: "电话", ko: "전화", ja: "電話", id: "Telepon" },
+        email: { tr: "E-posta", en: "Email", de: "E-Mail", fr: "E-mail", it: "E-mail", es: "Correo", pt: "E-mail", ro: "Email", sq: "Email", el: "Email", ka: "ელ.ფოსტა", ru: "Эл. почта", uk: "Ел. пошта", az: "E-poçt", hi: "ईमेल", ar: "البريد الإلكتروني", fa: "ایمیل", zh: "邮箱", ko: "이메일", ja: "メール", id: "Email" },
+        web: { tr: "Web", en: "Web", de: "Web", fr: "Web", it: "Web", es: "Web", pt: "Web", ro: "Web", sq: "Web", el: "Web", ka: "ვებ", ru: "Веб", uk: "Веб", az: "Veb", hi: "वेब", ar: "الموقع", fa: "وب", zh: "网站", ko: "웹", ja: "ウェブ", id: "Web" },
+        reviews: { tr: "Yorumlar", en: "Reviews", de: "Bewertungen", fr: "Avis", it: "Recensioni", es: "Reseñas", pt: "Avaliações", ro: "Recenzii", sq: "Komentet", el: "Κριτικές", ka: "მიმოხილვები", ru: "Отзывы", uk: "Відгуки", az: "Rəylər", hi: "समीक्षाएं", ar: "التقييمات", fa: "نظرات", zh: "评价", ko: "리뷰", ja: "レビュー", id: "Ulasan" },
+        reviewCount: { tr: "değerlendirme", en: "reviews", de: "Bewertungen", fr: "avis", it: "recensioni", es: "reseñas", pt: "avaliações", ro: "recenzii", sq: "vlerësime", el: "κριτικές", ka: "მიმოხილვა", ru: "отзывов", uk: "відгуків", az: "rəy", hi: "समीक्षाएं", ar: "تقييم", fa: "نظر", zh: "条评价", ko: "개 리뷰", ja: "件のレビュー", id: "ulasan" },
+        reviewsLabel: { tr: "yorum", en: "reviews", de: "Bewertungen", fr: "avis", it: "recensioni", es: "reseñas", pt: "avaliações", ro: "recenzii", sq: "komente", el: "κριτικές", ka: "კომენტარი", ru: "отзывов", uk: "відгуків", az: "rəy", hi: "समीक्षाएं", ar: "تعليق", fa: "نظر", zh: "条评论", ko: "개 댓글", ja: "件のコメント", id: "ulasan" },
+        writeReview: { tr: "Yorum Yaz", en: "Write Review", de: "Bewertung schreiben", fr: "Écrire un avis", it: "Scrivi recensione", es: "Escribir reseña", pt: "Escrever avaliação", ro: "Scrie recenzie", sq: "Shkruaj koment", el: "Γράψε κριτική", ka: "მიმოხილვის წერა", ru: "Написать отзыв", uk: "Написати відгук", az: "Rəy yaz", hi: "समीक्षा लिखें", ar: "اكتب تقييم", fa: "نوشتن نظر", zh: "写评价", ko: "리뷰 작성", ja: "レビューを書く", id: "Tulis ulasan" },
+        rateUs: { tr: "Bizi Değerlendirin", en: "Rate Us", de: "Bewerten Sie uns", fr: "Évaluez-nous", it: "Valutaci", es: "Califícanos", pt: "Avalie-nos", ro: "Evaluează-ne", sq: "Na vlerëso", el: "Αξιολογήστε μας", ka: "შეგვაფასეთ", ru: "Оцените нас", uk: "Оцініть нас", az: "Bizi qiymətləndirin", hi: "हमें रेट करें", ar: "قيّمنا", fa: "به ما امتیاز دهید", zh: "给我们评分", ko: "평가하기", ja: "評価する", id: "Beri nilai" },
+        rateCategoryDesc: { tr: "Her kategoriyi ayrı puanlayın", en: "Rate each category separately", de: "Bewerten Sie jede Kategorie einzeln", fr: "Notez chaque catégorie séparément", it: "Valuta ogni categoria separatamente", es: "Califique cada categoría por separado", pt: "Avalie cada categoria separadamente", ro: "Evaluați fiecare categorie separat", sq: "Vlerësoni çdo kategori veçmas", el: "Βαθμολογήστε κάθε κατηγορία ξεχωριστά", ka: "შეაფასეთ ყოველი კატეგორია ცალკე", ru: "Оцените каждую категорию отдельно", uk: "Оцініть кожну категорію окремо", az: "Hər kateqoriyanı ayrı qiymətləndirin", hi: "प्रत्येक श्रेणी को अलग से रेट करें", ar: "قيّم كل فئة على حدة", fa: "هر دسته را جداگانه امتیاز دهید", zh: "请分别为每个类别评分", ko: "각 카테고리를 별도로 평가하세요", ja: "各カテゴリーを個別に評価してください", id: "Beri nilai setiap kategori secara terpisah" },
+        foodQuality: { tr: "Yemek Kalitesi", en: "Food Quality", de: "Essensqualität", fr: "Qualité de la nourriture", it: "Qualità del cibo", es: "Calidad de la comida", pt: "Qualidade da comida", ro: "Calitatea mâncării", sq: "Cilësia e ushqimit", el: "Ποιότητα φαγητού", ka: "საკვების ხარისხი", ru: "Качество еды", uk: "Якість їжі", az: "Yemək keyfiyyəti", hi: "खाने की गुणवत्ता", ar: "جودة الطعام", fa: "کیفیت غذا", zh: "食物质量", ko: "음식 품질", ja: "料理の品質", id: "Kualitas makanan" },
+        service: { tr: "Hizmet", en: "Service", de: "Service", fr: "Service", it: "Servizio", es: "Servicio", pt: "Serviço", ro: "Serviciu", sq: "Shërbimi", el: "Εξυπηρέτηση", ka: "სერვისი", ru: "Обслуживание", uk: "Обслуговування", az: "Xidmət", hi: "सेवा", ar: "الخدمة", fa: "خدمات", zh: "服务", ko: "서비스", ja: "サービス", id: "Layanan" },
+        ambiance: { tr: "Ambiyans", en: "Ambiance", de: "Ambiente", fr: "Ambiance", it: "Atmosfera", es: "Ambiente", pt: "Ambiente", ro: "Ambient", sq: "Ambienti", el: "Ατμόσφαιρα", ka: "ატმოსფერო", ru: "Атмосфера", uk: "Атмосфера", az: "Mühit", hi: "माहौल", ar: "الأجواء", fa: "فضا", zh: "氛围", ko: "분위기", ja: "雰囲気", id: "Suasana" },
+        pricePerformance: { tr: "Fiyat / Performans", en: "Value for Money", de: "Preis-Leistung", fr: "Rapport qualité-prix", it: "Rapporto qualità-prezzo", es: "Relación calidad-precio", pt: "Custo-benefício", ro: "Raport calitate-preț", sq: "Çmimi / Cilësia", el: "Σχέση ποιότητας-τιμής", ka: "ფასი / ხარისხი", ru: "Цена / Качество", uk: "Ціна / Якість", az: "Qiymət / Keyfiyyət", hi: "पैसा वसूल", ar: "السعر مقابل الجودة", fa: "ارزش در برابر قیمت", zh: "性价比", ko: "가성비", ja: "コストパフォーマンス", id: "Harga / Kualitas" },
+        fullName: { tr: "Ad Soyad", en: "Full Name", de: "Vollständiger Name", fr: "Nom complet", it: "Nome completo", es: "Nombre completo", pt: "Nome completo", ro: "Nume complet", sq: "Emri i plotë", el: "Ονοματεπώνυμο", ka: "სახელი გვარი", ru: "Полное имя", uk: "Повне ім'я", az: "Ad Soyad", hi: "पूरा नाम", ar: "الاسم الكامل", fa: "نام کامل", zh: "全名", ko: "성명", ja: "氏名", id: "Nama Lengkap" },
+        fullNamePlaceholder: { tr: "Adınızı ve soyadınızı girin...", en: "Enter your full name...", de: "Geben Sie Ihren vollständigen Namen ein...", fr: "Entrez votre nom complet...", it: "Inserisci il tuo nome completo...", es: "Ingrese su nombre completo...", pt: "Digite seu nome completo...", ro: "Introduceți numele complet...", sq: "Shkruani emrin e plotë...", el: "Εισάγετε το πλήρες όνομά σας...", ka: "შეიყვანეთ სახელი და გვარი...", ru: "Введите полное имя...", uk: "Введіть повне ім'я...", az: "Adınızı və soyadınızı daxil edin...", hi: "अपना पूरा नाम दर्ज करें...", ar: "...أدخل اسمك الكامل", fa: "...نام کامل خود را وارد کنید", zh: "请输入您的全名...", ko: "성명을 입력하세요...", ja: "氏名を入力してください...", id: "Masukkan nama lengkap..." },
+        phonePlaceholder: { tr: "0 (5__) ___ __ __", en: "Phone number...", de: "Telefonnummer...", fr: "Numéro de téléphone...", it: "Numero di telefono...", es: "Número de teléfono...", pt: "Número de telefone...", ro: "Număr de telefon...", sq: "Numri i telefonit...", el: "Αριθμός τηλεφώνου...", ka: "ტელეფონის ნომერი...", ru: "Номер телефона...", uk: "Номер телефону...", az: "Telefon nömrəsi...", hi: "फ़ोन नंबर...", ar: "...رقم الهاتف", fa: "...شماره تلفن", zh: "电话号码...", ko: "전화번호...", ja: "電話番号...", id: "Nomor telepon..." },
+        message: { tr: "Mesaj", en: "Message", de: "Nachricht", fr: "Message", it: "Messaggio", es: "Mensaje", pt: "Mensagem", ro: "Mesaj", sq: "Mesazhi", el: "Μήνυμα", ka: "შეტყობინება", ru: "Сообщение", uk: "Повідомлення", az: "Mesaj", hi: "संदेश", ar: "الرسالة", fa: "پیام", zh: "消息", ko: "메시지", ja: "メッセージ", id: "Pesan" },
+        messagePlaceholder: { tr: "Deneyiminizi paylaşın...", en: "Share your experience...", de: "Teilen Sie Ihre Erfahrung...", fr: "Partagez votre expérience...", it: "Condividi la tua esperienza...", es: "Comparte tu experiencia...", pt: "Compartilhe sua experiência...", ro: "Împărtășiți experiența...", sq: "Ndani përvojën tuaj...", el: "Μοιραστείτε την εμπειρία σας...", ka: "გაგვიზიარეთ თქვენი გამოცდილება...", ru: "Поделитесь впечатлениями...", uk: "Поділіться враженнями...", az: "Təcrübənizi paylaşın...", hi: "अपना अनुभव साझा करें...", ar: "...شاركنا تجربتك", fa: "...تجربه خود را به اشتراک بگذارید", zh: "分享您的体验...", ko: "경험을 공유하세요...", ja: "体験を共有してください...", id: "Bagikan pengalaman Anda..." },
+        submitReview: { tr: "Değerlendirmeyi Gönder", en: "Submit Review", de: "Bewertung senden", fr: "Envoyer l'avis", it: "Invia recensione", es: "Enviar reseña", pt: "Enviar avaliação", ro: "Trimite recenzia", sq: "Dërgo vlerësimin", el: "Υποβολή κριτικής", ka: "მიმოხილვის გაგზავნა", ru: "Отправить отзыв", uk: "Надіслати відгук", az: "Rəyi göndər", hi: "समीक्षा भेजें", ar: "إرسال التقييم", fa: "ارسال نظر", zh: "提交评价", ko: "리뷰 제출", ja: "レビューを送信", id: "Kirim ulasan" },
+        helpful: { tr: "kişi faydalı buldu", en: "people found this helpful", de: "Personen fanden dies hilfreich", fr: "personnes ont trouvé cela utile", it: "persone hanno trovato utile", es: "personas encontraron esto útil", pt: "pessoas acharam útil", ro: "persoane au găsit util", sq: "persona e gjetën të dobishme", el: "άτομα βρήκαν χρήσιμο", ka: "ადამიანმა მიიჩნია სასარგებლოდ", ru: "человек сочли полезным", uk: "осіб вважають корисним", az: "nəfər faydalı hesab etdi", hi: "लोगों को उपयोगी लगा", ar: "أشخاص وجدوا هذا مفيدًا", fa: "نفر این را مفید دانستند", zh: "人觉得有用", ko: "명이 도움이 됐다고 함", ja: "人が役に立ったと評価", id: "orang menganggap ini bermanfaat" },
+        justNow: { tr: "Az önce", en: "Just now", de: "Gerade eben", fr: "À l'instant", it: "Proprio ora", es: "Ahora mismo", pt: "Agora mesmo", ro: "Chiar acum", sq: "Pikërisht tani", el: "Μόλις τώρα", ka: "ახლახანს", ru: "Только что", uk: "Щойно", az: "İndicə", hi: "अभी", ar: "الآن", fa: "همین الان", zh: "刚刚", ko: "방금", ja: "たった今", id: "Baru saja" },
+        loading: { tr: "Menü çevriliyor...", en: "Translating menu...", de: "Menü wird übersetzt...", fr: "Traduction du menu...", it: "Traduzione del menu...", es: "Traduciendo el menú...", pt: "Traduzindo o menu...", ro: "Se traduce meniul...", sq: "Duke përkthyer menunë...", el: "Μετάφραση μενού...", ka: "მენიუ ითარგმნება...", ru: "Перевод меню...", uk: "Перекладаємо меню...", az: "Menyu tərcümə olunur...", hi: "मेनू का अनुवाद हो रहा है...", ar: "...جارٍ ترجمة القائمة", fa: "...در حال ترجمه منو", zh: "正在翻译菜单...", ko: "메뉴 번역 중...", ja: "メニューを翻訳中...", id: "Menerjemahkan menu..." },
+        specialRecipes: { tr: "Özel Tarifler", en: "Special Recipes", de: "Spezialrezepte", fr: "Recettes spéciales", it: "Ricette speciali", es: "Recetas especiales", pt: "Receitas especiais", ro: "Rețete speciale", sq: "Receta speciale", el: "Ειδικές συνταγές", ka: "სპეციალური რეცეპტები", ru: "Особые рецепты", uk: "Особливі рецепти", az: "Xüsusi reseptlər", hi: "विशेष व्यंजन", ar: "وصفات خاصة", fa: "دستورهای ویژه", zh: "特色菜谱", ko: "특별 레시피", ja: "特別レシピ", id: "Resep spesial" },
+        flavorFeast: { tr: "Lezzet Şöleni Başlıyor", en: "Flavor Feast Begins", de: "Geschmacksfest beginnt", fr: "La fête des saveurs commence", it: "La festa del sapore inizia", es: "La fiesta de sabores comienza", pt: "A festa de sabores começa", ro: "Festivalul gustului începe", sq: "Festa e shijes fillon", el: "Γιορτή γεύσεων αρχίζει", ka: "გემოს ზეიმი იწყება", ru: "Праздник вкусов начинается", uk: "Свято смаків починається", az: "Dad bayramı başlayır", hi: "स्वाद का उत्सव शुरू", ar: "مهرجان النكهات يبدأ", fa: "جشن طعم آغاز می‌شود", zh: "美味盛宴开始", ko: "맛의 향연이 시작됩니다", ja: "味の饗宴が始まる", id: "Pesta rasa dimulai" },
+        freshNatural: { tr: "Taze & Doğal", en: "Fresh & Natural", de: "Frisch & Natürlich", fr: "Frais & Naturel", it: "Fresco & Naturale", es: "Fresco & Natural", pt: "Fresco & Natural", ro: "Proaspăt & Natural", sq: "I freskët & Natyral", el: "Φρέσκο & Φυσικό", ka: "ახალი & ბუნებრივი", ru: "Свежий & Натуральный", uk: "Свіжий & Натуральний", az: "Təzə & Təbii", hi: "ताज़ा और प्राकृतिक", ar: "طازج وطبيعي", fa: "تازه و طبیعی", zh: "新鲜 & 天然", ko: "신선 & 자연", ja: "新鮮 & ナチュラル", id: "Segar & Alami" },
+        bestOfSeason: { tr: "Mevsimin En İyileri", en: "Best of the Season", de: "Das Beste der Saison", fr: "Le meilleur de la saison", it: "Il meglio della stagione", es: "Lo mejor de la temporada", pt: "O melhor da estação", ro: "Cele mai bune ale sezonului", sq: "Më të mirat e sezonit", el: "Τα καλύτερα της σεζόν", ka: "სეზონის საუკეთესო", ru: "Лучшее в сезоне", uk: "Найкраще сезону", az: "Mövsümün ən yaxşıları", hi: "मौसम के सर्वश्रेष्ठ", ar: "أفضل ما في الموسم", fa: "بهترین‌های فصل", zh: "当季最佳", ko: "시즌 베스트", ja: "季節のベスト", id: "Terbaik musim ini" },
+    };
 
-    const selectLanguage = (lang: string) => {
-        localStorage.setItem(`qrlex-lang-${slug}`, lang);
+    const t = (key: string) => uiStrings[key]?.[selectedLang] || uiStrings[key]?.["tr"] || key;
+
+    const selectLanguage = async (lang: string) => {
+        setSelectedLang(lang);
+
+        if (lang === "tr") {
+            // Turkish = no translation needed
+            setTranslatedCategories(initialCategories);
+            setTranslatedProducts(initialProducts);
+            setSplashFading(true);
+            setTimeout(() => setShowLangSplash(false), 400);
+            return;
+        }
+
+        // Show loading, then translate
         setSplashFading(true);
         setTimeout(() => setShowLangSplash(false), 400);
+        setIsTranslating(true);
+
+        try {
+            // Collect all texts to translate in one batch
+            const categoryNames = initialCategories.map(c => c.id === "populer" ? "" : c.name);
+            const productNames = initialProducts.map(p => p.name);
+            const productDescs = initialProducts.map(p => p.description);
+            const allTexts = [...categoryNames, ...productNames, ...productDescs];
+
+            const res = await fetch("/api/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ texts: allTexts, target: lang }),
+            });
+
+            if (!res.ok) throw new Error("Translation failed");
+
+            const data = await res.json();
+            const tr = data.translations as string[];
+
+            const catCount = categoryNames.length;
+            const prodCount = productNames.length;
+
+            // Rebuild categories with translated names
+            const newCats = initialCategories.map((c, i) => ({
+                ...c,
+                name: c.id === "populer" ? t("popular") : (tr[i] || c.name),
+            }));
+
+            // Rebuild products with translated names and descriptions
+            const newProds = initialProducts.map((p, i) => ({
+                ...p,
+                name: tr[catCount + i] || p.name,
+                description: tr[catCount + prodCount + i] || p.description,
+            }));
+
+            setTranslatedCategories(newCats);
+            setTranslatedProducts(newProds);
+        } catch (err) {
+            console.error("Translation error:", err);
+            // Fallback to original
+            setTranslatedCategories(initialCategories);
+            setTranslatedProducts(initialProducts);
+        } finally {
+            setIsTranslating(false);
+        }
     };
+
+    // Use translated data
+    const DISPLAY_CATEGORIES = translatedCategories;
+    const DISPLAY_PRODUCTS = translatedProducts;
 
     const languages = [
         { code: "tr", flag: "🇹🇷", name: "Türkçe" },
         { code: "en", flag: "🇬🇧", name: "English" },
         { code: "de", flag: "🇩🇪", name: "Deutsch" },
         { code: "fr", flag: "🇫🇷", name: "Français" },
-        { code: "ar", flag: "🇸🇦", name: "العربية" },
+        { code: "it", flag: "🇮🇹", name: "Italiano" },
+        { code: "es", flag: "🇪🇸", name: "Español" },
+        { code: "pt", flag: "🇵🇹", name: "Português" },
+        { code: "ro", flag: "🇷🇴", name: "Română" },
+        { code: "sq", flag: "🇦🇱", name: "Shqip" },
+        { code: "el", flag: "🇬🇷", name: "Ελληνικά" },
+        { code: "ka", flag: "🇬🇪", name: "ქართული" },
         { code: "ru", flag: "🇷🇺", name: "Русский" },
+        { code: "uk", flag: "🇺🇦", name: "Українська" },
+        { code: "az", flag: "🇦🇿", name: "Azərbaycan" },
+        { code: "hi", flag: "🇮🇳", name: "हिन्दी" },
+        { code: "ar", flag: "🇸🇦", name: "العربية" },
+        { code: "fa", flag: "🇮🇷", name: "فارسی" },
+        { code: "zh", flag: "🇨🇳", name: "中文" },
+        { code: "ko", flag: "🇰🇷", name: "한국어" },
+        { code: "ja", flag: "🇯🇵", name: "日本語" },
+        { code: "id", flag: "🇮🇩", name: "Bahasa" },
     ];
 
     return (
         <>
-            {/* Language Selection Splash */}
+            {/* Welcome Screen */}
             {showLangSplash && (
                 <div
-                    className={`fixed inset-0 z-[100] flex flex-col items-center justify-center transition-opacity duration-400 ${splashFading ? 'opacity-0' : 'opacity-100'}`}
-                    style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}
+                    className={`fixed inset-0 z-[100] flex flex-col transition-opacity duration-500 ${splashFading ? 'opacity-0' : 'opacity-100'}`}
+                    style={{ fontFamily: T.fontFamily }}
                 >
-                    {/* Restaurant Logo/Name */}
-                    <div className="mb-8 text-center">
+                    {/* Fullscreen Video Background */}
+                    <div className="absolute inset-0 overflow-hidden bg-black">
+                        <video
+                            src="https://github.com/qrlex2026/qrlexvideo/raw/refs/heads/main/1.mp4"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            className="absolute inset-0 w-full h-full object-cover opacity-60"
+                        />
+                    </div>
+
+                    {/* Bottom-to-Top Black Gradient */}
+                    <div className="absolute inset-0 pointer-events-none" style={{
+                        background: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.1) 60%, transparent 100%)'
+                    }} />
+
+                    {/* Content */}
+                    <div className="relative flex-1 flex flex-col items-center justify-center z-10">
+                        {/* Restaurant Logo */}
                         {BUSINESS_INFO.image ? (
-                            <div className="w-20 h-20 rounded-2xl overflow-hidden mx-auto mb-4 shadow-lg">
+                            <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl mb-5 border-2 border-white/20">
                                 <img src={BUSINESS_INFO.image} alt={BUSINESS_INFO.name} className="w-full h-full object-cover" />
                             </div>
                         ) : (
-                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center mx-auto mb-4 shadow-lg">
-                                <span className="text-3xl text-white font-bold">{BUSINESS_INFO.name.charAt(0)}</span>
+                            <div className="w-24 h-24 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-5 border border-white/20">
+                                <span className="text-4xl text-white font-bold">{BUSINESS_INFO.name.charAt(0)}</span>
                             </div>
                         )}
-                        <h1 className="text-2xl font-bold text-gray-900">{BUSINESS_INFO.name}</h1>
-                        <p className="text-sm text-gray-500 mt-1">Dil Seçin / Select Language</p>
+                        <h1 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg">{BUSINESS_INFO.name}</h1>
+                        {BUSINESS_INFO.description && (
+                            <p className="text-white/60 text-sm mt-2 max-w-[280px] text-center line-clamp-2">{BUSINESS_INFO.description}</p>
+                        )}
                     </div>
 
-                    {/* Language Grid */}
-                    <div className="grid grid-cols-2 gap-3 px-8 w-full max-w-sm">
-                        {languages.map((lang, i) => (
+                    {/* Bottom Navigation */}
+                    <div className="relative z-10 pb-8">
+                        {/* Gray Separator Line */}
+                        <div className="mx-8 mb-5 h-px bg-white/20" />
+
+                        {/* 3 Buttons */}
+                        <div className="flex items-center justify-center gap-4 px-6">
+                            {/* MENÜ Button */}
                             <button
-                                key={lang.code}
-                                onClick={() => selectLanguage(lang.code)}
-                                className="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 shadow-sm border border-gray-100 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all"
-                                style={{ animationDelay: `${i * 60}ms`, animation: 'fadeInUp 0.4s ease-out both' }}
+                                onClick={() => selectLanguage('tr')}
+                                className="flex-1 py-3.5 rounded-xl bg-white text-black text-sm font-bold tracking-wider text-center hover:bg-gray-100 active:scale-[0.97] transition-all shadow-lg"
+                                style={{ animation: 'fadeInUp 0.5s ease-out 0.1s both' }}
                             >
-                                <span className="text-2xl">{lang.flag}</span>
-                                <span className="text-sm font-semibold text-gray-800">{lang.name}</span>
+                                MENÜ
                             </button>
-                        ))}
+
+                            {/* DİL Button */}
+                            <button
+                                onClick={() => setShowLangPicker(true)}
+                                className="flex-1 py-3.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-bold tracking-wider text-center hover:bg-white/20 active:scale-[0.97] transition-all"
+                                style={{ animation: 'fadeInUp 0.5s ease-out 0.2s both' }}
+                            >
+                                DİL
+                            </button>
+
+                            {/* KAMPANYALAR Button */}
+                            <button
+                                className="flex-1 py-3.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-bold tracking-wider text-center hover:bg-white/20 active:scale-[0.97] transition-all"
+                                style={{ animation: 'fadeInUp 0.5s ease-out 0.3s both' }}
+                            >
+                                KAMPANYALAR
+                            </button>
+                        </div>
+
+                        {/* Powered by */}
+                        <p className="text-center mt-5 text-[10px] text-white/30 font-medium tracking-widest">
+                            Powered by <span className="font-bold">QRlex</span>
+                        </p>
                     </div>
 
-                    {/* Powered by */}
-                    <p className="absolute bottom-6 text-[11px] text-gray-400 font-medium tracking-wider">
-                        Powered by <span className="font-bold">QRlex</span>
-                    </p>
+                    {/* Language Picker Overlay */}
+                    {showLangPicker && (
+                        <div className="absolute inset-0 z-20 flex flex-col bg-black/70 backdrop-blur-sm" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                            {/* Close area */}
+                            <div className="flex-1" onClick={() => setShowLangPicker(false)} />
+
+                            {/* Language Sheet */}
+                            <div
+                                className="bg-white rounded-t-3xl px-6 pt-6 pb-8 max-h-[70vh] overflow-y-auto"
+                                style={{ animation: 'slideUp 0.35s ease-out' }}
+                            >
+                                {/* Handle bar */}
+                                <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
+                                <h3 className="text-lg font-bold text-gray-900 text-center mb-1">Dil Seçin</h3>
+                                <p className="text-xs text-gray-400 text-center mb-5">Select Language</p>
+
+                                <div className="grid grid-cols-2 gap-2.5">
+                                    {languages.map((lang, i) => (
+                                        <button
+                                            key={lang.code}
+                                            onClick={() => {
+                                                setShowLangPicker(false);
+                                                selectLanguage(lang.code);
+                                            }}
+                                            className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:bg-gray-100 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                            style={{ animationDelay: `${i * 30}ms`, animation: 'fadeInUp 0.3s ease-out both' }}
+                                        >
+                                            <span className="text-xl">{lang.flag}</span>
+                                            <span className="text-sm font-semibold text-gray-800">{lang.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <style dangerouslySetInnerHTML={{
                         __html: `
                         @keyframes fadeInUp {
-                            from { opacity: 0; transform: translateY(12px); }
+                            from { opacity: 0; transform: translateY(16px); }
                             to { opacity: 1; transform: translateY(0); }
                         }
+                        @keyframes fadeIn {
+                            from { opacity: 0; }
+                            to { opacity: 1; }
+                        }
+                        @keyframes slideUp {
+                            from { transform: translateY(100%); }
+                            to { transform: translateY(0); }
+                        }
                     `}} />
+                </div>
+            )}
+
+            {/* Translation Loading Overlay */}
+            {isTranslating && (
+                <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm" style={{ fontFamily: T.fontFamily }}>
+                    <div className="w-10 h-10 border-3 border-gray-200 border-t-black rounded-full animate-spin mb-4" />
+                    <p className="text-sm text-gray-600 font-medium">{t('loading')}</p>
                 </div>
             )}
 
@@ -313,15 +518,15 @@ export default function MenuClient({
                         {/* Slide 1 */}
                         <div className="min-w-full h-full relative flex-shrink-0">
                             <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
-                                <h3 className="text-xl font-medium mb-2 opacity-80">Özel Tarifler</h3>
-                                <h1 className="text-4xl font-bold leading-tight">Lezzet Şöleni Başlıyor</h1>
+                                <h3 className="text-xl font-medium mb-2 opacity-80">{t('specialRecipes')}</h3>
+                                <h1 className="text-4xl font-bold leading-tight">{t('flavorFeast')}</h1>
                             </div>
                         </div>
                         {/* Slide 2 */}
                         <div className="min-w-full h-full relative flex-shrink-0">
                             <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
-                                <h3 className="text-xl font-medium mb-2 opacity-80">Taze & Doğal</h3>
-                                <h1 className="text-4xl font-bold leading-tight">Mevsimin En İyileri</h1>
+                                <h3 className="text-xl font-medium mb-2 opacity-80">{t('freshNatural')}</h3>
+                                <h1 className="text-4xl font-bold leading-tight">{t('bestOfSeason')}</h1>
                             </div>
                         </div>
                     </div>
@@ -347,13 +552,13 @@ export default function MenuClient({
                         style={{ backgroundColor: T.searchBg, border: `1px solid ${T.searchBorder}`, color: T.searchText }}
                     >
                         <Search size={18} />
-                        <span className="text-sm">Ürün ara...</span>
+                        <span className="text-sm">{t('searchPlaceholder')}</span>
                     </div>
                 </div>
 
                 {/* Sticky Category Navbar */}
                 <div ref={categoryNavRef} className="sticky top-[56px] z-10 overflow-x-auto no-scrollbar py-3 px-4 flex gap-2" style={{ backgroundColor: T.pageBg }}>
-                    {CATEGORIES.map((cat) => (
+                    {DISPLAY_CATEGORIES.map((cat) => (
                         <button
                             key={cat.id}
                             data-cat={cat.id}
@@ -372,11 +577,11 @@ export default function MenuClient({
 
                 {/* Product List (Grouped by Category) */}
                 <div className="pb-20">
-                    {CATEGORIES.map((cat) => {
+                    {DISPLAY_CATEGORIES.map((cat) => {
                         const products =
                             cat.id === "populer"
-                                ? PRODUCTS.filter((p) => p.isPopular)
-                                : PRODUCTS.filter((p) => p.categoryId === cat.id);
+                                ? DISPLAY_PRODUCTS.filter((p) => p.isPopular)
+                                : DISPLAY_PRODUCTS.filter((p) => p.categoryId === cat.id);
 
                         if (products.length === 0) return null;
 
@@ -484,7 +689,7 @@ export default function MenuClient({
                                             <MapPin size={18} className="text-blue-500" />
                                         </div>
                                         <div>
-                                            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Adres</p>
+                                            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">{t('address')}</p>
                                             <p className="text-sm font-medium text-gray-900">{BUSINESS_INFO.address}</p>
                                         </div>
                                     </div>
@@ -493,7 +698,7 @@ export default function MenuClient({
                                             <Phone size={18} className="text-green-500" />
                                         </div>
                                         <div>
-                                            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Telefon</p>
+                                            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">{t('phone')}</p>
                                             <p className="text-sm font-medium text-gray-900">{BUSINESS_INFO.phone}</p>
                                         </div>
                                     </div>
@@ -502,7 +707,7 @@ export default function MenuClient({
                                             <Mail size={18} className="text-purple-500" />
                                         </div>
                                         <div>
-                                            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">E-posta</p>
+                                            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">{t('email')}</p>
                                             <p className="text-sm font-medium text-gray-900">{BUSINESS_INFO.email}</p>
                                         </div>
                                     </div>
@@ -512,7 +717,7 @@ export default function MenuClient({
                                                 <Globe size={18} className="text-sky-500" />
                                             </div>
                                             <div>
-                                                <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Web</p>
+                                                <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">{t('web')}</p>
                                                 <p className="text-sm font-medium text-gray-900">{BUSINESS_INFO.website}</p>
                                             </div>
                                         </div>
@@ -530,7 +735,7 @@ export default function MenuClient({
 
                                 {/* Working Hours */}
                                 <div>
-                                    <h3 className="text-base font-bold text-gray-900 mb-3">🕐 Çalışma Saatleri</h3>
+                                    <h3 className="text-base font-bold text-gray-900 mb-3">{t('workingHours')}</h3>
                                     <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                         <div className="space-y-2.5">
                                             {BUSINESS_INFO.workingHours.map((item, i) => {
@@ -540,7 +745,7 @@ export default function MenuClient({
                                                     <div key={i} className={`flex items-center justify-between py-1 ${isToday ? '' : ''}`}>
                                                         <span className={`text-sm ${isToday ? 'font-bold text-gray-900' : 'text-gray-600'}`}>
                                                             {item.day}
-                                                            {isToday && <span className="ml-2 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Bugün</span>}
+                                                            {isToday && <span className="ml-2 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">{t('today')}</span>}
                                                         </span>
                                                         <span className={`text-sm ${isToday ? 'font-bold text-gray-900' : 'text-gray-500'}`}>{item.hours}</span>
                                                     </div>
@@ -579,7 +784,7 @@ export default function MenuClient({
                                         />
                                     ))}
                                 </div>
-                                <p className="text-white/90 text-sm font-medium">{REVIEWS.totalCount} değerlendirme</p>
+                                <p className="text-white/90 text-sm font-medium">{REVIEWS.totalCount} {t('reviewCount')}</p>
 
                                 {/* Star Distribution Bars */}
                                 <div className="w-full max-w-[240px] mt-5 space-y-1.5">
@@ -608,9 +813,9 @@ export default function MenuClient({
                                 <div className="flex items-center justify-between mb-5">
                                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                         <MessageCircle size={20} className="text-gray-400" />
-                                        Yorumlar
+                                        {t('reviews')}
                                     </h3>
-                                    <span className="text-sm text-gray-400">{userReviews.length + REVIEWS.items.length} yorum</span>
+                                    <span className="text-sm text-gray-400">{userReviews.length + REVIEWS.items.length} {t('reviewsLabel')}</span>
                                 </div>
 
                                 <div className="space-y-4">
@@ -642,7 +847,7 @@ export default function MenuClient({
                                             {/* Helpful */}
                                             <div className="flex items-center gap-1.5 text-gray-400">
                                                 <ThumbsUp size={14} />
-                                                <span className="text-xs">{review.helpful} kişi faydalı buldu</span>
+                                                <span className="text-xs">{review.helpful} {t('helpful')}</span>
                                             </div>
                                         </div>
                                     ))}
@@ -657,7 +862,7 @@ export default function MenuClient({
                             style={{ bottom: 20 }}
                         >
                             <Send size={16} />
-                            Yorum Yaz
+                            {t('writeReview')}
                         </button>
                     </div>
                 )}
@@ -682,15 +887,15 @@ export default function MenuClient({
                             </button>
 
                             <div className="h-full flex flex-col items-center justify-center px-5">
-                                <h2 className="text-2xl font-bold text-white drop-shadow-md mb-1">Bizi Değerlendirin</h2>
-                                <p className="text-white/80 text-sm mb-5">Her kategoriyi ayrı puanlayın</p>
+                                <h2 className="text-2xl font-bold text-white drop-shadow-md mb-1">{t('rateUs')}</h2>
+                                <p className="text-white/80 text-sm mb-5">{t('rateCategoryDesc')}</p>
 
                                 <div className="w-full max-w-[320px] space-y-3">
                                     {[
-                                        { key: 'yemek' as const, label: 'Yemek Kalitesi', icon: <Utensils size={18} /> },
-                                        { key: 'hizmet' as const, label: 'Hizmet', icon: <HandHeart size={18} /> },
-                                        { key: 'ambiyans' as const, label: 'Ambiyans', icon: <Music size={18} /> },
-                                        { key: 'fiyat' as const, label: 'Fiyat / Performans', icon: <BadgeDollarSign size={18} /> },
+                                        { key: 'yemek' as const, label: t('foodQuality'), icon: <Utensils size={18} /> },
+                                        { key: 'hizmet' as const, label: t('service'), icon: <HandHeart size={18} /> },
+                                        { key: 'ambiyans' as const, label: t('ambiance'), icon: <Music size={18} /> },
+                                        { key: 'fiyat' as const, label: t('pricePerformance'), icon: <BadgeDollarSign size={18} /> },
                                     ].map((cat) => (
                                         <div key={cat.key} className="flex items-center justify-between bg-white/15 backdrop-blur-sm rounded-xl px-4 py-2.5">
                                             <div className="flex items-center gap-2.5">
@@ -725,10 +930,10 @@ export default function MenuClient({
                             <div className="px-5 pt-7 pb-10">
                                 {/* Ad Soyad */}
                                 <div className="mb-4">
-                                    <p className="text-xs text-gray-500 mb-2 font-medium">Ad Soyad</p>
+                                    <p className="text-xs text-gray-500 mb-2 font-medium">{t('fullName')}</p>
                                     <input
                                         type="text"
-                                        placeholder="Adınızı ve soyadınızı girin..."
+                                        placeholder={t('fullNamePlaceholder')}
                                         value={reviewName}
                                         onChange={(e) => setReviewName(e.target.value)}
                                         className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 focus:bg-white transition-colors"
@@ -737,10 +942,10 @@ export default function MenuClient({
 
                                 {/* Telefon */}
                                 <div className="mb-4">
-                                    <p className="text-xs text-gray-500 mb-2 font-medium">Telefon</p>
+                                    <p className="text-xs text-gray-500 mb-2 font-medium">{t('phone')}</p>
                                     <input
                                         type="tel"
-                                        placeholder="0 (5__) ___ __ __"
+                                        placeholder={t('phonePlaceholder')}
                                         value={reviewPhone}
                                         onChange={(e) => setReviewPhone(e.target.value)}
                                         className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 focus:bg-white transition-colors"
@@ -749,9 +954,9 @@ export default function MenuClient({
 
                                 {/* Mesaj */}
                                 <div className="mb-6">
-                                    <p className="text-xs text-gray-500 mb-2 font-medium">Mesaj</p>
+                                    <p className="text-xs text-gray-500 mb-2 font-medium">{t('message')}</p>
                                     <textarea
-                                        placeholder="Deneyiminizi paylaşın..."
+                                        placeholder={t('messagePlaceholder')}
                                         value={reviewComment}
                                         onChange={(e) => setReviewComment(e.target.value)}
                                         rows={4}
@@ -767,7 +972,7 @@ export default function MenuClient({
                                             const newReview = {
                                                 id: `user-${Date.now()}`,
                                                 name: reviewName.trim(),
-                                                date: "Az önce",
+                                                date: t('justNow'),
                                                 rating: avgRating,
                                                 comment: reviewComment.trim(),
                                                 helpful: 0,
@@ -787,7 +992,7 @@ export default function MenuClient({
                                         }`}
                                 >
                                     <Send size={16} />
-                                    Değerlendirmeyi Gönder
+                                    {t('submitReview')}
                                 </button>
                             </div>
                         </div>
