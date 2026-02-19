@@ -430,54 +430,72 @@ export default function MenuClient({
             {/* Welcome Screen */}
             {showLangSplash && (
                 <div
-                    className={`fixed inset-0 z-[100] flex flex-col overflow-hidden bg-black transition-opacity duration-500 ${splashFading ? 'opacity-0' : 'opacity-100'}`}
-                    style={{ fontFamily: T.fontFamily }}
+                    className={`fixed inset-0 z-[100] flex flex-col overflow-hidden transition-opacity duration-500 ${splashFading ? 'opacity-0' : 'opacity-100'}`}
+                    style={{ fontFamily: T.fontFamily, backgroundColor: T.welcomeBg || '#000000' }}
                 >
                     {/* Fullscreen Video Background */}
-                    <div className="absolute inset-0 overflow-hidden bg-black">
+                    <div className="absolute inset-0 overflow-hidden" style={{ backgroundColor: T.welcomeBg || '#000000' }}>
                         <video
                             src="https://github.com/qrlex2026/qrlexvideo/raw/refs/heads/main/1.mp4"
                             autoPlay
                             muted
                             loop
                             playsInline
-                            className="absolute inset-0 w-full h-full object-cover opacity-60"
+                            className="absolute inset-0 w-full h-full object-cover"
+                            style={{ opacity: (parseInt(T.welcomeOverlayOpacity || '60') / 100) }}
                         />
                     </div>
 
-                    {/* Bottom-to-Top Black Gradient */}
+                    {/* Bottom-to-Top Gradient */}
                     <div className="absolute inset-0 pointer-events-none" style={{
-                        background: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.1) 60%, transparent 100%)'
+                        background: `linear-gradient(to top, ${T.welcomeGradientFrom || '#000000'} 0%, ${T.welcomeGradientFrom || '#000000'}${Math.round((parseInt(T.welcomeGradientOpacity || '85') / 100) * 255).toString(16).padStart(2, '0')} 15%, transparent 60%, transparent 100%)`
                     }} />
 
                     {/* Content */}
                     <div className="relative flex-1 flex flex-col items-center justify-center z-10">
                         {/* Restaurant Logo */}
                         {BUSINESS_INFO.image ? (
-                            <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl mb-5 border-2 border-white/20">
+                            <div className="overflow-hidden shadow-2xl mb-5" style={{
+                                width: `${T.welcomeLogoSize || '96'}px`,
+                                height: `${T.welcomeLogoSize || '96'}px`,
+                                borderRadius: `${T.welcomeLogoRadius || '16'}px`,
+                                border: `2px solid ${T.welcomeLogoBorder || '#ffffff33'}`
+                            }}>
                                 <img src={BUSINESS_INFO.image} alt={BUSINESS_INFO.name} className="w-full h-full object-cover" />
                             </div>
                         ) : (
-                            <div className="w-24 h-24 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-5 border border-white/20">
-                                <span className="text-4xl text-white font-bold">{BUSINESS_INFO.name.charAt(0)}</span>
+                            <div className="backdrop-blur-md flex items-center justify-center mb-5" style={{
+                                width: `${T.welcomeLogoSize || '96'}px`,
+                                height: `${T.welcomeLogoSize || '96'}px`,
+                                borderRadius: `${T.welcomeLogoRadius || '16'}px`,
+                                border: `1px solid ${T.welcomeLogoBorder || '#ffffff33'}`,
+                                backgroundColor: `${T.welcomeSecondaryBtnBg || '#ffffff1a'}`
+                            }}>
+                                <span className="text-4xl font-bold" style={{ color: T.welcomeTextColor || '#ffffff' }}>{BUSINESS_INFO.name.charAt(0)}</span>
                             </div>
                         )}
-                        <h1 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg">{BUSINESS_INFO.name}</h1>
-                        <p className="text-white/50 text-lg mt-3 font-light tracking-wide">{t('welcome')}</p>
+                        <h1 className="text-3xl font-bold tracking-tight drop-shadow-lg" style={{ color: T.welcomeTextColor || '#ffffff' }}>{BUSINESS_INFO.name}</h1>
+                        <p className="text-lg mt-3 font-light tracking-wide" style={{ color: T.welcomeSubtextColor || '#ffffff80' }}>{t('welcome')}</p>
                     </div>
 
                     {/* Bottom Navigation */}
                     <div className="relative z-10 pb-8" style={{ padding: '0 13px 32px 13px' }}>
-                        {/* Gray Separator Line */}
-                        <div className="mb-5 h-px bg-white/20" />
+                        {/* Separator Line */}
+                        <div className="mb-5 h-px" style={{ backgroundColor: T.welcomeSeparatorColor || '#ffffff33' }} />
 
                         {/* 3 Buttons */}
                         <div className="flex items-center justify-center gap-3">
                             {/* MENÜ Button */}
                             <button
                                 onClick={goToMenu}
-                                className="flex-1 py-3.5 rounded-xl bg-white text-black text-sm font-bold tracking-wider text-center hover:bg-gray-100 active:scale-[0.97] transition-all shadow-lg"
-                                style={{ animation: 'fadeInUp 0.5s ease-out 0.1s both' }}
+                                className="flex-1 py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all"
+                                style={{
+                                    backgroundColor: T.welcomeBtnBg || '#ffffff',
+                                    color: T.welcomeBtnText || '#000000',
+                                    borderRadius: `${T.welcomeBtnRadius || '12'}px`,
+                                    boxShadow: T.welcomeBtnShadow === 'none' ? 'none' : T.welcomeBtnShadow === 'sm' ? '0 1px 2px rgba(0,0,0,0.1)' : T.welcomeBtnShadow === 'md' ? '0 4px 6px rgba(0,0,0,0.1)' : '0 10px 15px rgba(0,0,0,0.2)',
+                                    animation: 'fadeInUp 0.5s ease-out 0.1s both'
+                                }}
                             >
                                 MENÜ
                             </button>
@@ -485,23 +503,35 @@ export default function MenuClient({
                             {/* LANGUAGE Button */}
                             <button
                                 onClick={() => setShowLangPicker(true)}
-                                className="flex-1 py-3.5 rounded-xl bg-white/10 backdrop-blur-md text-white text-sm font-bold tracking-wider text-center hover:bg-white/20 active:scale-[0.97] transition-all"
-                                style={{ animation: 'fadeInUp 0.5s ease-out 0.2s both' }}
+                                className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all"
+                                style={{
+                                    backgroundColor: T.welcomeSecondaryBtnBg || '#ffffff1a',
+                                    color: T.welcomeSecondaryBtnText || '#ffffff',
+                                    border: `1px solid ${T.welcomeSecondaryBtnBorder || '#ffffff33'}`,
+                                    borderRadius: `${T.welcomeBtnRadius || '12'}px`,
+                                    animation: 'fadeInUp 0.5s ease-out 0.2s both'
+                                }}
                             >
                                 {t('btnLanguage')}
                             </button>
 
                             {/* KAMPANYALAR Button */}
                             <button
-                                className="flex-1 py-3.5 rounded-xl bg-white/10 backdrop-blur-md text-white text-sm font-bold tracking-wider text-center hover:bg-white/20 active:scale-[0.97] transition-all"
-                                style={{ animation: 'fadeInUp 0.5s ease-out 0.3s both' }}
+                                className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all"
+                                style={{
+                                    backgroundColor: T.welcomeSecondaryBtnBg || '#ffffff1a',
+                                    color: T.welcomeSecondaryBtnText || '#ffffff',
+                                    border: `1px solid ${T.welcomeSecondaryBtnBorder || '#ffffff33'}`,
+                                    borderRadius: `${T.welcomeBtnRadius || '12'}px`,
+                                    animation: 'fadeInUp 0.5s ease-out 0.3s both'
+                                }}
                             >
                                 {t('btnCampaigns')}
                             </button>
                         </div>
 
                         {/* Powered by */}
-                        <p className="text-center mt-5 text-[10px] text-white/30 font-medium tracking-widest">
+                        <p className="text-center mt-5 text-[10px] font-medium tracking-widest" style={{ color: T.welcomeSubtextColor || '#ffffff80', opacity: 0.5 }}>
                             Powered by <span className="font-bold">QRlex</span>
                         </p>
                     </div>

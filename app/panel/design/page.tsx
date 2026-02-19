@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
     Save, Loader2, Palette, Type, Square, Layers, Eye, RotateCcw,
     Sun, Moon, Sparkles, Paintbrush, SlidersHorizontal, Monitor,
-    LayoutGrid, ChevronDown, ChevronUp, Check, Smartphone, RefreshCw, Search
+    LayoutGrid, ChevronDown, ChevronUp, Check, Smartphone, RefreshCw, Search, Image as ImageIcon
 } from "lucide-react";
 import { useSession } from "@/lib/useSession";
 
@@ -67,6 +67,26 @@ const DEFAULT_THEME = {
 
     // Accent / Highlight
     accentColor: "#000000",
+
+    // Welcome Screen
+    welcomeBg: "#000000",
+    welcomeGradientFrom: "#000000",
+    welcomeGradientTo: "transparent",
+    welcomeGradientOpacity: "85",
+    welcomeOverlayOpacity: "60",
+    welcomeTextColor: "#ffffff",
+    welcomeSubtextColor: "#ffffff80",
+    welcomeBtnBg: "#ffffff",
+    welcomeBtnText: "#000000",
+    welcomeBtnRadius: "12",
+    welcomeBtnShadow: "lg",
+    welcomeSecondaryBtnBg: "#ffffff1a",
+    welcomeSecondaryBtnText: "#ffffff",
+    welcomeSecondaryBtnBorder: "#ffffff33",
+    welcomeLogoBorder: "#ffffff33",
+    welcomeLogoRadius: "16",
+    welcomeLogoSize: "96",
+    welcomeSeparatorColor: "#ffffff33",
 };
 
 type ThemeType = typeof DEFAULT_THEME;
@@ -454,6 +474,39 @@ export default function PanelDesign() {
                     <Section title="Popüler Etiketi" icon={<Sparkles size={18} />} defaultOpen={false}>
                         <ColorPicker label="Arkaplan" value={theme.popularBadgeBg} onChange={(v) => updateTheme("popularBadgeBg", v)} />
                         <ColorPicker label="Yazı Rengi" value={theme.popularBadgeText} onChange={(v) => updateTheme("popularBadgeText", v)} />
+                    </Section>
+
+                    {/* Welcome Screen */}
+                    <Section title="Hoşgeldiniz Ekranı" icon={<ImageIcon size={18} />} defaultOpen={false}>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Arka Plan</p>
+                        <ColorPicker label="Arka Plan Rengi" value={theme.welcomeBg} onChange={(v) => updateTheme("welcomeBg", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Video/Resim Opaklığı</label><div className="flex items-center gap-2"><input type="range" min={0} max={100} value={theme.welcomeOverlayOpacity} onChange={(e) => updateTheme("welcomeOverlayOpacity", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeOverlayOpacity}%</span></div></div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Gradient Ayarları</p>
+                        <ColorPicker label="Gradient Başlangıç" value={theme.welcomeGradientFrom} onChange={(v) => updateTheme("welcomeGradientFrom", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Gradient Yoğunluğu</label><div className="flex items-center gap-2"><input type="range" min={0} max={100} value={theme.welcomeGradientOpacity} onChange={(e) => updateTheme("welcomeGradientOpacity", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeGradientOpacity}%</span></div></div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Yazılar</p>
+                        <ColorPicker label="Ana Yazı Rengi" value={theme.welcomeTextColor} onChange={(v) => updateTheme("welcomeTextColor", v)} />
+                        <ColorPicker label="Alt Yazı Rengi" value={theme.welcomeSubtextColor} onChange={(v) => updateTheme("welcomeSubtextColor", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Logo</p>
+                        <ColorPicker label="Logo Kenarlık" value={theme.welcomeLogoBorder} onChange={(v) => updateTheme("welcomeLogoBorder", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Logo Boyutu</label><div className="flex items-center gap-2"><input type="range" min={48} max={160} value={theme.welcomeLogoSize} onChange={(e) => updateTheme("welcomeLogoSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeLogoSize}px</span></div></div>
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Logo Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={50} value={theme.welcomeLogoRadius} onChange={(e) => updateTheme("welcomeLogoRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeLogoRadius}px</span></div></div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Menü Butonu</p>
+                        <ColorPicker label="Buton Arkaplan" value={theme.welcomeBtnBg} onChange={(v) => updateTheme("welcomeBtnBg", v)} />
+                        <ColorPicker label="Buton Yazı" value={theme.welcomeBtnText} onChange={(v) => updateTheme("welcomeBtnText", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Buton Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={24} value={theme.welcomeBtnRadius} onChange={(e) => updateTheme("welcomeBtnRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeBtnRadius}px</span></div></div>
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Buton Gölgesi</label><div className="flex gap-1.5">{SHADOW_OPTIONS.map((s) => (<button key={s.value} onClick={() => updateTheme("welcomeBtnShadow", s.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.welcomeBtnShadow === s.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{s.label}</button>))}</div></div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Diğer Butonlar</p>
+                        <ColorPicker label="Arkaplan" value={theme.welcomeSecondaryBtnBg} onChange={(v) => updateTheme("welcomeSecondaryBtnBg", v)} />
+                        <ColorPicker label="Yazı Rengi" value={theme.welcomeSecondaryBtnText} onChange={(v) => updateTheme("welcomeSecondaryBtnText", v)} />
+                        <ColorPicker label="Kenarlık" value={theme.welcomeSecondaryBtnBorder} onChange={(v) => updateTheme("welcomeSecondaryBtnBorder", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <ColorPicker label="Ayırıcı Çizgi" value={theme.welcomeSeparatorColor} onChange={(v) => updateTheme("welcomeSeparatorColor", v)} />
                     </Section>
 
                     {/* Bottom Nav */}
