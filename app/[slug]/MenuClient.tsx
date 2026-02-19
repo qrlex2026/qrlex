@@ -704,46 +704,31 @@ export default function MenuClient({
                                         >
                                             {/* Image / Video Preview */}
                                             <div className="relative w-24 h-full shrink-0 overflow-hidden" style={{ borderRadius: `${T.cardImageRadius}px` }}>
-                                                {product.video ? (
-                                                    <>
-                                                        <video
-                                                            src={product.video}
-                                                            poster={product.image || undefined}
-                                                            muted
-                                                            autoPlay
-                                                            loop
-                                                            playsInline
-                                                            // @ts-ignore
-                                                            webkit-playsinline="true"
-                                                            preload="metadata"
-                                                            className="w-full h-full object-cover"
-                                                            onError={(e) => {
-                                                                const el = e.currentTarget;
-                                                                el.style.display = 'none';
-                                                                const fallback = el.parentElement?.querySelector('.video-fallback') as HTMLElement;
-                                                                if (fallback) fallback.style.display = 'flex';
-                                                            }}
-                                                        />
-                                                        {product.image && <img src={product.image} alt="" className="video-fallback w-full h-full object-cover absolute inset-0" style={{ display: 'none' }} />}
-                                                        {!product.image && <div className="video-fallback w-full h-full bg-gray-200 items-center justify-center absolute inset-0" style={{ display: 'none' }}><span className="text-gray-400 text-2xl">🍽️</span></div>}
-                                                        <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
-                                                            <span className="text-white text-[10px] ml-0.5">▶</span>
-                                                        </div>
-                                                    </>
-                                                ) : product.image ? (
-                                                    <img
-                                                        src={product.image}
-                                                        alt={product.name}
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => {
-                                                            const el = e.currentTarget;
-                                                            el.style.display = 'none';
-                                                            const fallback = el.parentElement?.querySelector('.img-fallback') as HTMLElement;
-                                                            if (fallback) fallback.style.display = 'flex';
-                                                        }}
+                                                {/* Always show image first as base */}
+                                                {product.image ? (
+                                                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                                        <span className="text-gray-400 text-2xl">🍽️</span>
+                                                    </div>
+                                                )}
+                                                {/* Video overlay on top — if it plays, covers the image */}
+                                                {product.video && (
+                                                    <video
+                                                        src={product.video}
+                                                        muted
+                                                        autoPlay
+                                                        loop
+                                                        playsInline
+                                                        preload="metadata"
+                                                        className="absolute inset-0 w-full h-full object-cover"
                                                     />
-                                                ) : null}
-                                                {!product.video && <div className="img-fallback w-full h-full bg-gray-200 items-center justify-center" style={{ display: product.image ? 'none' : 'flex' }}><span className="text-gray-400 text-2xl">🍽️</span></div>}
+                                                )}
+                                                {product.video && (
+                                                    <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
+                                                        <span className="text-white text-[10px] ml-0.5">▶</span>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Content */}
@@ -1129,45 +1114,26 @@ export default function MenuClient({
                     <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
                         {/* Product Media Section */}
                         <div className="relative w-full shrink-0" style={{ height: '45%' }}>
-                            {selectedProduct.video ? (
+                            {/* Always show image/placeholder as base */}
+                            {selectedProduct.image ? (
+                                <img src={selectedProduct.image} alt={selectedProduct.name} className="absolute inset-0 w-full h-full object-cover" />
+                            ) : (
+                                <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                                    <span className="text-gray-400 text-6xl">🍽️</span>
+                                </div>
+                            )}
+                            {/* Video overlay — plays on top of image */}
+                            {selectedProduct.video && (
                                 <video
                                     src={selectedProduct.video}
-                                    poster={selectedProduct.image || undefined}
                                     autoPlay
                                     muted
                                     loop
                                     playsInline
-                                    // @ts-ignore
-                                    webkit-playsinline="true"
                                     preload="metadata"
                                     className="absolute inset-0 w-full h-full object-cover"
-                                    onError={(e) => {
-                                        const el = e.currentTarget;
-                                        el.style.display = 'none';
-                                        const fallback = el.parentElement?.querySelector('.detail-video-fallback') as HTMLElement;
-                                        if (fallback) fallback.style.display = 'block';
-                                    }}
                                 />
-                            ) : null}
-                            {selectedProduct.video && (selectedProduct.image ? (
-                                <img src={selectedProduct.image} alt={selectedProduct.name} className="detail-video-fallback absolute inset-0 w-full h-full object-cover" style={{ display: 'none' }} />
-                            ) : (
-                                <div className="detail-video-fallback absolute inset-0 w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center" style={{ display: 'none' }}><span className="text-gray-400 text-6xl">🍽️</span></div>
-                            ))}
-                            {!selectedProduct.video && selectedProduct.image ? (
-                                <img
-                                    src={selectedProduct.image}
-                                    alt={selectedProduct.name}
-                                    className="absolute inset-0 w-full h-full object-cover"
-                                    onError={(e) => {
-                                        e.currentTarget.style.display = 'none';
-                                    }}
-                                />
-                            ) : !selectedProduct.video && !selectedProduct.image ? (
-                                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                                    <span className="text-gray-400 text-6xl">🍽️</span>
-                                </div>
-                            ) : null}
+                            )}
                             {/* Back Button */}
                             <button
                                 onClick={() => setSelectedProduct(null)}
