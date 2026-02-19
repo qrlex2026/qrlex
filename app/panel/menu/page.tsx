@@ -337,37 +337,6 @@ export default function PanelMenu() {
                 )}
             </div>
 
-            {/* RIGHT: Live Preview */}
-            <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0">
-                <div className="flex items-center gap-2 mb-3"><Smartphone size={16} className="text-gray-500" /><span className="text-xs text-gray-500 font-medium">Canlı Önizleme</span></div>
-                <div className="w-[380px] bg-white rounded-[2.5rem] border-[5px] border-gray-700 overflow-hidden shadow-2xl flex-1 max-h-[700px]">
-                    <div className="h-7 bg-gray-100 flex items-center justify-center"><div className="w-20 h-1.5 bg-gray-300 rounded-full" /></div>
-                    <div className="overflow-y-auto bg-gray-50 p-4 space-y-5" style={{ height: 'calc(100% - 28px)' }}>
-                        {categories.filter(c => c.isActive !== false).map(cat => {
-                            const catProducts = productsByCategory(cat.id).filter(p => p.isActive);
-                            if (catProducts.length === 0) return null;
-                            return (
-                                <div key={cat.id}>
-                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-2.5">{cat.name}</h3>
-                                    <div className="space-y-2">
-                                        {catProducts.map(p => (
-                                            <div key={p.id} className="bg-white rounded-xl p-3 flex gap-3 shadow-sm border border-gray-100">
-                                                {p.image ? <img src={p.image} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" /> : <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-xl">🍽️</div>}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold text-gray-900 truncate">{p.name}</p>
-                                                    {p.description && <p className="text-[11px] text-gray-400 truncate mt-0.5">{p.description}</p>}
-                                                    <div className="mt-1.5">{p.discountPrice ? (<div className="flex items-center gap-1.5"><span className="text-sm font-bold text-emerald-600">₺{Number(p.discountPrice).toFixed(0)}</span><span className="text-[11px] text-gray-400 line-through">₺{Number(p.price).toFixed(0)}</span></div>) : (<span className="text-sm font-bold text-gray-900">₺{Number(p.price).toFixed(0)}</span>)}</div>
-                                                </div>
-                                                {p.isPopular && <div className="self-start"><span className="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">⭐ Popüler</span></div>}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
 
             {/* Product Modal */}
             {showModal && (

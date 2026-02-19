@@ -140,7 +140,18 @@ export default function MenuClient({
     useEffect(() => {
         const handler = (e: MessageEvent) => {
             if (e.data?.type === 'theme-update' && e.data.theme) {
-                setLiveTheme(e.data.theme);
+                const newTheme = e.data.theme;
+                // Load Google Font if font family changed
+                if (newTheme.fontFamily && newTheme.fontFamily !== liveTheme.fontFamily) {
+                    const fontName = newTheme.fontFamily.replace(/ /g, '+');
+                    if (!document.querySelector(`link[href*="${fontName}"]`)) {
+                        const link = document.createElement('link');
+                        link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;500;600;700&display=swap`;
+                        link.rel = 'stylesheet';
+                        document.head.appendChild(link);
+                    }
+                }
+                setLiveTheme(newTheme);
             }
             if (e.data?.type === 'reload-menu') {
                 window.location.reload();
@@ -148,7 +159,7 @@ export default function MenuClient({
         };
         window.addEventListener('message', handler);
         return () => window.removeEventListener('message', handler);
-    }, []);
+    }, [liveTheme.fontFamily]);
 
 
     // Search Logic
