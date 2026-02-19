@@ -35,6 +35,10 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     if (!restaurant) notFound();
 
     // Pre-process all data server-side
+    // Proxy R2 URLs through our domain to bypass mobile ISP blocks on r2.dev
+    const R2_PUBLIC = "https://pub-5b35497dfb5b4103971895d42f4b4222.r2.dev";
+    const toProxy = (url: string | null) => url ? url.replace(R2_PUBLIC, "/media") : "";
+
     const categories = [
         { id: "populer", name: "Popüler" },
         ...restaurant.categories.map((c) => ({ id: c.id, name: c.name })),
@@ -46,8 +50,8 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
         name: p.name,
         description: p.description || "",
         price: Number(p.discountPrice || p.price),
-        image: p.image || "",
-        video: p.video || "",
+        image: toProxy(p.image),
+        video: toProxy(p.video),
         isPopular: p.isPopular,
         prepTime: p.prepTime || "",
         calories: p.calories || "",
@@ -63,7 +67,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     const businessInfo = {
         name: restaurant.name,
         description: restaurant.description || "",
-        image: restaurant.image || "",
+        image: toProxy(restaurant.image),
         address: restaurant.address || "",
         phone: restaurant.phone || "",
         email: restaurant.email || "",

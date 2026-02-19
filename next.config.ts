@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/media/:path*",
+        destination: "https://pub-5b35497dfb5b4103971895d42f4b4222.r2.dev/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
