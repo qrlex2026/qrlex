@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Plus, Trash2, Star, Pencil, X, Upload, ChevronDown, ChevronRight, GripVertical, ToggleLeft, ToggleRight, Smartphone, Percent } from "lucide-react";
+import { Plus, Trash2, Star, Pencil, X, Upload, ChevronDown, ChevronRight, GripVertical, ToggleLeft, ToggleRight, Smartphone, Percent, RefreshCw } from "lucide-react";
 import { useSession } from "@/lib/useSession";
 import { compressVideo } from "@/lib/videoCompress";
 
@@ -42,11 +42,27 @@ export default function PanelMenu() {
     const [priceCatId, setPriceCatId] = useState("");
     const [priceApplying, setPriceApplying] = useState(false);
 
+    // Slug + iframe
+    const [slug, setSlug] = useState("");
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+
     // Drag state
     const [dragType, setDragType] = useState<"category" | "product" | null>(null);
     const [dragId, setDragId] = useState<string | null>(null);
     const [dragOverId, setDragOverId] = useState<string | null>(null);
     const [dragCatId, setDragCatId] = useState<string | null>(null);
+
+    // Fetch slug
+    useEffect(() => {
+        if (!restaurantId) return;
+        fetch(`/api/admin/restaurants/${restaurantId}`).then(r => r.json()).then(d => { if (d.slug) setSlug(d.slug); }).catch(() => { });
+    }, [restaurantId]);
+
+    const reloadPreview = useCallback(() => {
+        if (iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({ type: 'reload-menu' }, '*');
+        }
+    }, []);
 
     const fetchData = useCallback(() => {
         if (!restaurantId) return;
@@ -59,6 +75,7 @@ export default function PanelMenu() {
             setCategories(cats);
             setExpandedCats(new Set(cats.map((c: Category) => c.id)));
             setLoading(false);
+            setTimeout(reloadPreview, 500);
         });
     }, [restaurantId]);
     useEffect(() => { if (restaurantId) fetchData(); }, [restaurantId, fetchData]);
@@ -391,6 +408,27 @@ export default function PanelMenu() {
                             <div><label className="text-xs text-gray-400 mb-1 block">Kategori Adı</label><input value={catName} onChange={e => setCatName(e.target.value)} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="Örn: Burgerler" /></div>
                             <button onClick={saveCat} disabled={catSaving || !catName} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-colors">{catSaving ? "Kaydediliyor..." : editCat ? "Güncelle" : "Ekle"}</button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* RIGHT: Live iframe preview */}
+            {slug && (
+                <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Smartphone size={16} className="text-gray-500" />
+                        <span className="text-xs text-gray-500 font-medium">Canlı Önizleme</span>
+                        <button onClick={reloadPreview} className="ml-2 p-1 rounded-lg hover:bg-gray-800 text-gray-600 hover:text-emerald-400 transition-colors" title="Yenile">
+                            <RefreshCw size={14} />
+                        </button>
+                    </div>
+                    <div className="w-[380px] bg-gray-950 rounded-[2.5rem] p-3 shadow-2xl border-[3px] border-gray-800 overflow-hidden flex-1 max-h-[700px] relative">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-950 rounded-b-2xl z-20" />
+                        <iframe
+                            ref={iframeRef}
+                            src={`/${slug}`}
+                            className="w-full h-full rounded-[1.8rem] border-0"
+                            style={{ transform: 'scale(1)', transformOrigin: 'top left' }}
+                        />
                     </div>
                 </div>
             )}

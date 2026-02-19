@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
     Save, Loader2, Palette, Type, Square, Layers, Eye, RotateCcw,
     Sun, Moon, Sparkles, Paintbrush, SlidersHorizontal, Monitor,
-    LayoutGrid, ChevronDown, ChevronUp, Check, Smartphone
+    LayoutGrid, ChevronDown, ChevronUp, Check, Smartphone, RefreshCw
 } from "lucide-react";
 import { useSession } from "@/lib/useSession";
 
@@ -184,7 +184,8 @@ export default function PanelDesign() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
-    const [showPreview, setShowPreview] = useState(false);
+    const [slug, setSlug] = useState("");
+    const iframeRef = useRef<HTMLIFrameElement>(null);
 
     useEffect(() => {
         if (!restaurantId) return;
@@ -197,6 +198,19 @@ export default function PanelDesign() {
                 setLoading(false);
             });
     }, [restaurantId]);
+
+    // Fetch slug
+    useEffect(() => {
+        if (!restaurantId) return;
+        fetch(`/api/admin/restaurants/${restaurantId}`).then(r => r.json()).then(d => { if (d.slug) setSlug(d.slug); }).catch(() => { });
+    }, [restaurantId]);
+
+    // Send theme to iframe in real-time
+    useEffect(() => {
+        if (iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({ type: 'theme-update', theme }, '*');
+        }
+    }, [theme]);
 
     // Load Google Font
     useEffect(() => {
@@ -369,65 +383,35 @@ export default function PanelDesign() {
                 </div>
             </div>
 
-            {/* RIGHT: Live Phone Preview */}
-            <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0">
-                <div className="flex items-center gap-2 mb-3"><Smartphone size={16} className="text-gray-500" /><span className="text-xs text-gray-500 font-medium">Canlı Önizleme</span></div>
-                <div className="w-[380px] bg-gray-950 rounded-[2.5rem] p-3 shadow-2xl border-[3px] border-gray-800 overflow-hidden flex-1 max-h-[700px] relative">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-950 rounded-b-2xl z-20" />
-                    <div className="w-full h-full rounded-[1.8rem] overflow-y-auto overflow-x-hidden" style={{ backgroundColor: theme.pageBg, fontFamily: theme.fontFamily }}>
-                        {/* Hero */}
-                        <div className="h-40 relative" style={{ background: `linear-gradient(135deg, ${theme.headerGradientFrom}, ${theme.headerGradientTo})` }}>
-                            <div className="absolute inset-0 p-5 flex flex-col justify-end">
-                                <p className="text-xs opacity-60" style={{ color: theme.productNameColor }}>Özel Tarifler</p>
-                                <h1 className="text-xl font-bold" style={{ color: theme.productNameColor }}>Lezzet Şöleni</h1>
-                            </div>
-                        </div>
-                        {/* Search */}
-                        <div className="px-4 py-3 sticky top-0 z-10" style={{ backgroundColor: theme.pageBg }}>
-                            <div className="h-10 rounded-lg flex items-center px-3 gap-2 text-sm" style={{ backgroundColor: theme.searchBg, border: `1px solid ${theme.searchBorder}`, color: theme.searchText }}>🔍 Ürün ara...</div>
-                        </div>
-                        {/* Categories */}
-                        <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar">
-                            {["Popüler", "Burgerler", "Pizzalar", "İçecek"].map((cat, i) => (
-                                <span key={cat} className="whitespace-nowrap text-xs font-medium px-4 py-2" style={{ backgroundColor: i === 0 ? theme.categoryActiveBg : theme.categoryInactiveBg, color: i === 0 ? theme.categoryActiveText : theme.categoryInactiveText, borderRadius: `${theme.categoryRadius}px` }}>{cat}</span>
-                            ))}
-                        </div>
-                        {/* Section Title */}
-                        <div className="px-4 pt-4 pb-2">
-                            <h2 style={{ color: theme.categoryTitleColor, fontSize: `${Math.min(parseInt(theme.categoryTitleSize), 28)}px`, fontWeight: theme.categoryTitleWeight }}>Popüler</h2>
-                        </div>
-                        {/* Cards */}
-                        <div className="px-4 space-y-3 pb-20">
-                            {[
-                                { name: "Classic Burger", desc: "180gr dana eti, özel sos, cheddar peyniri", price: "185", discount: "165", popular: true },
-                                { name: "Margherita Pizza", desc: "Taze mozzarella, domates sosu, fesleğen", price: "145", popular: false },
-                                { name: "Caesar Salad", desc: "Marul, kruton, parmesan, caesar sos", price: "95", popular: false },
-                            ].map(product => (
-                                <div key={product.name} className="flex gap-3 p-3" style={{ backgroundColor: theme.cardBg, border: `1px solid ${theme.cardBorder}`, borderRadius: `${theme.cardRadius}px`, boxShadow: getShadowCSS(theme.cardShadow) }}>
-                                    <div className="w-20 h-20 shrink-0" style={{ borderRadius: `${theme.cardImageRadius}px`, backgroundColor: theme.categoryInactiveBg }} />
-                                    <div className="flex-1 flex flex-col justify-between py-0.5">
-                                        <div>
-                                            <div className="flex items-center gap-1.5">
-                                                <span style={{ color: theme.productNameColor, fontSize: `${theme.productNameSize}px`, fontWeight: theme.productNameWeight }}>{product.name}</span>
-                                                {product.popular && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: theme.popularBadgeBg, color: theme.popularBadgeText }}>⭐</span>}
-                                            </div>
-                                            <p className="mt-0.5 line-clamp-2" style={{ color: theme.productDescColor, fontSize: `${theme.productDescSize}px` }}>{product.desc}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span style={{ color: product.discount ? theme.discountColor : theme.priceColor, fontSize: `${theme.priceSize}px`, fontWeight: theme.priceWeight }}>{product.discount || product.price} TL</span>
-                                            {product.discount && <span className="line-through" style={{ color: theme.oldPriceColor, fontSize: "12px" }}>{product.price} TL</span>}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        {/* Bottom Nav */}
-                        <div className="sticky bottom-0 flex items-center justify-around py-3 border-t" style={{ backgroundColor: theme.bottomNavBg, borderColor: theme.cardBorder }}>
-                            {["🏠", "⭐", "ℹ️"].map((icon, i) => (<span key={i} className="text-lg" style={{ opacity: i === 0 ? 1 : 0.4 }}>{icon}</span>))}
-                        </div>
+            {/* RIGHT: Live iframe preview */}
+            {slug && (
+                <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Smartphone size={16} className="text-gray-500" />
+                        <span className="text-xs text-gray-500 font-medium">Canlı Önizleme</span>
+                        <button onClick={() => { if (iframeRef.current) iframeRef.current.src = `/${slug}`; }} className="ml-2 p-1 rounded-lg hover:bg-gray-800 text-gray-600 hover:text-emerald-400 transition-colors" title="Yenile">
+                            <RefreshCw size={14} />
+                        </button>
+                    </div>
+                    <div className="w-[380px] bg-gray-950 rounded-[2.5rem] p-3 shadow-2xl border-[3px] border-gray-800 overflow-hidden flex-1 max-h-[700px] relative">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-950 rounded-b-2xl z-20" />
+                        <iframe
+                            ref={iframeRef}
+                            src={`/${slug}`}
+                            className="w-full h-full rounded-[1.8rem] border-0"
+                            onLoad={() => {
+                                // Send current theme after iframe loads
+                                setTimeout(() => {
+                                    if (iframeRef.current?.contentWindow) {
+                                        iframeRef.current.contentWindow.postMessage({ type: 'theme-update', theme }, '*');
+                                    }
+                                }, 500);
+                            }}
+                        />
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
+

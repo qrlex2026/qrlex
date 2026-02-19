@@ -132,8 +132,23 @@ export default function MenuClient({
     const PRODUCTS = initialProducts;
     const BUSINESS_INFO = initialBusinessInfo;
     const REVIEWS = initialReviews;
-    const T = initialTheme;
+    const [liveTheme, setLiveTheme] = useState<Record<string, string>>(initialTheme);
+    const T = liveTheme;
     const [userReviews, setUserReviews] = useState<ReviewItem[]>([]);
+
+    // Listen for live theme updates from panel design page (postMessage)
+    useEffect(() => {
+        const handler = (e: MessageEvent) => {
+            if (e.data?.type === 'theme-update' && e.data.theme) {
+                setLiveTheme(e.data.theme);
+            }
+            if (e.data?.type === 'reload-menu') {
+                window.location.reload();
+            }
+        };
+        window.addEventListener('message', handler);
+        return () => window.removeEventListener('message', handler);
+    }, []);
 
 
     // Search Logic
