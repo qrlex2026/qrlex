@@ -703,30 +703,33 @@ export default function MenuClient({
                                             style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}
                                         >
                                             {/* Image / Video Preview */}
-                                            <div className="relative w-24 shrink-0 overflow-hidden self-stretch" style={{ borderRadius: `${T.cardImageRadius}px` }}>
-                                                {/* Always show image first as base */}
-                                                {product.image ? (
-                                                    <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center">
-                                                        <span className="text-gray-400 text-2xl">🍽️</span>
-                                                    </div>
-                                                )}
-                                                {/* Video overlay on top — if it plays, covers the image */}
-                                                {product.video && (
-                                                    <video
-                                                        src={product.video}
-                                                        muted
-                                                        autoPlay
-                                                        loop
-                                                        playsInline
-                                                        preload="auto"
-                                                        className="absolute inset-0 w-full h-full object-cover"
+                                            <div className="relative w-24 h-full shrink-0 overflow-hidden" style={{ borderRadius: `${T.cardImageRadius}px` }}>
+                                                {product.video ? (
+                                                    <>
+                                                        <video
+                                                            src={product.video}
+                                                            poster={product.image || undefined}
+                                                            muted
+                                                            autoPlay
+                                                            loop
+                                                            playsInline
+                                                            preload="auto"
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
+                                                            <span className="text-white text-[10px] ml-0.5">▶</span>
+                                                        </div>
+                                                    </>
+                                                ) : product.image ? (
+                                                    <img
+                                                        src={product.image}
+                                                        alt={product.name}
+                                                        loading="lazy"
+                                                        className="w-full h-full object-cover"
                                                     />
-                                                )}
-                                                {product.video && (
-                                                    <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
-                                                        <span className="text-white text-[10px] ml-0.5">▶</span>
+                                                ) : (
+                                                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                                        <span className="text-gray-400 text-2xl">🍽️</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -1114,18 +1117,10 @@ export default function MenuClient({
                     <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
                         {/* Product Media Section */}
                         <div className="relative w-full shrink-0" style={{ height: '45%' }}>
-                            {/* Always show image/placeholder as base */}
-                            {selectedProduct.image ? (
-                                <img src={selectedProduct.image} alt={selectedProduct.name} className="absolute inset-0 w-full h-full object-cover" />
-                            ) : (
-                                <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                                    <span className="text-gray-400 text-6xl">🍽️</span>
-                                </div>
-                            )}
-                            {/* Video overlay — plays on top of image */}
-                            {selectedProduct.video && (
+                            {selectedProduct.video ? (
                                 <video
                                     src={selectedProduct.video}
+                                    poster={selectedProduct.image || undefined}
                                     autoPlay
                                     muted
                                     loop
@@ -1133,6 +1128,16 @@ export default function MenuClient({
                                     preload="auto"
                                     className="absolute inset-0 w-full h-full object-cover"
                                 />
+                            ) : selectedProduct.image ? (
+                                <img
+                                    src={selectedProduct.image}
+                                    alt={selectedProduct.name}
+                                    className="absolute inset-0 w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                                    <span className="text-gray-400 text-6xl">🍽️</span>
+                                </div>
                             )}
                             {/* Back Button */}
                             <button
