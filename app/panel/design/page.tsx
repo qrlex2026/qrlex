@@ -275,16 +275,50 @@ export default function PanelDesign() {
                 <div className="flex-1 overflow-y-auto space-y-4 pr-1">
                     {/* Preset Themes */}
                     <Section title="Hazır Temalar" icon={<Sparkles size={18} />} defaultOpen={true}>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {PRESET_THEMES.map((preset) => (
-                                <button key={preset.name} onClick={() => applyPreset(preset.theme)} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-gray-700 bg-gray-800/50 hover:bg-gray-800 hover:border-emerald-500/50 transition-all text-center group">
-                                    <span className="text-2xl">{preset.icon}</span>
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-200 group-hover:text-emerald-300 transition-colors">{preset.name}</p>
-                                        <p className="text-[10px] text-gray-500">{preset.desc}</p>
-                                    </div>
-                                </button>
-                            ))}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {PRESET_THEMES.map((preset) => {
+                                const t = { ...DEFAULT_THEME, ...preset.theme };
+                                return (
+                                    <button key={preset.name} onClick={() => applyPreset(preset.theme)} className="group rounded-2xl border border-gray-700 hover:border-emerald-500/60 bg-gray-800/40 hover:bg-gray-800 transition-all overflow-hidden">
+                                        {/* Mini phone frame */}
+                                        <div className="mx-2.5 mt-2.5 rounded-xl overflow-hidden border border-gray-600/30" style={{ backgroundColor: t.pageBg }}>
+                                            {/* Mini header */}
+                                            <div className="h-6 flex items-center px-2" style={{ background: `linear-gradient(135deg, ${t.headerGradientFrom}, ${t.headerGradientTo})` }}>
+                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.accentColor, opacity: 0.6 }} />
+                                                <div className="ml-1.5 h-1.5 w-10 rounded-full" style={{ backgroundColor: t.categoryTitleColor, opacity: 0.3 }} />
+                                            </div>
+                                            {/* Mini category pills */}
+                                            <div className="flex gap-1 px-2 py-1.5">
+                                                <div className="h-3 px-2 rounded-full flex items-center" style={{ backgroundColor: t.categoryActiveBg }}>
+                                                    <span className="text-[5px] font-bold" style={{ color: t.categoryActiveText }}>Tümü</span>
+                                                </div>
+                                                <div className="h-3 w-6 rounded-full" style={{ backgroundColor: t.categoryInactiveBg }} />
+                                                <div className="h-3 w-8 rounded-full" style={{ backgroundColor: t.categoryInactiveBg }} />
+                                            </div>
+                                            {/* Mini product card */}
+                                            <div className="mx-2 mb-2 p-1.5 rounded-md flex gap-1.5" style={{ backgroundColor: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
+                                                <div className="w-6 h-6 rounded flex-shrink-0 bg-gray-300/50" style={{ borderRadius: `${Math.min(Number(t.cardImageRadius), 4)}px` }} />
+                                                <div className="flex-1 min-w-0 space-y-0.5">
+                                                    <div className="h-1.5 w-10 rounded-full" style={{ backgroundColor: t.productNameColor, opacity: 0.7 }} />
+                                                    <div className="h-1 w-14 rounded-full" style={{ backgroundColor: t.productDescColor, opacity: 0.4 }} />
+                                                    <div className="h-1.5 w-6 rounded-full" style={{ backgroundColor: t.priceColor, opacity: 0.8 }} />
+                                                </div>
+                                            </div>
+                                            {/* Mini bottom nav */}
+                                            <div className="h-3 flex items-center justify-around px-3 border-t" style={{ backgroundColor: t.bottomNavBg, borderColor: t.cardBorder }}>
+                                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.bottomNavActive }} />
+                                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.bottomNavInactive }} />
+                                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.bottomNavInactive }} />
+                                            </div>
+                                        </div>
+                                        {/* Label */}
+                                        <div className="px-2.5 py-2 text-center">
+                                            <p className="text-[11px] font-semibold text-gray-200 group-hover:text-emerald-300 transition-colors">{preset.name}</p>
+                                            <p className="text-[9px] text-gray-500">{preset.desc}</p>
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </Section>
 
