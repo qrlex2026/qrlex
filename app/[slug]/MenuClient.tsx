@@ -720,7 +720,7 @@ export default function MenuClient({
                                                         autoPlay
                                                         loop
                                                         playsInline
-                                                        preload="metadata"
+                                                        preload="auto"
                                                         className="absolute inset-0 w-full h-full object-cover"
                                                     />
                                                 )}
@@ -1130,7 +1130,7 @@ export default function MenuClient({
                                     muted
                                     loop
                                     playsInline
-                                    preload="metadata"
+                                    preload="auto"
                                     className="absolute inset-0 w-full h-full object-cover"
                                 />
                             )}
