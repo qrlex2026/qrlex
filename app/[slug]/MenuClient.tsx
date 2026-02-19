@@ -703,12 +703,12 @@ export default function MenuClient({
                                             style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}
                                         >
                                             {/* Image / Video Preview */}
-                                            <div className="relative w-24 h-full shrink-0 overflow-hidden" style={{ borderRadius: `${T.cardImageRadius}px` }}>
+                                            <div className="relative w-24 shrink-0 overflow-hidden self-stretch" style={{ borderRadius: `${T.cardImageRadius}px` }}>
                                                 {/* Always show image first as base */}
                                                 {product.image ? (
-                                                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                                                    <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-cover" />
                                                 ) : (
-                                                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                                    <div className="absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center">
                                                         <span className="text-gray-400 text-2xl">🍽️</span>
                                                     </div>
                                                 )}
