@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
     Save, Loader2, Palette, Type, Square, Layers, Eye, RotateCcw,
     Sun, Moon, Sparkles, Paintbrush, SlidersHorizontal, Monitor,
-    LayoutGrid, ChevronDown, ChevronUp, Check, Smartphone, RefreshCw
+    LayoutGrid, ChevronDown, ChevronUp, Check, Smartphone, RefreshCw, Search
 } from "lucide-react";
 import { useSession } from "@/lib/useSession";
 
@@ -71,21 +71,17 @@ const DEFAULT_THEME = {
 
 type ThemeType = typeof DEFAULT_THEME;
 
-// ─── Font Options ──────────────────────────────────────────
 const FONTS = [
-    { name: "Inter", label: "Inter", category: "Modern" },
-    { name: "Roboto", label: "Roboto", category: "Modern" },
-    { name: "Poppins", label: "Poppins", category: "Modern" },
-    { name: "Outfit", label: "Outfit", category: "Modern" },
-    { name: "DM Sans", label: "DM Sans", category: "Modern" },
-    { name: "Playfair Display", label: "Playfair Display", category: "Elegant" },
-    { name: "Lora", label: "Lora", category: "Elegant" },
-    { name: "Merriweather", label: "Merriweather", category: "Elegant" },
-    { name: "Nunito", label: "Nunito", category: "Friendly" },
-    { name: "Quicksand", label: "Quicksand", category: "Friendly" },
-    { name: "Comfortaa", label: "Comfortaa", category: "Friendly" },
-    { name: "Space Grotesk", label: "Space Grotesk", category: "Tech" },
-    { name: "JetBrains Mono", label: "JetBrains Mono", category: "Tech" },
+    { name: "Plus Jakarta Sans", label: "Plus Jakarta" },
+    { name: "Inter", label: "Inter" },
+    { name: "Roboto", label: "Roboto" },
+    { name: "Poppins", label: "Poppins" },
+    { name: "Outfit", label: "Outfit" },
+    { name: "DM Sans", label: "DM Sans" },
+    { name: "Nunito", label: "Nunito" },
+    { name: "Quicksand", label: "Quicksand" },
+    { name: "Lora", label: "Lora" },
+    { name: "Playfair Display", label: "Playfair" },
 ];
 
 const SHADOW_OPTIONS = [
@@ -186,6 +182,8 @@ export default function PanelDesign() {
     const [saved, setSaved] = useState(false);
     const [slug, setSlug] = useState("");
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const [fontSearch, setFontSearch] = useState("");
+    const [searchedFonts, setSearchedFonts] = useState<{ name: string; label: string }[]>([]);
 
     useEffect(() => {
         if (!restaurantId) return;
@@ -294,11 +292,61 @@ export default function PanelDesign() {
                     <Section title="Genel Ayarlar" icon={<Palette size={18} />}>
                         <ColorPicker label="Sayfa Arkaplanı" value={theme.pageBg} onChange={(v) => updateTheme("pageBg", v)} />
                         <ColorPicker label="Vurgu Rengi" value={theme.accentColor} onChange={(v) => updateTheme("accentColor", v)} />
-                        <div className="flex items-center justify-between gap-3">
-                            <label className="text-xs text-gray-400">Yazı Tipi</label>
-                            <select value={theme.fontFamily} onChange={(e) => updateTheme("fontFamily", e.target.value)} className="w-[200px] px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500" style={{ fontFamily: theme.fontFamily }}>
-                                {FONTS.map((f) => <option key={f.name} value={f.name} style={{ fontFamily: f.name }}>{f.label} — {f.category}</option>)}
-                            </select>
+                        <div>
+                            <label className="text-xs text-gray-400 mb-2 block">Yazı Tipi</label>
+                            {/* Font search */}
+                            <div className="relative mb-3">
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                                <input
+                                    value={fontSearch}
+                                    onChange={(e) => {
+                                        const q = e.target.value;
+                                        setFontSearch(q);
+                                        if (q.length >= 2) {
+                                            // Load Google Font for preview
+                                            const fontName = q.replace(/ /g, '+');
+                                            if (!document.querySelector(`link[href*="${fontName}"]`)) {
+                                                const link = document.createElement('link');
+                                                link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;600&display=swap`;
+                                                link.rel = 'stylesheet';
+                                                document.head.appendChild(link);
+                                            }
+                                            setSearchedFonts([{ name: q, label: q }]);
+                                        } else {
+                                            setSearchedFonts([]);
+                                        }
+                                    }}
+                                    placeholder="Google Fonts'ta ara..."
+                                    className="w-full pl-9 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500"
+                                />
+                            </div>
+                            {/* Font grid */}
+                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+                                {[...searchedFonts, ...FONTS.filter(f => !searchedFonts.some(sf => sf.name === f.name))].map((f) => {
+                                    // Preload font
+                                    const fontName = f.name.replace(/ /g, '+');
+                                    if (typeof window !== 'undefined' && !document.querySelector(`link[href*="${fontName}"]`)) {
+                                        const link = document.createElement('link');
+                                        link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;600&display=swap`;
+                                        link.rel = 'stylesheet';
+                                        document.head.appendChild(link);
+                                    }
+                                    const isActive = theme.fontFamily === f.name;
+                                    return (
+                                        <button
+                                            key={f.name}
+                                            onClick={() => updateTheme("fontFamily", f.name)}
+                                            className={`relative px-2 py-2.5 rounded-xl border text-center transition-all ${isActive ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30' : 'border-gray-700 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800'}`}
+                                        >
+                                            <span className="block text-sm font-semibold text-white truncate" style={{ fontFamily: f.name }}>
+                                                Aa
+                                            </span>
+                                            <span className="block text-[9px] text-gray-500 mt-0.5 truncate">{f.label}</span>
+                                            {isActive && <div className="absolute top-1 right-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </Section>
 
