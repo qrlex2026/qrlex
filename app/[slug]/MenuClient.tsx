@@ -734,7 +734,7 @@ export default function MenuClient({
 
                 {/* Business Profile Overlay */}
                 {isProfileOpen && (
-                    <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
+                    <div className="fixed inset-0 z-50 flex flex-col overscroll-none" style={{ width: '100vw', height: '100dvh', backgroundColor: T.pageBg || '#ffffff' }}>
                         {/* Business Image Section */}
                         <div className="relative w-full shrink-0" style={{ height: '45%' }}>
                             {BUSINESS_INFO.image ? (
@@ -762,8 +762,8 @@ export default function MenuClient({
 
                         {/* Detail Card */}
                         <div
-                            className="flex-1 bg-white overflow-y-auto -mt-6 relative"
-                            style={{ borderRadius: '25px 25px 0 0' }}
+                            className="flex-1 overflow-y-auto -mt-6 relative overscroll-contain"
+                            style={{ borderRadius: '25px 25px 0 0', backgroundColor: T.cardBg || '#ffffff' }}
                         >
                             <div className="px-5 pt-7 pb-10">
                                 {/* About */}
@@ -848,7 +848,7 @@ export default function MenuClient({
 
                 {/* Reviews Overlay */}
                 {isReviewsOpen && (
-                    <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
+                    <div className="fixed inset-0 z-50 flex flex-col overscroll-none" style={{ width: '100vw', height: '100dvh', backgroundColor: T.pageBg || '#ffffff' }}>
                         {/* Header Section */}
                         <div className="relative w-full shrink-0 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500" style={{ height: '45%' }}>
                             {/* Back Button */}
@@ -893,8 +893,8 @@ export default function MenuClient({
 
                         {/* Reviews List */}
                         <div
-                            className="flex-1 bg-white overflow-y-auto -mt-6 relative"
-                            style={{ borderRadius: '25px 25px 0 0' }}
+                            className="flex-1 overflow-y-auto -mt-6 relative overscroll-contain"
+                            style={{ borderRadius: '25px 25px 0 0', backgroundColor: T.cardBg || '#ffffff' }}
                         >
                             <div className="px-5 pt-7 pb-24">
                                 <div className="flex items-center justify-between mb-5">
@@ -956,7 +956,7 @@ export default function MenuClient({
 
                 {/* Write Review Popup */}
                 {isWriteReviewOpen && (
-                    <div className="fixed inset-0 z-[60] bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
+                    <div className="fixed inset-0 z-[60] flex flex-col overscroll-none" style={{ width: '100vw', height: '100dvh', backgroundColor: T.pageBg || '#ffffff' }}>
                         {/* Category Ratings Section */}
                         <div className="relative w-full shrink-0 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500" style={{ height: '45%' }}>
                             {/* Back Button */}
@@ -1011,8 +1011,8 @@ export default function MenuClient({
 
                         {/* Form Section */}
                         <div
-                            className="flex-1 bg-white overflow-y-auto -mt-6 relative"
-                            style={{ borderRadius: '25px 25px 0 0' }}
+                            className="flex-1 overflow-y-auto -mt-6 relative overscroll-contain"
+                            style={{ borderRadius: '25px 25px 0 0', backgroundColor: T.cardBg || '#ffffff' }}
                         >
                             <div className="px-5 pt-7 pb-10">
                                 {/* Ad Soyad */}
@@ -1088,7 +1088,7 @@ export default function MenuClient({
 
                 {/* Product Detail Overlay */}
                 {selectedProduct && (
-                    <div className="fixed inset-0 z-50 bg-white flex flex-col" style={{ width: '100vw', height: '100dvh' }}>
+                    <div className="fixed inset-0 z-50 flex flex-col overscroll-none" style={{ width: '100vw', height: '100dvh', backgroundColor: T.pageBg || '#ffffff' }}>
                         {/* Product Media Section */}
                         <div className="relative w-full shrink-0" style={{ height: '45%' }}>
                             {selectedProduct.video ? (
@@ -1124,8 +1124,8 @@ export default function MenuClient({
 
                         {/* Detail Card */}
                         <div
-                            className="flex-1 bg-white overflow-y-auto -mt-6 relative"
-                            style={{ borderRadius: '25px 25px 0 0' }}
+                            className="flex-1 overflow-y-auto -mt-6 relative overscroll-contain"
+                            style={{ borderRadius: '25px 25px 0 0', backgroundColor: T.cardBg || '#ffffff' }}
                         >
                             <div className="px-5 pt-7 pb-10">
                                 {/* Product Name & Price */}
@@ -1207,7 +1207,7 @@ export default function MenuClient({
 
                 {/* Search Popup */}
                 {isSearchOpen && (
-                    <div className="fixed inset-0 z-50 bg-white flex flex-col p-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
+                    <div className="fixed inset-0 z-50 flex flex-col p-4 animate-in fade-in slide-in-from-bottom-4 duration-200 overscroll-none" style={{ backgroundColor: T.pageBg || '#ffffff' }}>
                         <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
                             <Search size={20} className="text-gray-400" />
                             <input
