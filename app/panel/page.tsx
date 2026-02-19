@@ -26,7 +26,78 @@ export default function PanelDashboard() {
         }).catch(() => setLoading(false));
     }, [restaurantId, sessionLoading]);
 
-    if (sessionLoading || loading) return <div className="text-center py-20 text-gray-500">Yükleniyor...</div>;
+    if (sessionLoading || loading) return (
+        <div className="space-y-6 animate-pulse">
+            {/* Shimmer keyframes via inline style */}
+            <style>{`
+                @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+                .skeleton { background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+            `}</style>
+            {/* Header skeleton */}
+            <div>
+                <div className="skeleton h-7 w-40 mb-2" />
+                <div className="skeleton h-4 w-56" />
+            </div>
+            {/* Quick Actions skeleton */}
+            <div>
+                <div className="skeleton h-4 w-28 mb-3" />
+                <div className="flex gap-3">
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="min-w-[140px] bg-gray-900 border border-gray-800 rounded-2xl p-4 flex-shrink-0">
+                            <div className="skeleton w-10 h-10 rounded-xl mb-3" />
+                            <div className="skeleton h-4 w-20 mb-1.5" />
+                            <div className="skeleton h-3 w-24" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+            {/* Restaurant Card skeleton */}
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                        <div className="skeleton h-6 w-48 mb-2" />
+                        <div className="skeleton h-4 w-36 mb-4" />
+                        <div className="flex gap-6 mt-4">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i}>
+                                    <div className="skeleton h-7 w-10 mb-1" />
+                                    <div className="skeleton h-3 w-14" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="skeleton w-[120px] h-[120px] rounded-2xl flex-shrink-0" />
+                </div>
+            </div>
+            {/* Stat Cards skeleton */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+                        <div className="skeleton w-10 h-10 rounded-xl mb-3" />
+                        <div className="skeleton h-7 w-16 mb-2" />
+                        <div className="skeleton h-3 w-20" />
+                    </div>
+                ))}
+            </div>
+            {/* Bottom cards skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {[...Array(2)].map((_, i) => (
+                    <div key={i} className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                        <div className="skeleton h-4 w-36 mb-4" />
+                        <div className="space-y-3">
+                            {[...Array(3)].map((_, j) => (
+                                <div key={j} className="flex items-center gap-3">
+                                    <div className="skeleton w-6 h-6 rounded-lg" />
+                                    <div className="skeleton h-4 flex-1" />
+                                    <div className="skeleton h-3 w-20" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 
     const QUICK_ACTIONS = [
         { label: "Kategori Ekle", desc: "Yeni kategori oluştur", href: "/panel/menu", icon: Plus, gradient: "from-violet-500 to-purple-600" },
