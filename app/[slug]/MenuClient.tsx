@@ -713,16 +713,17 @@ export default function MenuClient({
                     {/* Custom Header */}
                     <div className="h-[60px] bg-white flex items-center justify-between px-4 shadow-sm relative">
                         {/* Left: Hamburger Menu */}
-                        <button onClick={() => setIsSidebarDrawerOpen(true)} className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors z-10">
-                            <Menu size={20} />
+                        <button onClick={() => setIsSidebarDrawerOpen(true)} className="flex flex-col items-start justify-center gap-[4px] text-gray-700 z-10 p-2">
+                            <span className="block w-[18px] h-[2px] bg-current rounded-full" />
+                            <span className="block w-[14px] h-[2px] bg-current rounded-full" />
                         </button>
 
                         {/* Center: Business Name */}
                         <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg text-gray-900 truncate max-w-[60%] text-center">{BUSINESS_INFO.name || "Yükleniyor..."}</span>
 
                         {/* Right: Search Icon */}
-                        <button onClick={() => setIsSearchOpen(true)} className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors z-10">
-                            <Search size={20} />
+                        <button onClick={() => setIsSearchOpen(true)} className="text-gray-700 z-10 p-2">
+                            <Search size={22} />
                         </button>
                     </div>
 
