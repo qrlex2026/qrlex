@@ -535,8 +535,8 @@ export default function PanelDesign() {
                                         key={v.id}
                                         onClick={() => updateTheme('layoutVariant', v.id)}
                                         className={`group rounded-2xl border overflow-hidden transition-all ${isActive
-                                                ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                                                : 'border-gray-700 bg-gray-800/40 hover:border-gray-600 hover:bg-gray-800'
+                                            ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                                            : 'border-gray-700 bg-gray-800/40 hover:border-gray-600 hover:bg-gray-800'
                                             }`}
                                     >
                                         {/* Mini wireframe */}
@@ -671,22 +671,21 @@ export default function PanelDesign() {
 
             {/* RIGHT: Live iframe preview */}
             {slug && (
-                <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0">
-                    <div className="flex items-center gap-2 mb-3">
+                <div className="hidden lg:flex flex-col w-[400px] flex-shrink-0">
+                    <div className="flex items-center gap-2 h-[68px] shrink-0 justify-center">
                         <Smartphone size={16} className="text-gray-500" />
                         <span className="text-xs text-gray-500 font-medium">Canlı Önizleme</span>
                         <button onClick={() => { if (iframeRef.current) iframeRef.current.src = `/${slug}`; }} className="ml-2 p-1 rounded-lg hover:bg-gray-800 text-gray-600 hover:text-emerald-400 transition-colors" title="Yenile">
                             <RefreshCw size={14} />
                         </button>
                     </div>
-                    <div className="w-[380px] bg-gray-950 rounded-[2.5rem] p-3 shadow-2xl border-[3px] border-gray-800 overflow-hidden flex-1 max-h-[700px] relative">
+                    <div className="w-[380px] mx-auto bg-gray-950 rounded-[2.5rem] p-3 shadow-2xl border-[3px] border-gray-800 overflow-hidden flex-1 relative">
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-950 rounded-b-2xl z-20" />
                         <iframe
                             ref={iframeRef}
                             src={`/${slug}`}
                             className="w-full h-full rounded-[1.8rem] border-0"
                             onLoad={() => {
-                                // Send current theme after iframe loads
                                 setTimeout(() => {
                                     if (iframeRef.current?.contentWindow) {
                                         iframeRef.current.contentWindow.postMessage({ type: 'theme-update', theme }, '*');

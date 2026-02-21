@@ -291,6 +291,22 @@ export default function MenuClient({
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
+    // Dynamically load Google Font when theme font changes
+    useEffect(() => {
+        const font = liveTheme.fontFamily;
+        if (font && font !== 'Inter') {
+            const fontName = font.replace(/ /g, '+');
+            const linkId = `gfont-${fontName}`;
+            if (!document.getElementById(linkId)) {
+                const link = document.createElement('link');
+                link.id = linkId;
+                link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;500;600;700&display=swap`;
+                link.rel = 'stylesheet';
+                document.head.appendChild(link);
+            }
+        }
+    }, [liveTheme.fontFamily]);
+
     const getShadow = (s: string) => { switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; case 'xl': return '0 20px 25px -5px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } };
 
     // Language splash screen - always show on every visit (localStorage disabled for testing)
