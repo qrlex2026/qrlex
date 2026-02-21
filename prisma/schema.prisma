@@ -39,8 +39,10 @@ model Restaurant {
   categories   Category[]
   products     Product[]
   reviews      Review[]
-  reservations Reservation[]
-  users        User[]
+  reservations     Reservation[]
+  notifications    Notification[]
+  supportTickets   SupportTicket[]
+  users            User[]
   pageViews    PageView[]
   productViews ProductView[]
 
@@ -134,4 +136,33 @@ model Reservation {
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@map("reservations")
+}
+
+model Notification {
+  id           String     @id @default(uuid())
+  restaurantId String     @map("restaurant_id")
+  type         String     @default("system")
+  title        String
+  message      String
+  isRead       Boolean    @default(false) @map("is_read")
+  linkUrl      String?    @map("link_url")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model SupportTicket {
+  id           String     @id @default(uuid())
+  restaurantId String     @map("restaurant_id")
+  subject      String
+  message      String
+  status       String     @default("open")
+  category     String     @default("general")
+  reply        String?
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@map("support_tickets")
 }

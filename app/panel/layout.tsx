@@ -1,13 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
     LayoutDashboard, UtensilsCrossed, Settings,
     Star, LogOut, Menu, X, QrCode, ChevronRight, Paintbrush, BarChart3,
-    UserCircle, CreditCard, CalendarDays,
+    UserCircle, CreditCard, CalendarDays, Inbox, Bell,
 } from "lucide-react";
+
+interface Notification {
+    id: string;
+    type: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    linkUrl: string | null;
+    createdAt: string;
+}
 
 const NAV_ITEMS = [
     { href: "/panel", label: "Dashboard", icon: LayoutDashboard },
@@ -17,10 +27,18 @@ const NAV_ITEMS = [
     { href: "/panel/design", label: "Tasarım", icon: Paintbrush },
     { href: "/panel/reviews", label: "Yorumlar", icon: Star },
     { href: "/panel/reservations", label: "Rezervasyonlar", icon: CalendarDays },
+    { href: "/panel/inbox", label: "Gelen Kutusu", icon: Inbox },
     { href: "/panel/profile", label: "Profil", icon: UserCircle },
     { href: "/panel/payments", label: "Ödemeler", icon: CreditCard },
     { href: "/panel/settings", label: "Ayarlar", icon: Settings },
 ];
+
+const NOTIF_ICONS: Record<string, string> = {
+    review: '⭐',
+    reservation: '📅',
+    payment: '💳',
+    system: '🔔',
+};
 
 export default function PanelLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -28,6 +46,12 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [restaurantName, setRestaurantName] = useState("Restoran");
     const [restaurantId, setRestaurantId] = useState("");
+
+    // Notifications state
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+    const notifRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         fetch("/api/auth/me")
@@ -41,6 +65,53 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                 }
             });
     }, []);
+
+    // Fetch notifications
+    const fetchNotifications = async () => {
+        try {
+            const res = await fetch('/api/notifications?limit=10');
+            const data = await res.json();
+            setNotifications(data.notifications || []);
+            setUnreadCount(data.unreadCount || 0);
+        } catch (err) {
+            console.error('Notification fetch error:', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+        return () => clearInterval(interval);
+    }, []);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClick = (e: MouseEvent) => {
+            if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+                setShowNotifDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, []);
+
+    const markAllRead = async () => {
+        await fetch('/api/notifications', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ markAllRead: true }),
+        });
+        fetchNotifications();
+    };
+
+    const markOneRead = async (id: string) => {
+        await fetch('/api/notifications', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id }),
+        });
+        fetchNotifications();
+    };
 
     const handleLogout = async () => {
         await fetch("/api/auth/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: "owner" }) });
@@ -69,6 +140,10 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${isActive ? "bg-emerald-500/10 text-emerald-400" : "text-gray-400 hover:bg-gray-800/60 hover:text-gray-200"}`}>
                             <item.icon size={20} className={isActive ? "text-emerald-400" : "text-gray-500 group-hover:text-gray-300"} />
                             {item.label}
+                            {/* Show unread badge on Gelen Kutusu */}
+                            {item.href === "/panel/inbox" && unreadCount > 0 && (
+                                <span className="ml-auto w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                            )}
                             {isActive && <ChevronRight size={16} className="ml-auto text-emerald-500/50" />}
                         </Link>
                     );
@@ -99,6 +174,72 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                     <div className="flex items-center gap-3">
                         <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors"><Menu size={20} /></button>
                         <h2 className="text-base font-bold text-white">{NAV_ITEMS.find((n) => n.href === pathname)?.label || "Panel"}</h2>
+                    </div>
+
+                    {/* Notification Bell */}
+                    <div className="relative" ref={notifRef}>
+                        <button
+                            onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+                            className="relative w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                        >
+                            <Bell size={20} />
+                            {unreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                            )}
+                        </button>
+
+                        {/* Dropdown */}
+                        {showNotifDropdown && (
+                            <div className="absolute right-0 top-12 w-80 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden z-50">
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+                                    <h3 className="text-sm font-bold text-white">Bildirimler</h3>
+                                    {unreadCount > 0 && (
+                                        <button onClick={markAllRead} className="text-xs text-emerald-400 hover:text-emerald-300 font-medium">
+                                            Tümünü Okundu Yap
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="max-h-80 overflow-y-auto">
+                                    {notifications.length === 0 ? (
+                                        <div className="px-4 py-8 text-center">
+                                            <Bell size={24} className="mx-auto text-gray-600 mb-2" />
+                                            <p className="text-sm text-gray-500">Bildirim yok</p>
+                                        </div>
+                                    ) : (
+                                        notifications.map((n) => (
+                                            <div
+                                                key={n.id}
+                                                onClick={() => {
+                                                    if (!n.isRead) markOneRead(n.id);
+                                                    if (n.linkUrl) router.push(n.linkUrl);
+                                                    setShowNotifDropdown(false);
+                                                }}
+                                                className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-gray-800/50 ${n.isRead ? 'opacity-60 hover:bg-gray-800/30' : 'bg-gray-800/20 hover:bg-gray-800/50'}`}
+                                            >
+                                                <span className="text-lg mt-0.5">{NOTIF_ICONS[n.type] || '🔔'}</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-semibold text-white">{n.title}</span>
+                                                        {!n.isRead && <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />}
+                                                    </div>
+                                                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{n.message}</p>
+                                                    <p className="text-[10px] text-gray-600 mt-1">{new Date(n.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                                <Link
+                                    href="/panel/inbox"
+                                    onClick={() => setShowNotifDropdown(false)}
+                                    className="block text-center text-xs font-medium text-emerald-400 hover:text-emerald-300 py-3 border-t border-gray-800 transition-colors"
+                                >
+                                    Tümünü Gör →
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 </header>
                 <main className="flex-1 p-4 lg:p-6">{children}</main>

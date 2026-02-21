@@ -30,6 +30,17 @@ export async function POST(req: NextRequest) {
             },
         });
 
+        // Auto-create notification
+        await prisma.notification.create({
+            data: {
+                restaurantId,
+                type: "review",
+                title: "Yeni Yorum",
+                message: `${authorName} ★${rating} yorum bıraktı${comment ? ': "' + comment.substring(0, 50) + '"' : ''}`,
+                linkUrl: "/panel/reviews",
+            },
+        });
+
         return NextResponse.json(review, { status: 201 });
     } catch (error) {
         console.error("Review create error:", error);

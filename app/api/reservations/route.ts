@@ -29,6 +29,19 @@ export async function POST(req: NextRequest) {
             },
         });
 
+        // Auto-create notification
+        const dateObj = new Date(date);
+        const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+        await prisma.notification.create({
+            data: {
+                restaurantId,
+                type: "reservation",
+                title: "Yeni Rezervasyon",
+                message: `${name} — ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${time}, ${guestCount || 2} kişi`,
+                linkUrl: "/panel/reservations",
+            },
+        });
+
         return NextResponse.json(reservation, { status: 201 });
     } catch (error) {
         console.error("Reservation create error:", error);
