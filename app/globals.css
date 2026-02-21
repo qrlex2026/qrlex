@@ -4,6 +4,26 @@
   --font-sans: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+/* Hide scrollbar globally while preserving scroll */
+html,
+body,
+* {
+  scrollbar-width: none !important;
+  /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE/Edge */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none !important;
+  /* Chrome/Safari/Opera */
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
 body {
   font-family: var(--font-plus-jakarta-sans), sans-serif;
   -webkit-font-smoothing: antialiased;

@@ -18,6 +18,33 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(reviews);
 }
 
+// POST /api/admin/reviews — create a new review from QR menu
+export async function POST(req: NextRequest) {
+    try {
+        const body = await req.json();
+        const { restaurantId, authorName, rating, comment } = body;
+
+        if (!restaurantId || !authorName || !rating) {
+            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        }
+
+        const review = await prisma.review.create({
+            data: {
+                restaurantId,
+                authorName,
+                rating: Number(rating),
+                comment: comment || "",
+                helpfulCount: 0,
+            },
+        });
+
+        return NextResponse.json(review, { status: 201 });
+    } catch (error) {
+        console.error("Review create error:", error);
+        return NextResponse.json({ error: "Failed to create review" }, { status: 500 });
+    }
+}
+
 // DELETE /api/admin/reviews
 export async function DELETE(req: NextRequest) {
     const id = req.nextUrl.searchParams.get("id");
