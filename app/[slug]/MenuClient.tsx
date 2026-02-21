@@ -147,7 +147,8 @@ export default function MenuClient({
     const PRODUCTS = initialProducts;
     const BUSINESS_INFO = initialBusinessInfo;
     const REVIEWS = initialReviews;
-    const T = initialTheme;
+    const [liveTheme, setLiveTheme] = useState<Record<string, string>>(initialTheme);
+    const T = liveTheme;
     const [userReviews, setUserReviews] = useState<ReviewItem[]>([]);
 
 
@@ -279,7 +280,16 @@ export default function MenuClient({
         return () => clearInterval(timer);
     }, []);
 
-
+    // Listen for live theme updates from design panel iframe
+    useEffect(() => {
+        const handleMessage = (e: MessageEvent) => {
+            if (e.data?.type === 'theme-update' && e.data.theme) {
+                setLiveTheme(e.data.theme);
+            }
+        };
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
 
     const getShadow = (s: string) => { switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; case 'xl': return '0 20px 25px -5px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } };
 
