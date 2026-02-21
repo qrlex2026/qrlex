@@ -724,72 +724,235 @@ export default function MenuClient({
 
                         if (products.length === 0) return null;
 
+                        const layout = (T as any).layoutVariant || 'list';
+
+                        // Shared image renderer
+                        const renderImage = (product: any, className: string, imgRadius?: string) => (
+                            <div className={`relative overflow-hidden ${className}`} style={{ borderRadius: imgRadius || `${T.cardImageRadius}px` }}>
+                                {product.video ? (
+                                    <>
+                                        <video src={product.video} poster={product.image || undefined} muted autoPlay loop playsInline preload="auto" className="w-full h-full object-cover" />
+                                        <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"><span className="text-white text-[10px] ml-0.5">▶</span></div>
+                                    </>
+                                ) : product.image ? (
+                                    <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full bg-gray-200 flex items-center justify-center"><span className="text-gray-400 text-2xl">🍽️</span></div>
+                                )}
+                            </div>
+                        );
+
+                        // Shared card click handler
+                        const handleClick = (product: any) => { setSelectedProduct(product); trackProductView(product.id); };
+
                         return (
                             <div key={cat.id} id={cat.id}>
                                 {/* Category Header */}
-                                <div className="px-4 pt-6 pb-3">
-                                    <h2 style={{ color: T.categoryTitleColor, fontSize: `${T.categoryTitleSize}px`, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
-                                </div>
+                                {layout !== 'banner-scroll' && (
+                                    <div className="px-4 pt-6 pb-3">
+                                        <h2 style={{ color: T.categoryTitleColor, fontSize: `${T.categoryTitleSize}px`, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
+                                    </div>
+                                )}
 
-                                <div className="px-4 space-y-4">
-                                    {products.map((product) => (
-                                        <div
-                                            key={product.id}
-                                            onClick={() => { setSelectedProduct(product); trackProductView(product.id); }}
-                                            className="p-3 flex gap-4 h-32 active:scale-[0.98] transition-transform cursor-pointer"
-                                            style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}
-                                        >
-                                            {/* Image / Video Preview */}
-                                            <div className="relative w-24 h-full shrink-0 overflow-hidden" style={{ borderRadius: `${T.cardImageRadius}px` }}>
-                                                {product.video ? (
-                                                    <>
-                                                        <video
-                                                            src={product.video}
-                                                            poster={product.image || undefined}
-                                                            muted
-                                                            autoPlay
-                                                            loop
-                                                            playsInline
-                                                            preload="auto"
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                        <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
-                                                            <span className="text-white text-[10px] ml-0.5">▶</span>
-                                                        </div>
-                                                    </>
-                                                ) : product.image ? (
-                                                    <img
-                                                        src={product.image}
-                                                        alt={product.name}
-                                                        loading="lazy"
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                                                        <span className="text-gray-400 text-2xl">🍽️</span>
+                                {/* ── LAYOUT: list (default) ── */}
+                                {layout === 'list' && (
+                                    <div className="px-4 space-y-4">
+                                        {products.map((product) => (
+                                            <div key={product.id} onClick={() => handleClick(product)} className="p-3 flex gap-4 h-32 active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
+                                                {renderImage(product, 'w-24 h-full shrink-0')}
+                                                <div className="flex-1 flex flex-col justify-between py-1">
+                                                    <div>
+                                                        <h3 className="line-clamp-1" style={{ color: T.productNameColor, fontSize: `${T.productNameSize}px`, fontWeight: T.productNameWeight }}>{product.name}</h3>
+                                                        <p className="mt-1 line-clamp-2" style={{ color: T.productDescColor, fontSize: `${T.productDescSize}px` }}>{product.description}</p>
                                                     </div>
-                                                )}
+                                                    <div className="flex items-center justify-between mt-2">
+                                                        <span style={{ color: T.priceColor, fontSize: `${T.priceSize}px`, fontWeight: T.priceWeight }}>{product.price} TL</span>
+                                                    </div>
+                                                </div>
                                             </div>
+                                        ))}
+                                    </div>
+                                )}
 
-                                            {/* Content */}
-                                            <div className="flex-1 flex flex-col justify-between py-1">
-                                                <div>
-                                                    <h3 className="line-clamp-1" style={{ color: T.productNameColor, fontSize: `${T.productNameSize}px`, fontWeight: T.productNameWeight }}>
-                                                        {product.name}
-                                                    </h3>
-                                                    <p className="mt-1 line-clamp-2" style={{ color: T.productDescColor, fontSize: `${T.productDescSize}px` }}>
-                                                        {product.description}
-                                                    </p>
+                                {/* ── LAYOUT: grid-2 ── */}
+                                {layout === 'grid-2' && (
+                                    <div className="px-4 grid grid-cols-2 gap-3">
+                                        {products.map((product) => (
+                                            <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
+                                                {renderImage(product, 'w-full h-28', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
+                                                <div className="p-2.5">
+                                                    <h3 className="line-clamp-1 mb-0.5" style={{ color: T.productNameColor, fontSize: `${Number(T.productNameSize) - 2}px`, fontWeight: T.productNameWeight }}>{product.name}</h3>
+                                                    <p className="line-clamp-1 mb-1.5" style={{ color: T.productDescColor, fontSize: `${Number(T.productDescSize) - 1}px` }}>{product.description}</p>
+                                                    <span style={{ color: T.priceColor, fontSize: `${Number(T.priceSize) - 2}px`, fontWeight: T.priceWeight }}>{product.price} TL</span>
                                                 </div>
-                                                <div className="flex items-center justify-between mt-2">
-                                                    <span style={{ color: T.priceColor, fontSize: `${T.priceSize}px`, fontWeight: T.priceWeight }}>
-                                                        {product.price} TL
-                                                    </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* ── LAYOUT: grid-3 ── */}
+                                {layout === 'grid-3' && (
+                                    <div className="px-4 grid grid-cols-3 gap-2">
+                                        {products.map((product) => (
+                                            <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
+                                                {renderImage(product, 'w-full h-20', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
+                                                <div className="p-1.5">
+                                                    <h3 className="line-clamp-1 text-xs font-semibold" style={{ color: T.productNameColor }}>{product.name}</h3>
+                                                    <span className="text-xs mt-0.5 block" style={{ color: T.priceColor, fontWeight: T.priceWeight }}>{product.price} TL</span>
                                                 </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* ── LAYOUT: horizontal scroll ── */}
+                                {layout === 'horizontal' && (
+                                    <div className="px-4 overflow-x-auto no-scrollbar">
+                                        <div className="flex gap-3" style={{ width: 'max-content' }}>
+                                            {products.map((product) => (
+                                                <div key={product.id} onClick={() => handleClick(product)} className="w-[140px] overflow-hidden active:scale-[0.98] transition-transform cursor-pointer shrink-0" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
+                                                    {renderImage(product, 'w-full h-24', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
+                                                    <div className="p-2">
+                                                        <h3 className="line-clamp-1 text-sm font-semibold" style={{ color: T.productNameColor }}>{product.name}</h3>
+                                                        <p className="line-clamp-1 mt-0.5 text-xs" style={{ color: T.productDescColor }}>{product.description}</p>
+                                                        <span className="text-sm font-bold mt-1 block" style={{ color: T.priceColor }}>{product.price} TL</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── LAYOUT: magazine ── */}
+                                {layout === 'magazine' && (
+                                    <div className="px-4 space-y-3">
+                                        {/* First product large */}
+                                        {products[0] && (
+                                            <div onClick={() => handleClick(products[0])} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
+                                                {renderImage(products[0], 'w-full h-44', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
+                                                <div className="p-3">
+                                                    <h3 className="line-clamp-1" style={{ color: T.productNameColor, fontSize: `${T.productNameSize}px`, fontWeight: T.productNameWeight }}>{products[0].name}</h3>
+                                                    <p className="line-clamp-2 mt-1" style={{ color: T.productDescColor, fontSize: `${T.productDescSize}px` }}>{products[0].description}</p>
+                                                    <span className="mt-2 block" style={{ color: T.priceColor, fontSize: `${T.priceSize}px`, fontWeight: T.priceWeight }}>{products[0].price} TL</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {/* Rest in 2-col grid */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {products.slice(1).map((product) => (
+                                                <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
+                                                    {renderImage(product, 'w-full h-24', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
+                                                    <div className="p-2">
+                                                        <h3 className="line-clamp-1 text-sm font-semibold" style={{ color: T.productNameColor }}>{product.name}</h3>
+                                                        <span className="text-sm font-bold mt-1 block" style={{ color: T.priceColor }}>{product.price} TL</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── LAYOUT: compact ── */}
+                                {layout === 'compact' && (
+                                    <div className="px-4">
+                                        {products.map((product, idx) => (
+                                            <div key={product.id} onClick={() => handleClick(product)} className={`flex items-center gap-3 py-3 cursor-pointer active:bg-gray-50 transition-colors ${idx > 0 ? 'border-t' : ''}`} style={{ borderColor: T.cardBorder }}>
+                                                {renderImage(product, 'w-12 h-12 shrink-0', '8px')}
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="line-clamp-1 text-sm font-semibold" style={{ color: T.productNameColor }}>{product.name}</h3>
+                                                    <p className="line-clamp-1 text-xs mt-0.5" style={{ color: T.productDescColor }}>{product.description}</p>
+                                                </div>
+                                                <span className="text-sm font-bold shrink-0" style={{ color: T.priceColor }}>{product.price} TL</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* ── LAYOUT: full-card ── */}
+                                {layout === 'full-card' && (
+                                    <div className="px-4 space-y-4">
+                                        {products.map((product) => (
+                                            <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
+                                                {renderImage(product, 'w-full h-48', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
+                                                <div className="p-4">
+                                                    <h3 className="line-clamp-1" style={{ color: T.productNameColor, fontSize: `${Number(T.productNameSize) + 2}px`, fontWeight: T.productNameWeight }}>{product.name}</h3>
+                                                    <p className="line-clamp-2 mt-1" style={{ color: T.productDescColor, fontSize: `${T.productDescSize}px` }}>{product.description}</p>
+                                                    <div className="flex items-center justify-between mt-3">
+                                                        <span style={{ color: T.priceColor, fontSize: `${Number(T.priceSize) + 2}px`, fontWeight: T.priceWeight }}>{product.price} TL</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* ── LAYOUT: banner-scroll ── */}
+                                {layout === 'banner-scroll' && (
+                                    <div className="mb-2">
+                                        {/* Banner header with gradient */}
+                                        <div className="relative h-24 mx-4 rounded-2xl overflow-hidden mb-3" style={{ backgroundColor: T.categoryActiveBg }}>
+                                            <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+                                            <div className="relative h-full flex items-center px-5">
+                                                <h2 className="text-white text-xl font-bold drop-shadow-lg">{cat.name}</h2>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                        {/* Horizontal scroll */}
+                                        <div className="px-4 overflow-x-auto no-scrollbar">
+                                            <div className="flex gap-3" style={{ width: 'max-content' }}>
+                                                {products.map((product) => (
+                                                    <div key={product.id} onClick={() => handleClick(product)} className="w-[150px] overflow-hidden active:scale-[0.98] transition-transform cursor-pointer shrink-0" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
+                                                        {renderImage(product, 'w-full h-28', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
+                                                        <div className="p-2.5">
+                                                            <h3 className="line-clamp-1 text-sm font-semibold" style={{ color: T.productNameColor }}>{product.name}</h3>
+                                                            <span className="text-sm font-bold mt-1 block" style={{ color: T.priceColor }}>{product.price} TL</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── LAYOUT: mosaic ── */}
+                                {layout === 'mosaic' && (
+                                    <div className="px-4">
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {products.map((product, idx) => {
+                                                // Alternating: every 3rd item takes 2 columns
+                                                const isLarge = idx % 3 === 0;
+                                                return (
+                                                    <div
+                                                        key={product.id}
+                                                        onClick={() => handleClick(product)}
+                                                        className={`overflow-hidden active:scale-[0.98] transition-transform cursor-pointer ${isLarge ? 'col-span-2 row-span-2' : ''}`}
+                                                        style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}
+                                                    >
+                                                        {renderImage(product, `w-full ${isLarge ? 'h-40' : 'h-20'}`, `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
+                                                        <div className={isLarge ? 'p-3' : 'p-1.5'}>
+                                                            <h3 className={`line-clamp-1 ${isLarge ? 'text-sm font-bold' : 'text-xs font-semibold'}`} style={{ color: T.productNameColor }}>{product.name}</h3>
+                                                            <span className={`${isLarge ? 'text-sm' : 'text-xs'} font-bold mt-0.5 block`} style={{ color: T.priceColor }}>{product.price} TL</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── LAYOUT: text-only ── */}
+                                {layout === 'text-only' && (
+                                    <div className="px-4" style={{ backgroundColor: T.cardBg, borderRadius: `${T.cardRadius}px`, border: `1px solid ${T.cardBorder}`, boxShadow: getShadow(T.cardShadow) }}>
+                                        {products.map((product, idx) => (
+                                            <div key={product.id} onClick={() => handleClick(product)} className={`flex items-center justify-between py-3.5 px-3 cursor-pointer hover:bg-gray-50 transition-colors ${idx > 0 ? 'border-t' : ''}`} style={{ borderColor: T.cardBorder }}>
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="text-sm font-semibold" style={{ color: T.productNameColor }}>{product.name}</h3>
+                                                    <p className="text-xs mt-0.5 line-clamp-1" style={{ color: T.productDescColor }}>{product.description}</p>
+                                                </div>
+                                                <span className="text-sm font-bold shrink-0 ml-4" style={{ color: T.priceColor }}>{product.price} TL</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}

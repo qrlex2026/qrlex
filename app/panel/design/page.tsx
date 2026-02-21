@@ -3,7 +3,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
     Save, Loader2, Palette, Type, Square, Layers, Eye, RotateCcw,
     Sun, Moon, Sparkles, Paintbrush, SlidersHorizontal, Monitor,
-    LayoutGrid, ChevronDown, ChevronUp, Check, Smartphone, RefreshCw, Search, Image as ImageIcon
+    LayoutGrid, ChevronDown, ChevronUp, Check, Smartphone, RefreshCw, Search, Image as ImageIcon,
+    LayoutList, Grid2X2, Grid3X3, GalleryHorizontal, Newspaper, AlignJustify, RectangleHorizontal, Rows3, LayoutDashboard, FileText
 } from "lucide-react";
 import { useSession } from "@/lib/useSession";
 
@@ -87,6 +88,9 @@ const DEFAULT_THEME = {
     welcomeLogoRadius: "16",
     welcomeLogoSize: "96",
     welcomeSeparatorColor: "#ffffff33",
+
+    // Layout
+    layoutVariant: "list",
 };
 
 type ThemeType = typeof DEFAULT_THEME;
@@ -507,6 +511,153 @@ export default function PanelDesign() {
                         <ColorPicker label="Kenarlık" value={theme.welcomeSecondaryBtnBorder} onChange={(v) => updateTheme("welcomeSecondaryBtnBorder", v)} />
                         <div className="border-t border-gray-800 my-2" />
                         <ColorPicker label="Ayırıcı Çizgi" value={theme.welcomeSeparatorColor} onChange={(v) => updateTheme("welcomeSeparatorColor", v)} />
+                    </Section>
+
+                    {/* Layout Position */}
+                    <Section title="Pozisyon (Ürün Düzeni)" icon={<LayoutGrid size={18} />} defaultOpen={false}>
+                        <p className="text-[10px] text-gray-500 mb-2">Ürünlerin menüde nasıl gösterileceğini seçin</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {([
+                                { id: 'list', name: 'Klasik Liste', desc: 'Resim sol, bilgi sağ', icon: <LayoutList size={14} /> },
+                                { id: 'grid-2', name: '2\'li Grid', desc: '2 sütun, resim üstte', icon: <Grid2X2 size={14} /> },
+                                { id: 'grid-3', name: '3\'lü Grid', desc: 'Kompakt 3 sütun', icon: <Grid3X3 size={14} /> },
+                                { id: 'horizontal', name: 'Yatay Kaydırma', desc: 'Sola-sağa scroll', icon: <GalleryHorizontal size={14} /> },
+                                { id: 'magazine', name: 'Dergi', desc: 'İlk büyük, kalanlar grid', icon: <Newspaper size={14} /> },
+                                { id: 'compact', name: 'Kompakt Liste', desc: 'Dar satırlar', icon: <AlignJustify size={14} /> },
+                                { id: 'full-card', name: 'Tam Kart', desc: 'Büyük resim üstte', icon: <RectangleHorizontal size={14} /> },
+                                { id: 'banner-scroll', name: 'Banner + Kaydır', desc: 'Kategori banner + scroll', icon: <Rows3 size={14} /> },
+                                { id: 'mosaic', name: 'Mozaik', desc: 'Büyük-küçük alternating', icon: <LayoutDashboard size={14} /> },
+                                { id: 'text-only', name: 'Sadece Metin', desc: 'Resim yok, minimalist', icon: <FileText size={14} /> },
+                            ] as { id: string; name: string; desc: string; icon: React.ReactNode }[]).map((v) => {
+                                const isActive = theme.layoutVariant === v.id;
+                                return (
+                                    <button
+                                        key={v.id}
+                                        onClick={() => updateTheme('layoutVariant', v.id)}
+                                        className={`group rounded-2xl border overflow-hidden transition-all ${isActive
+                                                ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                                                : 'border-gray-700 bg-gray-800/40 hover:border-gray-600 hover:bg-gray-800'
+                                            }`}
+                                    >
+                                        {/* Mini wireframe */}
+                                        <div className="mx-2 mt-2 rounded-xl overflow-hidden border border-gray-700/50 bg-gray-900 p-2 h-[72px] flex flex-col">
+                                            {v.id === 'list' && (
+                                                <div className="space-y-1.5 flex-1">
+                                                    {[0, 1].map(i => (
+                                                        <div key={i} className="flex gap-1.5 items-center">
+                                                            <div className="w-5 h-5 rounded bg-gray-700 shrink-0" />
+                                                            <div className="flex-1 space-y-0.5">
+                                                                <div className="h-1 w-8 rounded-full bg-gray-600" />
+                                                                <div className="h-1 w-12 rounded-full bg-gray-700" />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {v.id === 'grid-2' && (
+                                                <div className="grid grid-cols-2 gap-1 flex-1">
+                                                    {[0, 1, 2, 3].map(i => (
+                                                        <div key={i} className="rounded bg-gray-800 border border-gray-700 p-0.5">
+                                                            <div className="h-4 rounded bg-gray-700 mb-0.5" />
+                                                            <div className="h-1 w-6 rounded-full bg-gray-600" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {v.id === 'grid-3' && (
+                                                <div className="grid grid-cols-3 gap-0.5 flex-1">
+                                                    {[0, 1, 2, 3, 4, 5].map(i => (
+                                                        <div key={i} className="rounded bg-gray-800 border border-gray-700 p-0.5">
+                                                            <div className="h-3 rounded bg-gray-700 mb-0.5" />
+                                                            <div className="h-0.5 rounded-full bg-gray-600" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {v.id === 'horizontal' && (
+                                                <div className="flex gap-1 overflow-hidden flex-1 items-center">
+                                                    {[0, 1, 2, 3].map(i => (
+                                                        <div key={i} className="min-w-[22px] rounded bg-gray-800 border border-gray-700 p-0.5">
+                                                            <div className="h-6 rounded bg-gray-700 mb-0.5" />
+                                                            <div className="h-1 w-4 rounded-full bg-gray-600" />
+                                                        </div>
+                                                    ))}
+                                                    <div className="text-[7px] text-gray-600">→</div>
+                                                </div>
+                                            )}
+                                            {v.id === 'magazine' && (
+                                                <div className="flex flex-col gap-1 flex-1">
+                                                    <div className="h-6 rounded bg-gray-700 border border-gray-700" />
+                                                    <div className="grid grid-cols-2 gap-0.5 flex-1">
+                                                        {[0, 1].map(i => (
+                                                            <div key={i} className="rounded bg-gray-800 border border-gray-700 p-0.5">
+                                                                <div className="h-3 rounded bg-gray-700" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {v.id === 'compact' && (
+                                                <div className="space-y-1 flex-1">
+                                                    {[0, 1, 2, 3].map(i => (
+                                                        <div key={i} className="flex items-center gap-1">
+                                                            <div className="w-3 h-3 rounded bg-gray-700 shrink-0" />
+                                                            <div className="h-1 flex-1 rounded-full bg-gray-600" />
+                                                            <div className="h-1 w-4 rounded-full bg-gray-600" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {v.id === 'full-card' && (
+                                                <div className="space-y-1 flex-1">
+                                                    <div className="h-8 rounded bg-gray-700 border border-gray-700" />
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="h-1 w-10 rounded-full bg-gray-600" />
+                                                        <div className="h-1 w-4 rounded-full bg-gray-500" />
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {v.id === 'banner-scroll' && (
+                                                <div className="flex flex-col gap-1 flex-1">
+                                                    <div className="h-4 rounded bg-gradient-to-r from-gray-700 to-gray-800 border border-gray-700" />
+                                                    <div className="flex gap-0.5 overflow-hidden">
+                                                        {[0, 1, 2].map(i => (
+                                                            <div key={i} className="min-w-[18px] h-6 rounded bg-gray-800 border border-gray-700" />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {v.id === 'mosaic' && (
+                                                <div className="grid grid-cols-3 gap-0.5 flex-1">
+                                                    <div className="col-span-2 row-span-2 rounded bg-gray-700" />
+                                                    <div className="rounded bg-gray-800 border border-gray-700" />
+                                                    <div className="rounded bg-gray-800 border border-gray-700" />
+                                                </div>
+                                            )}
+                                            {v.id === 'text-only' && (
+                                                <div className="space-y-1.5 flex-1">
+                                                    {[0, 1, 2, 3].map(i => (
+                                                        <div key={i} className="flex items-center justify-between border-b border-gray-800 pb-1">
+                                                            <div className="h-1 w-14 rounded-full bg-gray-600" />
+                                                            <div className="h-1 w-5 rounded-full bg-gray-500" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        {/* Label */}
+                                        <div className="px-2 py-2 text-center">
+                                            <div className="flex items-center justify-center gap-1 mb-0.5">
+                                                <span className={isActive ? 'text-emerald-400' : 'text-gray-500'}>{v.icon}</span>
+                                                <p className={`text-[11px] font-semibold ${isActive ? 'text-emerald-300' : 'text-gray-200 group-hover:text-emerald-300'} transition-colors`}>{v.name}</p>
+                                            </div>
+                                            <p className="text-[9px] text-gray-500">{v.desc}</p>
+                                            {isActive && <div className="mx-auto mt-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </Section>
 
                     {/* Bottom Nav */}
