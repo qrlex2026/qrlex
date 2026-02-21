@@ -277,26 +277,28 @@ export default function PanelDesign() {
     if (sessionLoading || loading) return <div className="text-center py-20 text-gray-500">Yükleniyor...</div>;
 
     return (
-        <div className="flex gap-6 h-[calc(100dvh-112px)]">
-            {/* LEFT: Editor */}
-            <div className="flex-1 flex flex-col min-w-0">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">Tasarım</h1>
-                        <p className="text-sm text-gray-400 mt-1">QR menünüzün görünümünü özelleştirin</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button onClick={resetTheme} className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded-xl text-sm font-medium transition-colors">
-                            <RotateCcw size={16} /> Sıfırla
-                        </button>
-                        <button onClick={handleSave} disabled={saving || !hasChanges} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${hasChanges ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20" : "bg-gray-800 text-gray-500 cursor-not-allowed"}`}>
-                            {saving ? <Loader2 size={16} className="animate-spin" /> : saved ? <Check size={16} /> : <Save size={16} />}
-                            {saved ? "Kaydedildi ✓" : saving ? "..." : "Kaydet"}
-                        </button>
-                    </div>
+        <div className="flex flex-col h-[calc(100dvh-112px)]">
+            {/* FULL WIDTH HEADER */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-white">Tasarım</h1>
+                    <p className="text-sm text-gray-400 mt-1">QR menünüzün görünümünü özelleştirin</p>
                 </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={resetTheme} className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded-xl text-sm font-medium transition-colors">
+                        <RotateCcw size={16} /> Sıfırla
+                    </button>
+                    <button onClick={handleSave} disabled={saving || !hasChanges} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${hasChanges ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20" : "bg-gray-800 text-gray-500 cursor-not-allowed"}`}>
+                        {saving ? <Loader2 size={16} className="animate-spin" /> : saved ? <Check size={16} /> : <Save size={16} />}
+                        {saved ? "Kaydedildi ✓" : saving ? "..." : "Kaydet"}
+                    </button>
+                </div>
+            </div>
 
-                <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+            {/* CONTENT ROW */}
+            <div className="flex gap-6 flex-1 min-h-0">
+                {/* LEFT: Scrollable sections */}
+                <div className="flex-1 overflow-y-auto space-y-4 pr-1 min-w-0">
                     {/* Preset Themes */}
                     <Section title="Hazır Temalar" icon={<Sparkles size={18} />} defaultOpen={true}>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -667,28 +669,28 @@ export default function PanelDesign() {
                         <ColorPicker label="Pasif İkon" value={theme.bottomNavInactive} onChange={(v) => updateTheme("bottomNavInactive", v)} />
                     </Section>
                 </div>
-            </div>
 
-            {/* RIGHT: Live iframe preview */}
-            {slug && (
-                <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0 pt-[60px]">
-                    <div className="w-[380px] bg-gray-950 rounded-[2.5rem] p-3 shadow-2xl border-[3px] border-gray-800 overflow-hidden relative flex-1">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-950 rounded-b-2xl z-20" />
-                        <iframe
-                            ref={iframeRef}
-                            src={`/${slug}`}
-                            className="w-full h-full rounded-[1.8rem] border-0"
-                            onLoad={() => {
-                                setTimeout(() => {
-                                    if (iframeRef.current?.contentWindow) {
-                                        iframeRef.current.contentWindow.postMessage({ type: 'theme-update', theme }, '*');
-                                    }
-                                }, 500);
-                            }}
-                        />
+                {/* RIGHT: Phone frame - aligned with scrollable area */}
+                {slug && (
+                    <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0">
+                        <div className="w-[380px] bg-gray-950 rounded-[2.5rem] p-3 shadow-2xl border-[3px] border-gray-800 overflow-hidden relative flex-1">
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-950 rounded-b-2xl z-20" />
+                            <iframe
+                                ref={iframeRef}
+                                src={`/${slug}`}
+                                className="w-full h-full rounded-[1.8rem] border-0"
+                                onLoad={() => {
+                                    setTimeout(() => {
+                                        if (iframeRef.current?.contentWindow) {
+                                            iframeRef.current.contentWindow.postMessage({ type: 'theme-update', theme }, '*');
+                                        }
+                                    }, 500);
+                                }}
+                            />
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
