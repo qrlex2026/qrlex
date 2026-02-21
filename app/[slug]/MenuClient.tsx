@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 // Using regular img tags for external URLs
-import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users, Menu } from "lucide-react";
+import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users, Menu, LayoutGrid, LayoutList } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -61,6 +61,7 @@ export default function MenuClient({
     const [searchQuery, setSearchQuery] = useState("");
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [categoryLayoutOverrides, setCategoryLayoutOverrides] = useState<Record<string, string>>({});
 
     // ======= Analytics Tracking =======
     const sessionIdRef = useRef<string>('');
@@ -670,22 +671,6 @@ export default function MenuClient({
             )}
 
             <div className="min-h-screen pb-20 overflow-x-clip" style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}>
-                {/* Custom Header */}
-                <div className="h-[60px] bg-white flex items-center justify-between px-4 shadow-sm relative">
-                    {/* Left: Hamburger Menu */}
-                    <button onClick={() => setIsSidebarDrawerOpen(true)} className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors z-10">
-                        <Menu size={20} />
-                    </button>
-
-                    {/* Center: Business Name */}
-                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg text-gray-900 truncate max-w-[60%] text-center">{BUSINESS_INFO.name || "Yükleniyor..."}</span>
-
-                    {/* Right: Search Icon */}
-                    <button onClick={() => setIsSearchOpen(true)} className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors z-10">
-                        <Search size={20} />
-                    </button>
-                </div>
-
                 {/* Hero Slider (JS Based) — toggle from design panel */}
                 {T.showHeroSlider !== 'false' && (
                     <div className="w-full h-[300px] relative overflow-hidden bg-gray-100">
@@ -723,24 +708,45 @@ export default function MenuClient({
                     </div>
                 )}
 
-
-                {/* Sticky Category Navbar */}
-                <div ref={categoryNavRef} className="sticky top-0 z-10 overflow-x-auto no-scrollbar py-3 px-4 flex gap-2" style={{ backgroundColor: T.pageBg }}>
-                    {DISPLAY_CATEGORIES.map((cat) => (
-                        <button
-                            key={cat.id}
-                            data-cat={cat.id}
-                            onClick={() => scrollToCategory(cat.id)}
-                            className="whitespace-nowrap text-sm font-medium transition-all px-4 py-2"
-                            style={{
-                                backgroundColor: activeCategory === cat.id ? T.categoryActiveBg : T.categoryInactiveBg,
-                                color: activeCategory === cat.id ? T.categoryActiveText : T.categoryInactiveText,
-                                borderRadius: `${T.categoryRadius}px`,
-                            }}
-                        >
-                            {cat.name}
+                {/* Sticky Header + Category Nav */}
+                <div className="sticky top-0 z-10">
+                    {/* Custom Header */}
+                    <div className="h-[60px] bg-white flex items-center justify-between px-4 shadow-sm relative">
+                        {/* Left: Hamburger Menu */}
+                        <button onClick={() => setIsSidebarDrawerOpen(true)} className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors z-10">
+                            <Menu size={20} />
                         </button>
-                    ))}
+
+                        {/* Center: Business Name */}
+                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg text-gray-900 truncate max-w-[60%] text-center">{BUSINESS_INFO.name || "Yükleniyor..."}</span>
+
+                        {/* Right: Search Icon */}
+                        <button onClick={() => setIsSearchOpen(true)} className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors z-10">
+                            <Search size={20} />
+                        </button>
+                    </div>
+
+                    {/* Category Navbar */}
+                    <div ref={categoryNavRef} className="overflow-x-auto no-scrollbar py-3 px-4 flex gap-2" style={{
+                        backgroundColor: (T as any).categoryNavBg || T.pageBg,
+                        ...(Number((T as any).categoryNavBlur || 0) > 0 ? { backdropFilter: `blur(${(T as any).categoryNavBlur}px)`, WebkitBackdropFilter: `blur(${(T as any).categoryNavBlur}px)` } : {}),
+                    }}>
+                        {DISPLAY_CATEGORIES.map((cat) => (
+                            <button
+                                key={cat.id}
+                                data-cat={cat.id}
+                                onClick={() => scrollToCategory(cat.id)}
+                                className="whitespace-nowrap text-sm font-medium transition-all px-4 py-2"
+                                style={{
+                                    backgroundColor: activeCategory === cat.id ? T.categoryActiveBg : T.categoryInactiveBg,
+                                    color: activeCategory === cat.id ? T.categoryActiveText : T.categoryInactiveText,
+                                    borderRadius: `${T.categoryRadius}px`,
+                                }}
+                            >
+                                {cat.name}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Product List (Grouped by Category) */}
@@ -753,7 +759,8 @@ export default function MenuClient({
 
                         if (products.length === 0) return null;
 
-                        const layout = (T as any).layoutVariant || 'list';
+                        const defaultLayout = (T as any).layoutVariant || 'list';
+                        const layout = categoryLayoutOverrides[cat.id] || defaultLayout;
 
                         // Shared image renderer
                         const renderImage = (product: any, className: string, imgRadius?: string) => (
@@ -775,20 +782,42 @@ export default function MenuClient({
                         const handleClick = (product: any) => { setSelectedProduct(product); trackProductView(product.id); };
 
                         return (
-                            <div key={cat.id} id={cat.id}>
+                            <div key={cat.id} id={cat.id} className="rounded-xl" style={{ backgroundColor: (T as any).categorySectionBg || 'transparent', padding: (T as any).categorySectionBg && (T as any).categorySectionBg !== 'transparent' ? '8px' : '0', marginBottom: '4px' }}>
                                 {/* Category Header */}
                                 {layout !== 'banner-scroll' && (
-                                    <div className="px-4 pt-6 pb-3">
+                                    <div className="px-4 pt-6 pb-3 flex items-center justify-between">
                                         <h2 style={{ color: T.categoryTitleColor, fontSize: `${T.categoryTitleSize}px`, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => setCategoryLayoutOverrides(prev => ({ ...prev, [cat.id]: defaultLayout }))}
+                                                className="p-1.5 rounded-lg transition-all"
+                                                style={{
+                                                    backgroundColor: layout === defaultLayout ? `${T.accentColor}20` : 'transparent',
+                                                    color: layout === defaultLayout ? T.accentColor : (T.productDescColor || '#888'),
+                                                }}
+                                            >
+                                                <LayoutGrid size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => setCategoryLayoutOverrides(prev => ({ ...prev, [cat.id]: 'list' }))}
+                                                className="p-1.5 rounded-lg transition-all"
+                                                style={{
+                                                    backgroundColor: layout === 'list' && defaultLayout !== 'list' ? `${T.accentColor}20` : (defaultLayout === 'list' && layout === 'list' ? `${T.accentColor}20` : 'transparent'),
+                                                    color: layout === 'list' ? T.accentColor : (T.productDescColor || '#888'),
+                                                }}
+                                            >
+                                                <LayoutList size={16} />
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
 
                                 {/* ── LAYOUT: list (default) ── */}
                                 {layout === 'list' && (
-                                    <div className="px-4 space-y-4">
+                                    <div className="px-4 space-y-2.5">
                                         {products.map((product) => (
-                                            <div key={product.id} onClick={() => handleClick(product)} className="p-3 flex gap-4 h-32 active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
-                                                {renderImage(product, 'w-24 h-full shrink-0')}
+                                            <div key={product.id} onClick={() => handleClick(product)} className="p-2 flex gap-3 h-[88px] active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
+                                                {renderImage(product, 'w-20 h-full shrink-0')}
                                                 <div className="flex-1 flex flex-col justify-between py-1">
                                                     <div>
                                                         <h3 className="line-clamp-1" style={{ color: T.productNameColor, fontSize: `${T.productNameSize}px`, fontWeight: T.productNameWeight }}>{product.name}</h3>
@@ -835,22 +864,35 @@ export default function MenuClient({
                                 )}
 
                                 {/* ── LAYOUT: horizontal scroll ── */}
-                                {layout === 'horizontal' && (
-                                    <div className="px-4 overflow-x-auto no-scrollbar">
-                                        <div className="flex gap-3" style={{ width: 'max-content' }}>
-                                            {products.map((product) => (
-                                                <div key={product.id} onClick={() => handleClick(product)} className="w-[140px] overflow-hidden active:scale-[0.98] transition-transform cursor-pointer shrink-0" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
-                                                    {renderImage(product, 'w-full h-24', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
-                                                    <div className="p-2">
-                                                        <h3 className="line-clamp-1 text-sm font-semibold" style={{ color: T.productNameColor }}>{product.name}</h3>
-                                                        <p className="line-clamp-1 mt-0.5 text-xs" style={{ color: T.productDescColor }}>{product.description}</p>
-                                                        <span className="text-sm font-bold mt-1 block" style={{ color: T.priceColor }}>{product.price} TL</span>
-                                                    </div>
+                                {layout === 'horizontal' && (() => {
+                                    const itemsPerPage = 2;
+                                    const totalPages = Math.ceil(products.length / itemsPerPage);
+                                    return (
+                                        <div>
+                                            <div className="px-4 overflow-x-auto no-scrollbar snap-x snap-mandatory">
+                                                <div className="flex gap-3" style={{ width: 'max-content' }}>
+                                                    {products.map((product) => (
+                                                        <div key={product.id} onClick={() => handleClick(product)} className="w-[140px] overflow-hidden active:scale-[0.98] transition-transform cursor-pointer shrink-0 snap-start" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
+                                                            {renderImage(product, 'w-full h-24', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
+                                                            <div className="p-2">
+                                                                <h3 className="line-clamp-1 text-sm font-semibold" style={{ color: T.productNameColor }}>{product.name}</h3>
+                                                                <p className="line-clamp-1 mt-0.5 text-xs" style={{ color: T.productDescColor }}>{product.description}</p>
+                                                                <span className="text-sm font-bold mt-1 block" style={{ color: T.priceColor }}>{product.price} TL</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
+                                            </div>
+                                            {totalPages > 1 && (
+                                                <div className="flex justify-center gap-1.5 mt-3">
+                                                    {Array.from({ length: totalPages }).map((_, i) => (
+                                                        <div key={i} className="w-2 h-2 rounded-full transition-all" style={{ backgroundColor: i === 0 ? T.accentColor : `${T.productDescColor || '#888'}40` }} />
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                )}
+                                    );
+                                })()}
 
                                 {/* ── LAYOUT: magazine ── */}
                                 {layout === 'magazine' && (

@@ -175,16 +175,9 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                 {/* Header: Logo */}
                 <div className="px-4 pt-5 pb-3 flex items-center justify-center">
                     {!collapsed ? (
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                                <QrCode size={18} className="text-white" />
-                            </div>
-                            <span className="text-lg font-bold text-white tracking-tight">QRlex</span>
-                        </div>
+                        <span className="text-xl font-extrabold text-white tracking-tight">QRLEX</span>
                     ) : (
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                            <QrCode size={18} className="text-white" />
-                        </div>
+                        <span className="text-lg font-extrabold text-white">Q</span>
                     )}
                 </div>
 
@@ -236,20 +229,18 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                 {/* Divider */}
                 <div className="mx-4 my-3 border-t border-gray-800/80" />
 
-                {/* Logout */}
+                {/* Language */}
                 {!collapsed && (
                     <div className="px-3 mb-2">
-                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-red-400/80 hover:bg-red-500/10 hover:text-red-400 transition-all">
-                            <LogOut size={20} />
-                            Çıkış Yap
+                        <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-medium text-gray-400 hover:bg-gray-800/60 hover:text-gray-300 transition-all">
+                            <span>Dil</span>
+                            <div className="w-6 h-6 rounded-full bg-gray-800" />
                         </button>
                     </div>
                 )}
                 {collapsed && (
                     <div className="px-3 mb-2 flex justify-center">
-                        <button onClick={handleLogout} className="w-10 h-10 rounded-xl flex items-center justify-center text-red-400/80 hover:bg-red-500/10 hover:text-red-400 transition-all" title="Çıkış Yap">
-                            <LogOut size={20} />
-                        </button>
+                        <div className="w-6 h-6 rounded-full bg-gray-800" />
                     </div>
                 )}
 

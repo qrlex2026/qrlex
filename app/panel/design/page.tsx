@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
     Save, Loader2, Palette, Type, Square, Layers, Eye, RotateCcw,
@@ -91,6 +91,11 @@ const DEFAULT_THEME = {
 
     // Layout
     layoutVariant: "list",
+    categorySectionBg: "transparent",
+
+    // Category Nav Bar
+    categoryNavBg: "#ffffff",
+    categoryNavBlur: "0",
 
     // Slider
     showHeroSlider: "true",
@@ -351,186 +356,6 @@ export default function PanelDesign() {
                         </div>
                     </Section>
 
-                    {/* General */}
-                    <Section title="Genel Ayarlar" icon={<Palette size={18} />}>
-                        <ColorPicker label="Sayfa Arkaplanı" value={theme.pageBg} onChange={(v) => updateTheme("pageBg", v)} />
-                        <ColorPicker label="Vurgu Rengi" value={theme.accentColor} onChange={(v) => updateTheme("accentColor", v)} />
-                        <div>
-                            <label className="text-xs text-gray-400 mb-2 block">Yazı Tipi</label>
-                            {/* Font search */}
-                            <div className="relative mb-3">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                                <input
-                                    value={fontSearch}
-                                    onChange={(e) => {
-                                        const q = e.target.value;
-                                        setFontSearch(q);
-                                        if (q.length >= 2) {
-                                            // Load Google Font for preview
-                                            const fontName = q.replace(/ /g, '+');
-                                            if (!document.querySelector(`link[href*="${fontName}"]`)) {
-                                                const link = document.createElement('link');
-                                                link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;600&display=swap`;
-                                                link.rel = 'stylesheet';
-                                                document.head.appendChild(link);
-                                            }
-                                            setSearchedFonts([{ name: q, label: q }]);
-                                        } else {
-                                            setSearchedFonts([]);
-                                        }
-                                    }}
-                                    placeholder="Google Fonts'ta ara..."
-                                    className="w-full pl-9 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500"
-                                />
-                            </div>
-                            {/* Font grid */}
-                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
-                                {[...searchedFonts, ...FONTS.filter(f => !searchedFonts.some(sf => sf.name === f.name))].map((f) => {
-                                    // Preload font
-                                    const fontName = f.name.replace(/ /g, '+');
-                                    if (typeof window !== 'undefined' && !document.querySelector(`link[href*="${fontName}"]`)) {
-                                        const link = document.createElement('link');
-                                        link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;600&display=swap`;
-                                        link.rel = 'stylesheet';
-                                        document.head.appendChild(link);
-                                    }
-                                    const isActive = theme.fontFamily === f.name;
-                                    return (
-                                        <button
-                                            key={f.name}
-                                            onClick={() => updateTheme("fontFamily", f.name)}
-                                            className={`relative px-2 py-2.5 rounded-xl border text-center transition-all ${isActive ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30' : 'border-gray-700 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800'}`}
-                                        >
-                                            <span className="block text-sm font-semibold text-white truncate" style={{ fontFamily: f.name }}>
-                                                Aa
-                                            </span>
-                                            <span className="block text-[9px] text-gray-500 mt-0.5 truncate">{f.label}</span>
-                                            {isActive && <div className="absolute top-1 right-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </Section>
-
-                    {/* Header */}
-                    <Section title="Başlık / Slider" icon={<Monitor size={18} />} defaultOpen={false}>
-                        {/* Hero Slider Toggle */}
-                        <div className="flex items-center justify-between mb-4">
-                            <div>
-                                <p className="text-sm font-medium text-white">Hero Slider</p>
-                                <p className="text-[11px] text-gray-500">Menü üstündeki kayan banner alanı</p>
-                            </div>
-                            <button
-                                onClick={() => updateTheme("showHeroSlider", theme.showHeroSlider !== "false" ? "false" : "true")}
-                                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${theme.showHeroSlider !== "false" ? 'bg-emerald-500' : 'bg-gray-600'}`}
-                            >
-                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${theme.showHeroSlider !== "false" ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
-                            </button>
-                        </div>
-                        <ColorPicker label="Başlık Arkaplanı" value={theme.headerBg} onChange={(v) => updateTheme("headerBg", v)} />
-                        <ColorPicker label="Gradient Başlangıç" value={theme.headerGradientFrom} onChange={(v) => updateTheme("headerGradientFrom", v)} />
-                        <ColorPicker label="Gradient Bitiş" value={theme.headerGradientTo} onChange={(v) => updateTheme("headerGradientTo", v)} />
-                    </Section>
-
-                    {/* Category Buttons */}
-                    <Section title="Kategori Butonları" icon={<LayoutGrid size={18} />} defaultOpen={false}>
-                        <ColorPicker label="Aktif Arkaplan" value={theme.categoryActiveBg} onChange={(v) => updateTheme("categoryActiveBg", v)} />
-                        <ColorPicker label="Aktif Yazı Rengi" value={theme.categoryActiveText} onChange={(v) => updateTheme("categoryActiveText", v)} />
-                        <ColorPicker label="Pasif Arkaplan" value={theme.categoryInactiveBg} onChange={(v) => updateTheme("categoryInactiveBg", v)} />
-                        <ColorPicker label="Pasif Yazı Rengi" value={theme.categoryInactiveText} onChange={(v) => updateTheme("categoryInactiveText", v)} />
-                        <div className="flex items-center justify-between gap-3">
-                            <label className="text-xs text-gray-400">Köşe Yuvarlaklığı</label>
-                            <div className="flex gap-1.5">{RADIUS_PRESETS.map((r) => (
-                                <button key={r.value} onClick={() => updateTheme("categoryRadius", r.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.categoryRadius === r.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{r.label}</button>
-                            ))}</div>
-                        </div>
-                    </Section>
-
-                    {/* Search */}
-                    <Section title="Arama Çubuğu" icon={<SlidersHorizontal size={18} />} defaultOpen={false}>
-                        <ColorPicker label="Arkaplan" value={theme.searchBg} onChange={(v) => updateTheme("searchBg", v)} />
-                        <ColorPicker label="Kenarlık" value={theme.searchBorder} onChange={(v) => updateTheme("searchBorder", v)} />
-                        <ColorPicker label="Yazı Rengi" value={theme.searchText} onChange={(v) => updateTheme("searchText", v)} />
-                    </Section>
-
-                    {/* Cards */}
-                    <Section title="Ürün Kartları" icon={<Square size={18} />}>
-                        <ColorPicker label="Kart Arkaplanı" value={theme.cardBg} onChange={(v) => updateTheme("cardBg", v)} />
-                        <ColorPicker label="Kart Kenarlık" value={theme.cardBorder} onChange={(v) => updateTheme("cardBorder", v)} />
-                        <div className="flex items-center justify-between gap-3">
-                            <label className="text-xs text-gray-400">Kart Gölgesi</label>
-                            <div className="flex gap-1.5">{SHADOW_OPTIONS.map((s) => (
-                                <button key={s.value} onClick={() => updateTheme("cardShadow", s.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.cardShadow === s.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{s.label}</button>
-                            ))}</div>
-                        </div>
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Kart Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={24} value={theme.cardRadius} onChange={(e) => updateTheme("cardRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.cardRadius}px</span></div></div>
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Resim Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={20} value={theme.cardImageRadius} onChange={(e) => updateTheme("cardImageRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.cardImageRadius}px</span></div></div>
-                    </Section>
-
-                    {/* Text */}
-                    <Section title="Yazı Stilleri" icon={<Type size={18} />}>
-                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Ürün Adı</p>
-                        <ColorPicker label="Renk" value={theme.productNameColor} onChange={(v) => updateTheme("productNameColor", v)} />
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Boyut</label><div className="flex items-center gap-2"><input type="range" min={12} max={22} value={theme.productNameSize} onChange={(e) => updateTheme("productNameSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.productNameSize}px</span></div></div>
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Kalınlık</label><div className="flex gap-1.5">{["400", "500", "600", "700", "800"].map((w) => (<button key={w} onClick={() => updateTheme("productNameWeight", w)} className={`px-2 py-1 rounded-md text-[10px] transition-all border ${theme.productNameWeight === w ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400"}`} style={{ fontWeight: parseInt(w) }}>{w}</button>))}</div></div>
-                        <div className="border-t border-gray-800 my-2" />
-                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Ürün Açıklaması</p>
-                        <ColorPicker label="Renk" value={theme.productDescColor} onChange={(v) => updateTheme("productDescColor", v)} />
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Boyut</label><div className="flex items-center gap-2"><input type="range" min={10} max={16} value={theme.productDescSize} onChange={(e) => updateTheme("productDescSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.productDescSize}px</span></div></div>
-                        <div className="border-t border-gray-800 my-2" />
-                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Kategori Başlığı</p>
-                        <ColorPicker label="Renk" value={theme.categoryTitleColor} onChange={(v) => updateTheme("categoryTitleColor", v)} />
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Boyut</label><div className="flex items-center gap-2"><input type="range" min={16} max={32} value={theme.categoryTitleSize} onChange={(e) => updateTheme("categoryTitleSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.categoryTitleSize}px</span></div></div>
-                    </Section>
-
-                    {/* Pricing */}
-                    <Section title="Fiyat Stilleri" icon={<Layers size={18} />} defaultOpen={false}>
-                        <ColorPicker label="Fiyat Rengi" value={theme.priceColor} onChange={(v) => updateTheme("priceColor", v)} />
-                        <ColorPicker label="İndirimli Fiyat" value={theme.discountColor} onChange={(v) => updateTheme("discountColor", v)} />
-                        <ColorPicker label="Eski Fiyat" value={theme.oldPriceColor} onChange={(v) => updateTheme("oldPriceColor", v)} />
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Boyut</label><div className="flex items-center gap-2"><input type="range" min={14} max={26} value={theme.priceSize} onChange={(e) => updateTheme("priceSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.priceSize}px</span></div></div>
-                    </Section>
-
-                    {/* Popular Badge */}
-                    <Section title="Popüler Etiketi" icon={<Sparkles size={18} />} defaultOpen={false}>
-                        <ColorPicker label="Arkaplan" value={theme.popularBadgeBg} onChange={(v) => updateTheme("popularBadgeBg", v)} />
-                        <ColorPicker label="Yazı Rengi" value={theme.popularBadgeText} onChange={(v) => updateTheme("popularBadgeText", v)} />
-                    </Section>
-
-                    {/* Welcome Screen */}
-                    <Section title="Hoşgeldiniz Ekranı" icon={<ImageIcon size={18} />} defaultOpen={false}>
-                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Arka Plan</p>
-                        <ColorPicker label="Arka Plan Rengi" value={theme.welcomeBg} onChange={(v) => updateTheme("welcomeBg", v)} />
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Video/Resim Opaklığı</label><div className="flex items-center gap-2"><input type="range" min={0} max={100} value={theme.welcomeOverlayOpacity} onChange={(e) => updateTheme("welcomeOverlayOpacity", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeOverlayOpacity}%</span></div></div>
-                        <div className="border-t border-gray-800 my-2" />
-                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Gradient Ayarları</p>
-                        <ColorPicker label="Gradient Başlangıç" value={theme.welcomeGradientFrom} onChange={(v) => updateTheme("welcomeGradientFrom", v)} />
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Gradient Yoğunluğu</label><div className="flex items-center gap-2"><input type="range" min={0} max={100} value={theme.welcomeGradientOpacity} onChange={(e) => updateTheme("welcomeGradientOpacity", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeGradientOpacity}%</span></div></div>
-                        <div className="border-t border-gray-800 my-2" />
-                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Yazılar</p>
-                        <ColorPicker label="Ana Yazı Rengi" value={theme.welcomeTextColor} onChange={(v) => updateTheme("welcomeTextColor", v)} />
-                        <ColorPicker label="Alt Yazı Rengi" value={theme.welcomeSubtextColor} onChange={(v) => updateTheme("welcomeSubtextColor", v)} />
-                        <div className="border-t border-gray-800 my-2" />
-                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Logo</p>
-                        <ColorPicker label="Logo Kenarlık" value={theme.welcomeLogoBorder} onChange={(v) => updateTheme("welcomeLogoBorder", v)} />
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Logo Boyutu</label><div className="flex items-center gap-2"><input type="range" min={48} max={160} value={theme.welcomeLogoSize} onChange={(e) => updateTheme("welcomeLogoSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeLogoSize}px</span></div></div>
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Logo Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={50} value={theme.welcomeLogoRadius} onChange={(e) => updateTheme("welcomeLogoRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeLogoRadius}px</span></div></div>
-                        <div className="border-t border-gray-800 my-2" />
-                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Menü Butonu</p>
-                        <ColorPicker label="Buton Arkaplan" value={theme.welcomeBtnBg} onChange={(v) => updateTheme("welcomeBtnBg", v)} />
-                        <ColorPicker label="Buton Yazı" value={theme.welcomeBtnText} onChange={(v) => updateTheme("welcomeBtnText", v)} />
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Buton Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={24} value={theme.welcomeBtnRadius} onChange={(e) => updateTheme("welcomeBtnRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeBtnRadius}px</span></div></div>
-                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Buton Gölgesi</label><div className="flex gap-1.5">{SHADOW_OPTIONS.map((s) => (<button key={s.value} onClick={() => updateTheme("welcomeBtnShadow", s.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.welcomeBtnShadow === s.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{s.label}</button>))}</div></div>
-                        <div className="border-t border-gray-800 my-2" />
-                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Diğer Butonlar</p>
-                        <ColorPicker label="Arkaplan" value={theme.welcomeSecondaryBtnBg} onChange={(v) => updateTheme("welcomeSecondaryBtnBg", v)} />
-                        <ColorPicker label="Yazı Rengi" value={theme.welcomeSecondaryBtnText} onChange={(v) => updateTheme("welcomeSecondaryBtnText", v)} />
-                        <ColorPicker label="Kenarlık" value={theme.welcomeSecondaryBtnBorder} onChange={(v) => updateTheme("welcomeSecondaryBtnBorder", v)} />
-                        <div className="border-t border-gray-800 my-2" />
-                        <ColorPicker label="Ayırıcı Çizgi" value={theme.welcomeSeparatorColor} onChange={(v) => updateTheme("welcomeSeparatorColor", v)} />
-                    </Section>
-
                     {/* Layout Position */}
                     <Section title="Pozisyon (Ürün Düzeni)" icon={<LayoutGrid size={18} />} defaultOpen={false}>
                         <p className="text-[10px] text-gray-500 mb-2">Ürünlerin menüde nasıl gösterileceğini seçin</p>
@@ -678,6 +503,200 @@ export default function PanelDesign() {
                         </div>
                     </Section>
 
+                    {/* General */}
+                    <Section title="Genel Ayarlar" icon={<Palette size={18} />}>
+                        <ColorPicker label="Sayfa Arkaplanı" value={theme.pageBg} onChange={(v) => updateTheme("pageBg", v)} />
+                        <ColorPicker label="Vurgu Rengi" value={theme.accentColor} onChange={(v) => updateTheme("accentColor", v)} />
+                        <div>
+                            <label className="text-xs text-gray-400 mb-2 block">Yazı Tipi</label>
+                            {/* Font search */}
+                            <div className="relative mb-3">
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                                <input
+                                    value={fontSearch}
+                                    onChange={(e) => {
+                                        const q = e.target.value;
+                                        setFontSearch(q);
+                                        if (q.length >= 2) {
+                                            // Load Google Font for preview
+                                            const fontName = q.replace(/ /g, '+');
+                                            if (!document.querySelector(`link[href*="${fontName}"]`)) {
+                                                const link = document.createElement('link');
+                                                link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;600&display=swap`;
+                                                link.rel = 'stylesheet';
+                                                document.head.appendChild(link);
+                                            }
+                                            setSearchedFonts([{ name: q, label: q }]);
+                                        } else {
+                                            setSearchedFonts([]);
+                                        }
+                                    }}
+                                    placeholder="Google Fonts'ta ara..."
+                                    className="w-full pl-9 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500"
+                                />
+                            </div>
+                            {/* Font grid */}
+                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+                                {[...searchedFonts, ...FONTS.filter(f => !searchedFonts.some(sf => sf.name === f.name))].map((f) => {
+                                    // Preload font
+                                    const fontName = f.name.replace(/ /g, '+');
+                                    if (typeof window !== 'undefined' && !document.querySelector(`link[href*="${fontName}"]`)) {
+                                        const link = document.createElement('link');
+                                        link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;600&display=swap`;
+                                        link.rel = 'stylesheet';
+                                        document.head.appendChild(link);
+                                    }
+                                    const isActive = theme.fontFamily === f.name;
+                                    return (
+                                        <button
+                                            key={f.name}
+                                            onClick={() => updateTheme("fontFamily", f.name)}
+                                            className={`relative px-2 py-2.5 rounded-xl border text-center transition-all ${isActive ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30' : 'border-gray-700 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800'}`}
+                                        >
+                                            <span className="block text-sm font-semibold text-white truncate" style={{ fontFamily: f.name }}>
+                                                Aa
+                                            </span>
+                                            <span className="block text-[9px] text-gray-500 mt-0.5 truncate">{f.label}</span>
+                                            {isActive && <div className="absolute top-1 right-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </Section>
+
+                    {/* Header */}
+                    <Section title="Başlık / Slider" icon={<Monitor size={18} />} defaultOpen={false}>
+                        {/* Hero Slider Toggle */}
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <p className="text-sm font-medium text-white">Hero Slider</p>
+                                <p className="text-[11px] text-gray-500">Menü üstündeki kayan banner alanı</p>
+                            </div>
+                            <button
+                                onClick={() => updateTheme("showHeroSlider", theme.showHeroSlider !== "false" ? "false" : "true")}
+                                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${theme.showHeroSlider !== "false" ? 'bg-emerald-500' : 'bg-gray-600'}`}
+                            >
+                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${theme.showHeroSlider !== "false" ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                            </button>
+                        </div>
+                        <ColorPicker label="Başlık Arkaplanı" value={theme.headerBg} onChange={(v) => updateTheme("headerBg", v)} />
+                        <ColorPicker label="Gradient Başlangıç" value={theme.headerGradientFrom} onChange={(v) => updateTheme("headerGradientFrom", v)} />
+                        <ColorPicker label="Gradient Bitiş" value={theme.headerGradientTo} onChange={(v) => updateTheme("headerGradientTo", v)} />
+                    </Section>
+
+                    {/* Category Buttons */}
+                    <Section title="Kategori Butonları" icon={<LayoutGrid size={18} />} defaultOpen={false}>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Buton Bar Arkaplanı</p>
+                        <ColorPicker label="Arkaplan Rengi" value={theme.categoryNavBg} onChange={(v) => updateTheme("categoryNavBg", v)} />
+                        <div className="flex items-center justify-between gap-3">
+                            <label className="text-xs text-gray-400">Blur (Bulanıklık)</label>
+                            <div className="flex items-center gap-2">
+                                <input type="range" min={0} max={20} value={theme.categoryNavBlur} onChange={(e) => updateTheme("categoryNavBlur", e.target.value)} className="w-24 accent-emerald-500" />
+                                <span className="text-xs text-gray-500 w-8 text-right">{theme.categoryNavBlur}px</span>
+                            </div>
+                        </div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Buton Renkleri</p>
+                        <ColorPicker label="Aktif Arkaplan" value={theme.categoryActiveBg} onChange={(v) => updateTheme("categoryActiveBg", v)} />
+                        <ColorPicker label="Aktif Yazı Rengi" value={theme.categoryActiveText} onChange={(v) => updateTheme("categoryActiveText", v)} />
+                        <ColorPicker label="Pasif Arkaplan" value={theme.categoryInactiveBg} onChange={(v) => updateTheme("categoryInactiveBg", v)} />
+                        <ColorPicker label="Pasif Yazı Rengi" value={theme.categoryInactiveText} onChange={(v) => updateTheme("categoryInactiveText", v)} />
+                        <div className="flex items-center justify-between gap-3">
+                            <label className="text-xs text-gray-400">Köşe Yuvarlaklığı</label>
+                            <div className="flex gap-1.5">{RADIUS_PRESETS.map((r) => (
+                                <button key={r.value} onClick={() => updateTheme("categoryRadius", r.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.categoryRadius === r.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{r.label}</button>
+                            ))}</div>
+                        </div>
+                    </Section>
+
+                    {/* Search */}
+                    <Section title="Arama Çubuğu" icon={<SlidersHorizontal size={18} />} defaultOpen={false}>
+                        <ColorPicker label="Arkaplan" value={theme.searchBg} onChange={(v) => updateTheme("searchBg", v)} />
+                        <ColorPicker label="Kenarlık" value={theme.searchBorder} onChange={(v) => updateTheme("searchBorder", v)} />
+                        <ColorPicker label="Yazı Rengi" value={theme.searchText} onChange={(v) => updateTheme("searchText", v)} />
+                    </Section>
+
+                    {/* Cards */}
+                    <Section title="Ürün Kartları" icon={<Square size={18} />}>
+                        <ColorPicker label="Kategori Bölüm Arkaplanı" value={theme.categorySectionBg} onChange={(v) => updateTheme("categorySectionBg", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <ColorPicker label="Kart Arkaplanı" value={theme.cardBg} onChange={(v) => updateTheme("cardBg", v)} />
+                        <ColorPicker label="Kart Kenarlık" value={theme.cardBorder} onChange={(v) => updateTheme("cardBorder", v)} />
+                        <div className="flex items-center justify-between gap-3">
+                            <label className="text-xs text-gray-400">Kart Gölgesi</label>
+                            <div className="flex gap-1.5">{SHADOW_OPTIONS.map((s) => (
+                                <button key={s.value} onClick={() => updateTheme("cardShadow", s.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.cardShadow === s.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{s.label}</button>
+                            ))}</div>
+                        </div>
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Kart Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={24} value={theme.cardRadius} onChange={(e) => updateTheme("cardRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.cardRadius}px</span></div></div>
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Resim Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={20} value={theme.cardImageRadius} onChange={(e) => updateTheme("cardImageRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.cardImageRadius}px</span></div></div>
+                    </Section>
+
+                    {/* Text */}
+                    <Section title="Yazı Stilleri" icon={<Type size={18} />}>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Ürün Adı</p>
+                        <ColorPicker label="Renk" value={theme.productNameColor} onChange={(v) => updateTheme("productNameColor", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Boyut</label><div className="flex items-center gap-2"><input type="range" min={12} max={22} value={theme.productNameSize} onChange={(e) => updateTheme("productNameSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.productNameSize}px</span></div></div>
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Kalınlık</label><div className="flex gap-1.5">{["400", "500", "600", "700", "800"].map((w) => (<button key={w} onClick={() => updateTheme("productNameWeight", w)} className={`px-2 py-1 rounded-md text-[10px] transition-all border ${theme.productNameWeight === w ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400"}`} style={{ fontWeight: parseInt(w) }}>{w}</button>))}</div></div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Ürün Açıklaması</p>
+                        <ColorPicker label="Renk" value={theme.productDescColor} onChange={(v) => updateTheme("productDescColor", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Boyut</label><div className="flex items-center gap-2"><input type="range" min={10} max={16} value={theme.productDescSize} onChange={(e) => updateTheme("productDescSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.productDescSize}px</span></div></div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Kategori Başlığı</p>
+                        <ColorPicker label="Renk" value={theme.categoryTitleColor} onChange={(v) => updateTheme("categoryTitleColor", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Boyut</label><div className="flex items-center gap-2"><input type="range" min={16} max={32} value={theme.categoryTitleSize} onChange={(e) => updateTheme("categoryTitleSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.categoryTitleSize}px</span></div></div>
+                    </Section>
+
+                    {/* Pricing */}
+                    <Section title="Fiyat Stilleri" icon={<Layers size={18} />} defaultOpen={false}>
+                        <ColorPicker label="Fiyat Rengi" value={theme.priceColor} onChange={(v) => updateTheme("priceColor", v)} />
+                        <ColorPicker label="İndirimli Fiyat" value={theme.discountColor} onChange={(v) => updateTheme("discountColor", v)} />
+                        <ColorPicker label="Eski Fiyat" value={theme.oldPriceColor} onChange={(v) => updateTheme("oldPriceColor", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Boyut</label><div className="flex items-center gap-2"><input type="range" min={14} max={26} value={theme.priceSize} onChange={(e) => updateTheme("priceSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.priceSize}px</span></div></div>
+                    </Section>
+
+                    {/* Popular Badge */}
+                    <Section title="Popüler Etiketi" icon={<Sparkles size={18} />} defaultOpen={false}>
+                        <ColorPicker label="Arkaplan" value={theme.popularBadgeBg} onChange={(v) => updateTheme("popularBadgeBg", v)} />
+                        <ColorPicker label="Yazı Rengi" value={theme.popularBadgeText} onChange={(v) => updateTheme("popularBadgeText", v)} />
+                    </Section>
+
+                    {/* Welcome Screen */}
+                    <Section title="Hoşgeldiniz Ekranı" icon={<ImageIcon size={18} />} defaultOpen={false}>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Arka Plan</p>
+                        <ColorPicker label="Arka Plan Rengi" value={theme.welcomeBg} onChange={(v) => updateTheme("welcomeBg", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Video/Resim Opaklığı</label><div className="flex items-center gap-2"><input type="range" min={0} max={100} value={theme.welcomeOverlayOpacity} onChange={(e) => updateTheme("welcomeOverlayOpacity", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeOverlayOpacity}%</span></div></div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Gradient Ayarları</p>
+                        <ColorPicker label="Gradient Başlangıç" value={theme.welcomeGradientFrom} onChange={(v) => updateTheme("welcomeGradientFrom", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Gradient Yoğunluğu</label><div className="flex items-center gap-2"><input type="range" min={0} max={100} value={theme.welcomeGradientOpacity} onChange={(e) => updateTheme("welcomeGradientOpacity", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeGradientOpacity}%</span></div></div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Yazılar</p>
+                        <ColorPicker label="Ana Yazı Rengi" value={theme.welcomeTextColor} onChange={(v) => updateTheme("welcomeTextColor", v)} />
+                        <ColorPicker label="Alt Yazı Rengi" value={theme.welcomeSubtextColor} onChange={(v) => updateTheme("welcomeSubtextColor", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Logo</p>
+                        <ColorPicker label="Logo Kenarlık" value={theme.welcomeLogoBorder} onChange={(v) => updateTheme("welcomeLogoBorder", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Logo Boyutu</label><div className="flex items-center gap-2"><input type="range" min={48} max={160} value={theme.welcomeLogoSize} onChange={(e) => updateTheme("welcomeLogoSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeLogoSize}px</span></div></div>
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Logo Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={50} value={theme.welcomeLogoRadius} onChange={(e) => updateTheme("welcomeLogoRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeLogoRadius}px</span></div></div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Menü Butonu</p>
+                        <ColorPicker label="Buton Arkaplan" value={theme.welcomeBtnBg} onChange={(v) => updateTheme("welcomeBtnBg", v)} />
+                        <ColorPicker label="Buton Yazı" value={theme.welcomeBtnText} onChange={(v) => updateTheme("welcomeBtnText", v)} />
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Buton Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={24} value={theme.welcomeBtnRadius} onChange={(e) => updateTheme("welcomeBtnRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeBtnRadius}px</span></div></div>
+                        <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Buton Gölgesi</label><div className="flex gap-1.5">{SHADOW_OPTIONS.map((s) => (<button key={s.value} onClick={() => updateTheme("welcomeBtnShadow", s.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.welcomeBtnShadow === s.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{s.label}</button>))}</div></div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Diğer Butonlar</p>
+                        <ColorPicker label="Arkaplan" value={theme.welcomeSecondaryBtnBg} onChange={(v) => updateTheme("welcomeSecondaryBtnBg", v)} />
+                        <ColorPicker label="Yazı Rengi" value={theme.welcomeSecondaryBtnText} onChange={(v) => updateTheme("welcomeSecondaryBtnText", v)} />
+                        <ColorPicker label="Kenarlık" value={theme.welcomeSecondaryBtnBorder} onChange={(v) => updateTheme("welcomeSecondaryBtnBorder", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <ColorPicker label="Ayırıcı Çizgi" value={theme.welcomeSeparatorColor} onChange={(v) => updateTheme("welcomeSeparatorColor", v)} />
+                    </Section>
+
+
                     {/* Bottom Nav */}
                     <Section title="Alt Navigasyon" icon={<Monitor size={18} />} defaultOpen={false}>
                         <ColorPicker label="Arkaplan" value={theme.bottomNavBg} onChange={(v) => updateTheme("bottomNavBg", v)} />
@@ -686,28 +705,30 @@ export default function PanelDesign() {
                     </Section>
                 </div>
 
+
                 {/* RIGHT: Phone frame - aligned with scrollable area */}
-                {slug && (
-                    <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0">
-                        <div className="w-[380px] bg-gray-950 rounded-[2.5rem] p-3 shadow-2xl border-[3px] border-gray-800 overflow-hidden relative flex-1">
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-950 rounded-b-2xl z-20" />
-                            <iframe
-                                ref={iframeRef}
-                                src={`/${slug}`}
-                                className="w-full h-full rounded-[1.8rem] border-0"
-                                onLoad={() => {
-                                    setTimeout(() => {
-                                        if (iframeRef.current?.contentWindow) {
-                                            iframeRef.current.contentWindow.postMessage({ type: 'theme-update', theme }, '*');
-                                        }
-                                    }, 500);
-                                }}
-                            />
+                {
+                    slug && (
+                        <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0">
+                            <div className="w-[380px] bg-gray-950 overflow-hidden relative flex-1">
+                                <iframe
+                                    ref={iframeRef}
+                                    src={`/${slug}`}
+                                    className="w-full h-full border-0"
+                                    onLoad={() => {
+                                        setTimeout(() => {
+                                            if (iframeRef.current?.contentWindow) {
+                                                iframeRef.current.contentWindow.postMessage({ type: 'theme-update', theme }, '*');
+                                            }
+                                        }, 500);
+                                    }}
+                                />
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
-        </div>
+                    )
+                }
+            </div >
+        </div >
     );
 }
 
