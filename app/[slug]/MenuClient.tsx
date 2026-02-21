@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 // Using regular img tags for external URLs
-import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign } from "lucide-react";
+import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2 } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -124,6 +124,8 @@ export default function MenuClient({
     const [reviewPhone, setReviewPhone] = useState("");
     const [reviewComment, setReviewComment] = useState("");
     const [categoryRatings, setCategoryRatings] = useState({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [reviewSubmitted, setReviewSubmitted] = useState(false);
     const categoryNavRef = useRef<HTMLDivElement>(null);
     const isScrollingRef = useRef(false);
 
@@ -637,9 +639,9 @@ export default function MenuClient({
                     {/* Center: Business Name */}
                     <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg text-gray-900 truncate max-w-[60%] text-center">{BUSINESS_INFO.name || "Yükleniyor..."}</span>
 
-                    {/* Right: Star Icon */}
-                    <button onClick={() => setIsReviewsOpen(true)} className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors z-10">
-                        <Star size={20} />
+                    {/* Right: Search Icon */}
+                    <button onClick={() => setIsSearchOpen(true)} className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors z-10">
+                        <Search size={20} />
                     </button>
                 </div>
 
@@ -678,20 +680,9 @@ export default function MenuClient({
                     </div>
                 </div>
 
-                {/* Search Trigger */}
-                <div className="px-4 pt-4 pb-2 sticky top-0 z-20" style={{ backgroundColor: T.pageBg }}>
-                    <div
-                        onClick={() => setIsSearchOpen(true)}
-                        className="w-full h-10 rounded-lg flex items-center px-3 gap-2 cursor-pointer shadow-sm"
-                        style={{ backgroundColor: T.searchBg, border: `1px solid ${T.searchBorder}`, color: T.searchText }}
-                    >
-                        <Search size={18} />
-                        <span className="text-sm">{t('searchPlaceholder')}</span>
-                    </div>
-                </div>
 
                 {/* Sticky Category Navbar */}
-                <div ref={categoryNavRef} className="sticky top-[56px] z-10 overflow-x-auto no-scrollbar py-3 px-4 flex gap-2" style={{ backgroundColor: T.pageBg }}>
+                <div ref={categoryNavRef} className="sticky top-0 z-10 overflow-x-auto no-scrollbar py-3 px-4 flex gap-2" style={{ backgroundColor: T.pageBg }}>
                     {DISPLAY_CATEGORIES.map((cat) => (
                         <button
                             key={cat.id}
@@ -1010,10 +1001,12 @@ export default function MenuClient({
                             {/* Submit Button */}
                             <button
                                 onClick={async () => {
+                                    if (isSubmittingReview || reviewSubmitted) return;
                                     const avgRating = Math.round(
                                         (categoryRatings.yemek + categoryRatings.hizmet + categoryRatings.ambiyans + categoryRatings.fiyat + categoryRatings.temizlik + categoryRatings.sunum) / 6
                                     );
                                     if (avgRating > 0 && reviewName.trim() && reviewComment.trim()) {
+                                        setIsSubmittingReview(true);
                                         try {
                                             await fetch('/api/reviews', {
                                                 method: 'POST',
@@ -1025,24 +1018,32 @@ export default function MenuClient({
                                                     comment: reviewComment.trim(),
                                                 }),
                                             });
+                                            // Close overlay immediately and show toast on menu
+                                            setIsSubmittingReview(false);
+                                            setIsReviewsOpen(false);
+                                            setReviewName("");
+                                            setReviewPhone("");
+                                            setReviewComment("");
+                                            setCategoryRatings({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
+                                            setReviewSubmitted(true);
+                                            setTimeout(() => setReviewSubmitted(false), 2500);
                                         } catch (err) {
                                             console.error('Review submit error:', err);
+                                            setIsSubmittingReview(false);
                                         }
-                                        // Reset and close — go back to menu
-                                        setIsReviewsOpen(false);
-                                        setReviewName("");
-                                        setReviewComment("");
-                                        setCategoryRatings({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
                                     }
                                 }}
-                                disabled={Object.values(categoryRatings).some((v) => v === 0) || !reviewName.trim() || !reviewComment.trim()}
-                                className={`w-full py-4 rounded-xl text-base font-semibold transition-colors flex items-center justify-center gap-2 ${Object.values(categoryRatings).every((v) => v > 0) && reviewName.trim() && reviewComment.trim()
+                                disabled={isSubmittingReview || Object.values(categoryRatings).some((v) => v === 0) || !reviewName.trim() || !reviewComment.trim()}
+                                className={`w-full py-4 rounded-xl text-base font-semibold transition-all flex items-center justify-center gap-2 ${Object.values(categoryRatings).every((v) => v > 0) && reviewName.trim() && reviewComment.trim() && !isSubmittingReview
                                     ? 'bg-black text-white hover:bg-gray-800 shadow-lg'
                                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                     }`}
                             >
-                                {selectedLang === 'tr' ? 'Gönder' : 'Submit'}
-                                <ArrowRight size={18} />
+                                {isSubmittingReview ? (
+                                    <><Loader2 size={18} className="animate-spin" /> {selectedLang === 'tr' ? 'Gönderiliyor...' : 'Sending...'}</>
+                                ) : (
+                                    <>{selectedLang === 'tr' ? 'Gönder' : 'Submit'} <ArrowRight size={18} /></>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -1241,6 +1242,41 @@ export default function MenuClient({
                     <ChevronUp size={24} />
                 </button>
             )}
+
+            {/* Floating Review Button — bottom left */}
+            <button
+                onClick={() => setIsReviewsOpen(true)}
+                className="fixed z-30 flex items-center gap-2 bg-amber-500 text-white px-5 py-3 rounded-full shadow-lg hover:bg-amber-600 active:scale-95 transition-all font-semibold text-sm"
+                style={{ bottom: 20, left: 20 }}
+            >
+                <Star size={16} className="fill-white" />
+                {selectedLang === 'tr' ? 'Yorum Yap' : 'Review'}
+            </button>
+
+            {/* Success Toast Alert */}
+            {reviewSubmitted && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                    <div className="pointer-events-auto bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center gap-3 border border-gray-100" style={{ animation: 'scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)', minWidth: '260px' }}>
+                        <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
+                            <Check size={28} className="text-emerald-500" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">{selectedLang === 'tr' ? 'Gönderildi!' : 'Sent!'}</h3>
+                        <p className="text-sm text-gray-500 text-center">{selectedLang === 'tr' ? 'Değerlendirmeniz başarıyla gönderildi. Teşekkürler!' : 'Your review has been sent. Thank you!'}</p>
+                    </div>
+                </div>
+            )}
+
+            <style jsx>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scaleIn {
+                    from { transform: scale(0.7); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+            `}</style>
         </>
     );
 }
+
