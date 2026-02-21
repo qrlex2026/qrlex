@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { CalendarDays, Clock, Users, Phone, ChevronLeft, ChevronRight, Check, X, Trash2, Loader2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { CalendarDays, Clock, Users, Phone, ChevronLeft, ChevronRight, Check, X, Trash2, Loader2, Search, Plus, Filter } from "lucide-react";
 
 interface Reservation {
     id: string;
@@ -15,15 +15,51 @@ interface Reservation {
     createdAt: string;
 }
 
+const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; dot: string; border: string }> = {
+    pending: { label: 'Bekliyor', bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500', border: 'border-amber-200' },
+    confirmed: { label: 'Onaylı', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500', border: 'border-emerald-200' },
+    cancelled: { label: 'İptal', bg: 'bg-red-50', text: 'text-red-600', dot: 'bg-red-500', border: 'border-red-200' },
+};
+
+const HOURS = Array.from({ length: 13 }, (_, i) => i + 10); // 10:00 - 22:00
+const DAY_NAMES_SHORT = ['PZT', 'SAL', 'ÇAR', 'PER', 'CUM', 'CMT', 'PAZ'];
+const MONTH_NAMES = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
+function getWeekStart(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+function formatDateShort(date: Date): string {
+    return `${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function isSameDay(d1: Date, d2: Date): boolean {
+    return d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
+}
+
+// Color palette for reservation cards
+const CARD_COLORS = [
+    { bg: 'bg-blue-50', border: 'border-l-blue-500', text: 'text-blue-900' },
+    { bg: 'bg-violet-50', border: 'border-l-violet-500', text: 'text-violet-900' },
+    { bg: 'bg-emerald-50', border: 'border-l-emerald-500', text: 'text-emerald-900' },
+    { bg: 'bg-amber-50', border: 'border-l-amber-500', text: 'text-amber-900' },
+    { bg: 'bg-rose-50', border: 'border-l-rose-500', text: 'text-rose-900' },
+    { bg: 'bg-cyan-50', border: 'border-l-cyan-500', text: 'text-cyan-900' },
+    { bg: 'bg-orange-50', border: 'border-l-orange-500', text: 'text-orange-900' },
+];
+
 export default function ReservationsPage() {
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [loading, setLoading] = useState(true);
-    const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
-    const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
-    const [selectedDay, setSelectedDay] = useState<number | null>(new Date().getDate());
-
-    const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-    const dayNames = ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct'];
+    const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStart(new Date()));
+    const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
 
     const fetchReservations = async () => {
         try {
@@ -45,47 +81,79 @@ export default function ReservationsPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id, status }),
         });
+        setSelectedReservation(null);
         fetchReservations();
     };
 
     const deleteReservation = async (id: string) => {
         if (!confirm('Bu rezervasyonu silmek istediğinize emin misiniz?')) return;
         await fetch(`/api/reservations?id=${id}`, { method: 'DELETE' });
+        setSelectedReservation(null);
         fetchReservations();
     };
 
-    const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
-    const firstDayOfWeek = new Date(calendarYear, calendarMonth, 1).getDay();
+    // Generate week days
+    const weekDays = useMemo(() => {
+        return Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(currentWeekStart);
+            d.setDate(d.getDate() + i);
+            return d;
+        });
+    }, [currentWeekStart]);
+
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    // Count reservations per day
-    const reservationsByDay: Record<number, number> = {};
-    reservations.forEach((r) => {
-        const d = new Date(r.date);
-        if (d.getMonth() === calendarMonth && d.getFullYear() === calendarYear) {
-            const day = d.getDate();
-            reservationsByDay[day] = (reservationsByDay[day] || 0) + 1;
-        }
-    });
+    const weekEnd = new Date(currentWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
 
-    // Filter reservations for selected day
-    const selectedDayReservations = selectedDay
-        ? reservations.filter((r) => {
+    // Filter reservations for current week
+    const weekReservations = useMemo(() => {
+        return reservations.filter((r) => {
             const d = new Date(r.date);
-            return d.getDate() === selectedDay && d.getMonth() === calendarMonth && d.getFullYear() === calendarYear;
-        })
-        : [];
+            d.setHours(0, 0, 0, 0);
+            const start = new Date(currentWeekStart);
+            const end = new Date(currentWeekStart);
+            end.setDate(end.getDate() + 7);
+            return d >= start && d < end;
+        });
+    }, [reservations, currentWeekStart]);
 
-    const statusColors: Record<string, string> = {
-        pending: 'bg-amber-100 text-amber-700 border-amber-200',
-        confirmed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-        cancelled: 'bg-red-100 text-red-700 border-red-200',
+    // Filter by tab
+    const filteredReservations = useMemo(() => {
+        let filtered = activeTab === 'all' ? weekReservations : weekReservations.filter(r => r.status === activeTab);
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            filtered = filtered.filter(r => r.name.toLowerCase().includes(q) || r.phone.includes(q));
+        }
+        return filtered;
+    }, [weekReservations, activeTab, searchQuery]);
+
+    // Place reservation on calendar
+    const getReservationsForCell = (day: Date, hour: number) => {
+        return filteredReservations.filter((r) => {
+            const d = new Date(r.date);
+            const [h] = r.time.split(':').map(Number);
+            return isSameDay(d, day) && h === hour;
+        });
     };
-    const statusLabels: Record<string, string> = {
-        pending: 'Bekliyor',
-        confirmed: 'Onaylı',
-        cancelled: 'İptal',
+
+    // Summary counts
+    const counts = {
+        all: weekReservations.length,
+        pending: weekReservations.filter(r => r.status === 'pending').length,
+        confirmed: weekReservations.filter(r => r.status === 'confirmed').length,
+        cancelled: weekReservations.filter(r => r.status === 'cancelled').length,
     };
+
+    // Top cards - next upcoming reservations
+    const upcomingReservations = useMemo(() => {
+        const now = new Date();
+        return reservations
+            .filter(r => r.status !== 'cancelled' && new Date(r.date) >= now)
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .slice(0, 4);
+    }, [reservations]);
 
     if (loading) {
         return (
@@ -96,157 +164,273 @@ export default function ReservationsPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Rezervasyonlar</h1>
-                <p className="text-sm text-gray-500 mt-1">Gelen rezervasyonları takvim üzerinden yönetin</p>
+        <div className="space-y-5">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">
+                        {MONTH_NAMES[today.getMonth()]} {String(today.getDate()).padStart(2, '0')}, {today.getFullYear()}
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        Bu hafta {weekReservations.length} rezervasyon, {counts.pending} onay bekliyor
+                    </p>
+                </div>
+                <div className="flex items-center gap-2">
+                    {/* Today Button */}
+                    <button
+                        onClick={() => setCurrentWeekStart(getWeekStart(new Date()))}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                        Bugün
+                    </button>
+
+                    {/* Week Navigation */}
+                    <div className="flex items-center bg-white border border-gray-200 rounded-lg">
+                        <button
+                            onClick={() => {
+                                const prev = new Date(currentWeekStart);
+                                prev.setDate(prev.getDate() - 7);
+                                setCurrentWeekStart(prev);
+                            }}
+                            className="p-2 hover:bg-gray-50 rounded-l-lg transition-colors"
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+                        <span className="px-3 text-sm font-medium text-gray-700 border-x border-gray-200">
+                            {formatDateShort(currentWeekStart)} - {formatDateShort(weekEnd)} {MONTH_NAMES[weekEnd.getMonth()]}
+                        </span>
+                        <button
+                            onClick={() => {
+                                const next = new Date(currentWeekStart);
+                                next.setDate(next.getDate() + 7);
+                                setCurrentWeekStart(next);
+                            }}
+                            className="p-2 hover:bg-gray-50 rounded-r-lg transition-colors"
+                        >
+                            <ChevronRight size={18} />
+                        </button>
+                    </div>
+
+                    {/* Search */}
+                    <div className="relative">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Ara..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-lg w-40 outline-none focus:border-gray-400 transition-colors"
+                        />
+                    </div>
+                </div>
             </div>
 
-            {/* Calendar Card */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-                {/* Month Navigation */}
-                <div className="flex items-center justify-between mb-4">
-                    <button onClick={() => {
-                        if (calendarMonth === 0) { setCalendarMonth(11); setCalendarYear(calendarYear - 1); }
-                        else setCalendarMonth(calendarMonth - 1);
-                        setSelectedDay(null);
-                    }} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                        <ChevronLeft size={20} />
+            {/* Tabs */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+                {([
+                    { key: 'all' as const, label: 'Tümü' },
+                    { key: 'pending' as const, label: `Bekleyen (${counts.pending})` },
+                    { key: 'confirmed' as const, label: `Onaylı (${counts.confirmed})` },
+                    { key: 'cancelled' as const, label: `İptal (${counts.cancelled})` },
+                ]).map((tab) => (
+                    <button
+                        key={tab.key}
+                        onClick={() => setActiveTab(tab.key)}
+                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === tab.key
+                            ? 'bg-white text-gray-900 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        {tab.label}
                     </button>
-                    <h2 className="text-lg font-bold text-gray-900">{monthNames[calendarMonth]} {calendarYear}</h2>
-                    <button onClick={() => {
-                        if (calendarMonth === 11) { setCalendarMonth(0); setCalendarYear(calendarYear + 1); }
-                        else setCalendarMonth(calendarMonth + 1);
-                        setSelectedDay(null);
-                    }} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                        <ChevronRight size={20} />
-                    </button>
-                </div>
+                ))}
+            </div>
 
-                {/* Day Headers */}
-                <div className="grid grid-cols-7 gap-2 mb-2">
-                    {dayNames.map((d) => (
-                        <div key={d} className="text-center text-xs text-gray-400 font-semibold py-1">{d}</div>
-                    ))}
-                </div>
-
-                {/* Calendar Grid */}
-                <div className="grid grid-cols-7 gap-2">
-                    {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-                        <div key={`empty-${i}`} />
-                    ))}
-                    {Array.from({ length: daysInMonth }).map((_, i) => {
-                        const day = i + 1;
-                        const isToday = day === today.getDate() && calendarMonth === today.getMonth() && calendarYear === today.getFullYear();
-                        const isSelected = day === selectedDay;
-                        const count = reservationsByDay[day] || 0;
+            {/* Top Summary Cards */}
+            {upcomingReservations.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {upcomingReservations.map((r, idx) => {
+                        const color = CARD_COLORS[idx % CARD_COLORS.length];
+                        const d = new Date(r.date);
+                        const sc = STATUS_CONFIG[r.status] || STATUS_CONFIG.pending;
                         return (
-                            <button
-                                key={day}
-                                onClick={() => setSelectedDay(day)}
-                                className={`relative w-full aspect-square rounded-xl text-sm font-medium flex flex-col items-center justify-center transition-all ${isSelected
-                                    ? 'bg-gray-900 text-white shadow-lg'
-                                    : isToday
-                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                        : 'text-gray-700 hover:bg-gray-50'
-                                    }`}
+                            <div
+                                key={r.id}
+                                onClick={() => setSelectedReservation(r)}
+                                className={`${color.bg} rounded-xl p-4 border border-gray-100 cursor-pointer hover:shadow-md transition-all group`}
                             >
-                                {day}
-                                {count > 0 && (
-                                    <span className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${isSelected ? 'bg-amber-400 text-gray-900' : 'bg-amber-500 text-white'}`}>
-                                        {count}
-                                    </span>
-                                )}
-                            </button>
+                                <div className="flex items-start justify-between mb-2">
+                                    <h4 className={`font-semibold text-sm ${color.text}`}>{r.name}</h4>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${sc.bg} ${sc.text} border ${sc.border}`}>{sc.label}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <Clock size={12} />
+                                    <span>{r.time}</span>
+                                    <span>•</span>
+                                    <span>{d.getDate()} {MONTH_NAMES[d.getMonth()]}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                    <Users size={12} />
+                                    <span>{r.guestCount} kişi</span>
+                                    <span>•</span>
+                                    <Phone size={12} />
+                                    <span>{r.phone}</span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Weekly Calendar Grid */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                {/* Day Headers */}
+                <div className="grid grid-cols-[70px_repeat(7,1fr)] border-b border-gray-100">
+                    <div className="py-3 px-2" /> {/* Time column spacer */}
+                    {weekDays.map((day, i) => {
+                        const isToday_ = isSameDay(day, new Date());
+                        return (
+                            <div key={i} className={`py-3 px-2 text-center border-l border-gray-100 ${isToday_ ? 'bg-emerald-50' : ''}`}>
+                                <div className={`text-[11px] font-semibold tracking-wider ${isToday_ ? 'text-emerald-600' : 'text-gray-400'}`}>
+                                    {formatDateShort(day)} {DAY_NAMES_SHORT[i]}
+                                </div>
+                            </div>
                         );
                     })}
                 </div>
 
-                {/* Stats */}
-                <div className="mt-4 pt-4 border-t border-gray-100 flex gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-amber-500" />
-                        <span className="text-gray-500">Bekleyen: <strong className="text-gray-900">{reservations.filter(r => r.status === 'pending').length}</strong></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                        <span className="text-gray-500">Onaylı: <strong className="text-gray-900">{reservations.filter(r => r.status === 'confirmed').length}</strong></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500" />
-                        <span className="text-gray-500">İptal: <strong className="text-gray-900">{reservations.filter(r => r.status === 'cancelled').length}</strong></span>
-                    </div>
+                {/* Time grid */}
+                <div className="max-h-[520px] overflow-y-auto">
+                    {HOURS.map((hour) => (
+                        <div key={hour} className="grid grid-cols-[70px_repeat(7,1fr)] min-h-[64px] border-b border-gray-50">
+                            {/* Time label */}
+                            <div className="py-2 px-3 text-right">
+                                <span className="text-xs font-medium text-gray-400">{hour}:00</span>
+                            </div>
+                            {/* Day cells */}
+                            {weekDays.map((day, dayIdx) => {
+                                const cellReservations = getReservationsForCell(day, hour);
+                                const isToday_ = isSameDay(day, new Date());
+                                return (
+                                    <div
+                                        key={dayIdx}
+                                        className={`border-l border-gray-100 py-1 px-1 min-h-[64px] ${isToday_ ? 'bg-emerald-50/30' : ''}`}
+                                    >
+                                        {cellReservations.map((r, rIdx) => {
+                                            const color = CARD_COLORS[rIdx % CARD_COLORS.length];
+                                            const sc = STATUS_CONFIG[r.status] || STATUS_CONFIG.pending;
+                                            return (
+                                                <div
+                                                    key={r.id}
+                                                    onClick={() => setSelectedReservation(r)}
+                                                    className={`${color.bg} border-l-[3px] ${color.border} rounded-md px-2 py-1.5 mb-1 cursor-pointer hover:shadow-sm transition-all text-[11px]`}
+                                                >
+                                                    <div className={`font-semibold ${color.text} truncate`}>{r.name}</div>
+                                                    <div className="text-gray-500 flex items-center gap-1 mt-0.5">
+                                                        <Clock size={10} /> {r.time}
+                                                        <span className="mx-0.5">·</span>
+                                                        <Users size={10} /> {r.guestCount}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))}
                 </div>
             </div>
 
-            {/* Reservations List for Selected Day */}
-            {selectedDay && (
-                <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">
-                        <CalendarDays size={18} className="inline mr-2 text-gray-400" />
-                        {selectedDay} {monthNames[calendarMonth]} {calendarYear} — Rezervasyonlar
-                    </h3>
-
-                    {selectedDayReservations.length === 0 ? (
-                        <p className="text-sm text-gray-400 text-center py-8">Bu gün için rezervasyon bulunmuyor</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {selectedDayReservations.map((r) => (
-                                <div key={r.id} className="border border-gray-100 rounded-xl p-4 hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div>
-                                            <h4 className="font-semibold text-gray-900">{r.name}</h4>
-                                            <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
-                                                <span className="flex items-center gap-1"><Clock size={14} /> {r.time}</span>
-                                                <span className="flex items-center gap-1"><Users size={14} /> {r.guestCount} kişi</span>
-                                                <span className="flex items-center gap-1"><Phone size={14} /> {r.phone}</span>
-                                            </div>
-                                        </div>
-                                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${statusColors[r.status] || ''}`}>
-                                            {statusLabels[r.status] || r.status}
-                                        </span>
-                                    </div>
-                                    {r.note && (
-                                        <p className="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2 mt-2">💬 {r.note}</p>
-                                    )}
-                                    <div className="flex gap-2 mt-3">
-                                        {r.status === 'pending' && (
-                                            <>
-                                                <button
-                                                    onClick={() => updateStatus(r.id, 'confirmed')}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors"
-                                                >
-                                                    <Check size={14} /> Onayla
-                                                </button>
-                                                <button
-                                                    onClick={() => updateStatus(r.id, 'cancelled')}
-                                                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
-                                                >
-                                                    <X size={14} /> İptal
-                                                </button>
-                                            </>
-                                        )}
-                                        {r.status === 'cancelled' && (
-                                            <button
-                                                onClick={() => updateStatus(r.id, 'pending')}
-                                                className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors"
-                                            >
-                                                Tekrar Beklet
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={() => deleteReservation(r.id)}
-                                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-gray-50 text-gray-500 rounded-lg hover:bg-gray-100 transition-colors ml-auto"
-                                        >
-                                            <Trash2 size={14} /> Sil
-                                        </button>
-                                    </div>
+            {/* Reservation Detail Modal */}
+            {selectedReservation && (() => {
+                const r = selectedReservation;
+                const d = new Date(r.date);
+                const sc = STATUS_CONFIG[r.status] || STATUS_CONFIG.pending;
+                return (
+                    <>
+                        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm" onClick={() => setSelectedReservation(null)} />
+                        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-2xl shadow-2xl w-[420px] max-w-[90vw] p-6">
+                            <div className="flex items-start justify-between mb-4">
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900">{r.name}</h3>
+                                    <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full mt-1 ${sc.bg} ${sc.text} border ${sc.border}`}>
+                                        {sc.label}
+                                    </span>
                                 </div>
-                            ))}
+                                <button onClick={() => setSelectedReservation(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-3 mb-5">
+                                <div className="flex items-center gap-3 text-sm text-gray-600">
+                                    <CalendarDays size={16} className="text-gray-400" />
+                                    <span>{d.getDate()} {MONTH_NAMES[d.getMonth()]} {d.getFullYear()}</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-gray-600">
+                                    <Clock size={16} className="text-gray-400" />
+                                    <span>{r.time}</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-gray-600">
+                                    <Users size={16} className="text-gray-400" />
+                                    <span>{r.guestCount} kişi</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-gray-600">
+                                    <Phone size={16} className="text-gray-400" />
+                                    <span>{r.phone}</span>
+                                </div>
+                                {r.note && (
+                                    <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
+                                        💬 {r.note}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-2 border-t border-gray-100 pt-4">
+                                {r.status === 'pending' && (
+                                    <>
+                                        <button
+                                            onClick={() => updateStatus(r.id, 'confirmed')}
+                                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors"
+                                        >
+                                            <Check size={16} /> Onayla
+                                        </button>
+                                        <button
+                                            onClick={() => updateStatus(r.id, 'cancelled')}
+                                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                        >
+                                            <X size={16} /> İptal Et
+                                        </button>
+                                    </>
+                                )}
+                                {r.status === 'confirmed' && (
+                                    <button
+                                        onClick={() => updateStatus(r.id, 'cancelled')}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                    >
+                                        <X size={16} /> İptal Et
+                                    </button>
+                                )}
+                                {r.status === 'cancelled' && (
+                                    <button
+                                        onClick={() => updateStatus(r.id, 'pending')}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold bg-amber-50 text-amber-700 rounded-xl hover:bg-amber-100 transition-colors"
+                                    >
+                                        Tekrar Beklet
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => deleteReservation(r.id)}
+                                    className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
                         </div>
-                    )}
-                </div>
-            )}
+                    </>
+                );
+            })()}
         </div>
     );
 }
