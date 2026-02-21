@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 // Using regular img tags for external URLs
-import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2 } from "lucide-react";
+import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -126,6 +126,19 @@ export default function MenuClient({
     const [categoryRatings, setCategoryRatings] = useState({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [reviewSubmitted, setReviewSubmitted] = useState(false);
+    // Reservation states
+    const [isReservationOpen, setIsReservationOpen] = useState(false);
+    const [reserveStep, setReserveStep] = useState(0);
+    const [reserveDate, setReserveDate] = useState<Date | null>(null);
+    const [reserveTime, setReserveTime] = useState("");
+    const [reserveGuests, setReserveGuests] = useState(2);
+    const [reserveName, setReserveName] = useState("");
+    const [reservePhone, setReservePhone] = useState("");
+    const [reserveNote, setReserveNote] = useState("");
+    const [isSubmittingReserve, setIsSubmittingReserve] = useState(false);
+    const [reserveSubmitted, setReserveSubmitted] = useState(false);
+    const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
+    const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
     const categoryNavRef = useRef<HTMLDivElement>(null);
     const isScrollingRef = useRef(false);
 
@@ -276,7 +289,7 @@ export default function MenuClient({
     const [showLangPicker, setShowLangPicker] = useState(false);
 
     // Lock body scroll when welcome screen or ANY overlay is visible
-    const anyOverlayOpen = showLangSplash || isProfileOpen || isReviewsOpen || isWriteReviewOpen || !!selectedProduct || isSearchOpen;
+    const anyOverlayOpen = showLangSplash || isProfileOpen || isReviewsOpen || isWriteReviewOpen || !!selectedProduct || isSearchOpen || isReservationOpen;
     const scrollYRef = useRef(0);
     useEffect(() => {
         if (anyOverlayOpen) {
@@ -545,8 +558,9 @@ export default function MenuClient({
                                 {t('btnLanguage')}
                             </button>
 
-                            {/* KAMPANYALAR Button */}
+                            {/* REZERVE Button */}
                             <button
+                                onClick={() => { setShowLangSplash(false); setIsReservationOpen(true); }}
                                 className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all"
                                 style={{
                                     backgroundColor: T.welcomeSecondaryBtnBg || '#ffffff1a',
@@ -556,7 +570,7 @@ export default function MenuClient({
                                     animation: 'fadeInUp 0.5s ease-out 0.3s both'
                                 }}
                             >
-                                {t('btnCampaigns')}
+                                REZERVE
                             </button>
                         </div>
 
@@ -1046,6 +1060,322 @@ export default function MenuClient({
                                 )}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reservation Bottom Sheet — 40% height popup */}
+            {isReservationOpen && (() => {
+                const resetReservation = () => {
+                    setIsReservationOpen(false);
+                    setReserveStep(0);
+                    setReserveDate(null);
+                    setReserveTime("");
+                    setReserveGuests(2);
+                    setReserveName("");
+                    setReservePhone("");
+                    setReserveNote("");
+                };
+
+                const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+                const firstDayOfWeek = new Date(calendarYear, calendarMonth, 1).getDay();
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const dayNames = selectedLang === 'tr' ? ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct'] : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+                const monthNames = selectedLang === 'tr'
+                    ? ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+                    : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+                const timeSlots = ['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00'];
+
+                return (
+                    <>
+                        {/* Backdrop */}
+                        <div
+                            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+                            onClick={resetReservation}
+                            style={{ animation: 'fadeIn 0.2s ease-out' }}
+                        />
+
+                        {/* Bottom Sheet */}
+                        <div
+                            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl flex flex-col"
+                            style={{ height: '60dvh', animation: 'slideUp 0.3s ease-out' }}
+                        >
+                            {/* Handle bar */}
+                            <div className="flex justify-center pt-3 pb-2">
+                                <div className="w-10 h-1 bg-gray-300 rounded-full" />
+                            </div>
+
+                            {/* Step indicator */}
+                            <div className="flex items-center gap-2 px-5 pb-3">
+                                {[0, 1, 2].map((s) => (
+                                    <div key={s} className={`h-1 flex-1 rounded-full transition-all ${s <= reserveStep ? 'bg-amber-500' : 'bg-gray-200'}`} />
+                                ))}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 overflow-y-auto px-5 pb-5">
+                                {/* Step 0: Date Selection */}
+                                {reserveStep === 0 && (
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-900 mb-1">
+                                            <CalendarDays size={18} className="inline mr-2 text-amber-500" />
+                                            {selectedLang === 'tr' ? 'Tarih Seçin' : 'Select Date'}
+                                        </h3>
+
+                                        {/* Month Navigation */}
+                                        <div className="flex items-center justify-between mb-3 mt-2">
+                                            <button onClick={() => {
+                                                if (calendarMonth === 0) { setCalendarMonth(11); setCalendarYear(calendarYear - 1); }
+                                                else setCalendarMonth(calendarMonth - 1);
+                                            }} className="p-1.5 rounded-full hover:bg-gray-100"><ChevronLeft size={18} /></button>
+                                            <span className="text-sm font-semibold text-gray-800">{monthNames[calendarMonth]} {calendarYear}</span>
+                                            <button onClick={() => {
+                                                if (calendarMonth === 11) { setCalendarMonth(0); setCalendarYear(calendarYear + 1); }
+                                                else setCalendarMonth(calendarMonth + 1);
+                                            }} className="p-1.5 rounded-full hover:bg-gray-100"><ChevronRight size={18} /></button>
+                                        </div>
+
+                                        {/* Day Names */}
+                                        <div className="grid grid-cols-7 gap-1 mb-1">
+                                            {dayNames.map((d) => (
+                                                <div key={d} className="text-center text-xs text-gray-400 font-medium py-1">{d}</div>
+                                            ))}
+                                        </div>
+
+                                        {/* Calendar Grid */}
+                                        <div className="grid grid-cols-7 gap-1">
+                                            {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+                                                <div key={`empty-${i}`} />
+                                            ))}
+                                            {Array.from({ length: daysInMonth }).map((_, i) => {
+                                                const day = i + 1;
+                                                const thisDate = new Date(calendarYear, calendarMonth, day);
+                                                const isPast = thisDate < today;
+                                                const isSelected = reserveDate && reserveDate.getTime() === thisDate.getTime();
+                                                const isToday = thisDate.getTime() === today.getTime();
+                                                return (
+                                                    <button
+                                                        key={day}
+                                                        disabled={isPast}
+                                                        onClick={() => setReserveDate(thisDate)}
+                                                        className={`w-[30px] h-[30px] mx-auto rounded-full text-xs font-medium flex items-center justify-center transition-all ${isPast
+                                                            ? 'text-gray-300 cursor-not-allowed'
+                                                            : isSelected
+                                                                ? 'bg-amber-500 text-white shadow-md'
+                                                                : isToday
+                                                                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                                                                    : 'text-gray-700 hover:bg-gray-100'
+                                                            }`}
+                                                    >
+                                                        {day}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Next Button */}
+                                        <button
+                                            disabled={!reserveDate}
+                                            onClick={() => setReserveStep(1)}
+                                            className={`w-full mt-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${reserveDate
+                                                ? 'bg-black text-white hover:bg-gray-800 shadow-lg'
+                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                }`}
+                                        >
+                                            {selectedLang === 'tr' ? 'İleri' : 'Next'} <ArrowRight size={16} />
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Step 1: Time & Guest Count */}
+                                {reserveStep === 1 && (
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-900 mb-3">
+                                            <Clock size={18} className="inline mr-2 text-amber-500" />
+                                            {selectedLang === 'tr' ? 'Saat & Kişi Sayısı' : 'Time & Guests'}
+                                        </h3>
+
+                                        {/* Time Slots */}
+                                        <p className="text-xs text-gray-500 mb-2 font-medium">{selectedLang === 'tr' ? 'Saat Seçin' : 'Select Time'}</p>
+                                        <div className="grid grid-cols-4 gap-2 mb-4">
+                                            {timeSlots.map((t_slot) => (
+                                                <button
+                                                    key={t_slot}
+                                                    onClick={() => setReserveTime(t_slot)}
+                                                    className={`py-2 rounded-lg text-xs font-medium transition-all ${reserveTime === t_slot
+                                                        ? 'bg-amber-500 text-white shadow-md'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                        }`}
+                                                >
+                                                    {t_slot}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* Guest Count */}
+                                        <p className="text-xs text-gray-500 mb-2 font-medium">
+                                            <Users size={14} className="inline mr-1" />
+                                            {selectedLang === 'tr' ? 'Kişi Sayısı' : 'Guests'}
+                                        </p>
+                                        <div className="flex gap-2 flex-wrap mb-4">
+                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                                                <button
+                                                    key={n}
+                                                    onClick={() => setReserveGuests(n)}
+                                                    className={`w-10 h-10 rounded-full text-sm font-semibold transition-all ${reserveGuests === n
+                                                        ? 'bg-amber-500 text-white shadow-md'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                        }`}
+                                                >
+                                                    {n}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* Navigation */}
+                                        <div className="flex gap-3">
+                                            <button onClick={() => setReserveStep(0)} className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all">
+                                                <ChevronLeft size={16} className="inline mr-1" />{selectedLang === 'tr' ? 'Geri' : 'Back'}
+                                            </button>
+                                            <button
+                                                disabled={!reserveTime}
+                                                onClick={() => setReserveStep(2)}
+                                                className={`flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${reserveTime
+                                                    ? 'bg-black text-white hover:bg-gray-800 shadow-lg'
+                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                {selectedLang === 'tr' ? 'İleri' : 'Next'} <ArrowRight size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Step 2: Contact Info */}
+                                {reserveStep === 2 && (
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-900 mb-3">
+                                            <Users size={18} className="inline mr-2 text-amber-500" />
+                                            {selectedLang === 'tr' ? 'Bilgileriniz' : 'Your Info'}
+                                        </h3>
+
+                                        {/* Summary */}
+                                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-sm text-amber-800">
+                                            <div className="flex items-center gap-2">
+                                                <CalendarDays size={14} />
+                                                <span>{reserveDate?.toLocaleDateString(selectedLang === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                                <span className="mx-1">•</span>
+                                                <Clock size={14} />
+                                                <span>{reserveTime}</span>
+                                                <span className="mx-1">•</span>
+                                                <Users size={14} />
+                                                <span>{reserveGuests} {selectedLang === 'tr' ? 'kişi' : 'guests'}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3 mb-4">
+                                            <div>
+                                                <p className="text-xs text-gray-500 mb-1.5 font-medium">{selectedLang === 'tr' ? 'Ad Soyad' : 'Full Name'} *</p>
+                                                <input
+                                                    type="text"
+                                                    value={reserveName}
+                                                    onChange={(e) => setReserveName(e.target.value)}
+                                                    placeholder={selectedLang === 'tr' ? 'Adınız Soyadınız' : 'Your full name'}
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-amber-400 transition-colors"
+                                                />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-gray-500 mb-1.5 font-medium">{selectedLang === 'tr' ? 'Telefon' : 'Phone'} *</p>
+                                                <input
+                                                    type="tel"
+                                                    value={reservePhone}
+                                                    onChange={(e) => setReservePhone(e.target.value)}
+                                                    placeholder={selectedLang === 'tr' ? '05XX XXX XX XX' : 'Phone number'}
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-amber-400 transition-colors"
+                                                />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-gray-500 mb-1.5 font-medium">{selectedLang === 'tr' ? 'Not (opsiyonel)' : 'Note (optional)'}</p>
+                                                <textarea
+                                                    value={reserveNote}
+                                                    onChange={(e) => setReserveNote(e.target.value)}
+                                                    placeholder={selectedLang === 'tr' ? 'Özel istekleriniz...' : 'Special requests...'}
+                                                    rows={2}
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-amber-400 transition-colors resize-none"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Navigation */}
+                                        <div className="flex gap-3">
+                                            <button onClick={() => setReserveStep(1)} className="w-12 py-3 rounded-xl text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all flex items-center justify-center">
+                                                <ChevronLeft size={18} />
+                                            </button>
+                                            <button
+                                                disabled={!reserveName.trim() || !reservePhone.trim() || isSubmittingReserve}
+                                                onClick={async () => {
+                                                    setIsSubmittingReserve(true);
+                                                    try {
+                                                        await fetch('/api/reservations', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({
+                                                                restaurantId,
+                                                                name: reserveName.trim(),
+                                                                phone: reservePhone.trim(),
+                                                                date: reserveDate?.toISOString(),
+                                                                time: reserveTime,
+                                                                guestCount: reserveGuests,
+                                                                note: reserveNote.trim() || null,
+                                                            }),
+                                                        });
+                                                        setIsSubmittingReserve(false);
+                                                        setIsReservationOpen(false);
+                                                        setReserveStep(0);
+                                                        setReserveDate(null);
+                                                        setReserveTime("");
+                                                        setReserveGuests(2);
+                                                        setReserveName("");
+                                                        setReservePhone("");
+                                                        setReserveNote("");
+                                                        setReserveSubmitted(true);
+                                                        setTimeout(() => setReserveSubmitted(false), 2500);
+                                                    } catch (err) {
+                                                        console.error('Reservation error:', err);
+                                                        setIsSubmittingReserve(false);
+                                                    }
+                                                }}
+                                                className={`flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${reserveName.trim() && reservePhone.trim() && !isSubmittingReserve
+                                                    ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-lg'
+                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                {isSubmittingReserve ? (
+                                                    <><Loader2 size={16} className="animate-spin" /> {selectedLang === 'tr' ? 'Gönderiliyor...' : 'Sending...'}</>
+                                                ) : (
+                                                    <>{selectedLang === 'tr' ? 'Rezervasyon Yap' : 'Book Now'} <ArrowRight size={16} /></>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </>
+                );
+            })()}
+
+            {/* Reservation Success Toast */}
+            {reserveSubmitted && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                    <div className="pointer-events-auto bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center gap-3 border border-gray-100" style={{ animation: 'scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)', minWidth: '260px' }}>
+                        <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
+                            <Check size={28} className="text-emerald-500" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">{selectedLang === 'tr' ? 'Rezervasyon Alındı!' : 'Reservation Received!'}</h3>
+                        <p className="text-sm text-gray-500 text-center">{selectedLang === 'tr' ? 'Rezervasyonunuz başarıyla gönderildi. Teşekkürler!' : 'Your reservation has been sent. Thank you!'}</p>
                     </div>
                 </div>
             )}

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
     LayoutDashboard, UtensilsCrossed, Settings,
     Star, LogOut, Menu, X, QrCode, ChevronRight, Paintbrush, BarChart3,
-    UserCircle, CreditCard,
+    UserCircle, CreditCard, CalendarDays,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
     { href: "/panel/qr-code", label: "QR Kod", icon: QrCode },
     { href: "/panel/design", label: "Tasarım", icon: Paintbrush },
     { href: "/panel/reviews", label: "Yorumlar", icon: Star },
+    { href: "/panel/reservations", label: "Rezervasyonlar", icon: CalendarDays },
     { href: "/panel/profile", label: "Profil", icon: UserCircle },
     { href: "/panel/payments", label: "Ödemeler", icon: CreditCard },
     { href: "/panel/settings", label: "Ayarlar", icon: Settings },
