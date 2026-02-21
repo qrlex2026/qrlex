@@ -280,9 +280,20 @@ export default function PanelDesign() {
         <div className="flex gap-6 h-[calc(100dvh-112px)]">
             {/* LEFT: Editor */}
             <div className="flex-1 flex flex-col min-w-0">
-                <div className="mb-4">
-                    <h1 className="text-2xl font-bold text-white">Tasarım</h1>
-                    <p className="text-sm text-gray-400 mt-1">QR menünüzün görünümünü özelleştirin</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-white">Tasarım</h1>
+                        <p className="text-sm text-gray-400 mt-1">QR menünüzün görünümünü özelleştirin</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button onClick={resetTheme} className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded-xl text-sm font-medium transition-colors">
+                            <RotateCcw size={16} /> Sıfırla
+                        </button>
+                        <button onClick={handleSave} disabled={saving || !hasChanges} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${hasChanges ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20" : "bg-gray-800 text-gray-500 cursor-not-allowed"}`}>
+                            {saving ? <Loader2 size={16} className="animate-spin" /> : saved ? <Check size={16} /> : <Save size={16} />}
+                            {saved ? "Kaydedildi ✓" : saving ? "..." : "Kaydet"}
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto space-y-4 pr-1">
@@ -660,7 +671,7 @@ export default function PanelDesign() {
 
             {/* RIGHT: Live iframe preview */}
             {slug && (
-                <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0">
+                <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0 pt-[60px]">
                     <div className="w-[380px] bg-gray-950 rounded-[2.5rem] p-3 shadow-2xl border-[3px] border-gray-800 overflow-hidden relative flex-1">
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-950 rounded-b-2xl z-20" />
                         <iframe
@@ -675,15 +686,6 @@ export default function PanelDesign() {
                                 }, 500);
                             }}
                         />
-                    </div>
-                    <div className="flex items-center gap-2 mt-3 w-[380px]">
-                        <button onClick={resetTheme} className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded-xl text-sm font-medium transition-colors">
-                            <RotateCcw size={16} /> Sıfırla
-                        </button>
-                        <button onClick={handleSave} disabled={saving || !hasChanges} className={`flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${hasChanges ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20" : "bg-gray-800 text-gray-500 cursor-not-allowed"}`}>
-                            {saving ? <Loader2 size={16} className="animate-spin" /> : saved ? <Check size={16} /> : <Save size={16} />}
-                            {saved ? "Kaydedildi ✓" : saving ? "..." : "Kaydet"}
-                        </button>
                     </div>
                 </div>
             )}
