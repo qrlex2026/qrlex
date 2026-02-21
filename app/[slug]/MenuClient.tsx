@@ -901,22 +901,22 @@ export default function MenuClient({
 
             {/* Review Form Overlay — direct form with 6 category ratings */}
             {isReviewsOpen && (
-                <div className="fixed inset-0 z-50 flex flex-col overflow-hidden overscroll-none" style={{ width: '100vw', height: '100dvh', backgroundColor: T.pageBg || '#ffffff' }}>
-                    {/* Orange header with category ratings inside */}
-                    <div className="relative w-full shrink-0 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 px-5 pb-10 pt-16">
-                        {/* Back Button */}
-                        <button
-                            onClick={() => {
-                                setIsReviewsOpen(false);
-                                setCategoryRatings({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
-                                setReviewName("");
-                                setReviewComment("");
-                            }}
-                            className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/40 transition-colors z-10"
-                        >
-                            <ChevronLeft size={22} />
-                        </button>
+                <div className="fixed inset-0 z-50 overflow-y-auto overscroll-none" style={{ width: '100vw', height: '100dvh', backgroundColor: T.pageBg || '#ffffff' }}>
+                    {/* Fixed Back Button */}
+                    <button
+                        onClick={() => {
+                            setIsReviewsOpen(false);
+                            setCategoryRatings({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
+                            setReviewName("");
+                            setReviewComment("");
+                        }}
+                        className="fixed top-4 left-4 w-10 h-10 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/40 transition-colors z-[60]"
+                    >
+                        <ChevronLeft size={22} />
+                    </button>
 
+                    {/* Orange header with category ratings */}
+                    <div className="relative w-full bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 px-5 pb-10 pt-16">
                         <div className="flex flex-col items-center mb-5">
                             <h2 className="text-2xl font-bold text-white drop-shadow-md">{t('rateUs')}</h2>
                             <p className="text-white/80 text-sm mt-1">{t('rateCategoryDesc')}</p>
@@ -956,9 +956,9 @@ export default function MenuClient({
                         </div>
                     </div>
 
-                    {/* Form section — name, comment, submit */}
+                    {/* Form section — name, phone, comment, submit */}
                     <div
-                        className="flex-1 overflow-y-auto -mt-5 relative overscroll-contain"
+                        className="-mt-5 relative"
                         style={{ borderRadius: '20px 20px 0 0', backgroundColor: T.cardBg || '#ffffff' }}
                     >
                         <div className="px-5 pt-6 pb-10">
