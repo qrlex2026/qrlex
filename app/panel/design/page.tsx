@@ -671,15 +671,8 @@ export default function PanelDesign() {
 
             {/* RIGHT: Live iframe preview */}
             {slug && (
-                <div className="hidden lg:flex flex-col items-center justify-center w-[400px] flex-shrink-0">
-                    <div className="flex items-center gap-2 mb-3 justify-center">
-                        <Smartphone size={16} className="text-gray-500" />
-                        <span className="text-xs text-gray-500 font-medium">Canlı Önizleme</span>
-                        <button onClick={() => { if (iframeRef.current) iframeRef.current.src = `/${slug}`; }} className="ml-2 p-1 rounded-lg hover:bg-gray-800 text-gray-600 hover:text-emerald-400 transition-colors" title="Yenile">
-                            <RefreshCw size={14} />
-                        </button>
-                    </div>
-                    <div className="w-[380px] bg-gray-950 rounded-[2.5rem] p-3 shadow-2xl border-[3px] border-gray-800 overflow-hidden relative" style={{ height: 'calc(100% - 48px)', maxHeight: '780px' }}>
+                <div className="hidden lg:flex flex-col items-center w-[400px] flex-shrink-0">
+                    <div className="w-[380px] bg-gray-950 rounded-[2.5rem] p-3 shadow-2xl border-[3px] border-gray-800 overflow-hidden relative flex-1">
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-950 rounded-b-2xl z-20" />
                         <iframe
                             ref={iframeRef}
