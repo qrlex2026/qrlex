@@ -91,6 +91,9 @@ const DEFAULT_THEME = {
 
     // Layout
     layoutVariant: "list",
+
+    // Slider
+    showHeroSlider: "true",
 };
 
 type ThemeType = typeof DEFAULT_THEME;
@@ -412,6 +415,19 @@ export default function PanelDesign() {
 
                     {/* Header */}
                     <Section title="Başlık / Slider" icon={<Monitor size={18} />} defaultOpen={false}>
+                        {/* Hero Slider Toggle */}
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <p className="text-sm font-medium text-white">Hero Slider</p>
+                                <p className="text-[11px] text-gray-500">Menü üstündeki kayan banner alanı</p>
+                            </div>
+                            <button
+                                onClick={() => updateTheme("showHeroSlider", theme.showHeroSlider !== "false" ? "false" : "true")}
+                                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${theme.showHeroSlider !== "false" ? 'bg-emerald-500' : 'bg-gray-600'}`}
+                            >
+                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${theme.showHeroSlider !== "false" ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                            </button>
+                        </div>
                         <ColorPicker label="Başlık Arkaplanı" value={theme.headerBg} onChange={(v) => updateTheme("headerBg", v)} />
                         <ColorPicker label="Gradient Başlangıç" value={theme.headerGradientFrom} onChange={(v) => updateTheme("headerGradientFrom", v)} />
                         <ColorPicker label="Gradient Bitiş" value={theme.headerGradientTo} onChange={(v) => updateTheme("headerGradientTo", v)} />

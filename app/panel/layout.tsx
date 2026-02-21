@@ -8,7 +8,7 @@ import {
     Star, LogOut, Menu, X, QrCode, Paintbrush, BarChart3,
     UserCircle, CreditCard, CalendarDays, Inbox, Bell,
     MessageSquare, ChevronLeft, MoreVertical, HelpCircle,
-    FileText, Mail, HeadphonesIcon,
+    FileText, Mail, HeadphonesIcon, Search,
 } from "lucide-react";
 
 interface Notification {
@@ -172,49 +172,38 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
         const collapsed = mobile ? false : isSidebarCollapsed;
         return (
             <div className="flex flex-col h-full bg-black">
-                {/* Header: Logo + Collapse */}
-                <div className="px-4 pt-5 pb-3 flex items-center justify-between">
-                    {!collapsed && (
+                {/* Header: Logo */}
+                <div className="px-4 pt-5 pb-3 flex items-center justify-center">
+                    {!collapsed ? (
                         <div className="flex items-center gap-2.5">
                             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                                 <QrCode size={18} className="text-white" />
                             </div>
                             <span className="text-lg font-bold text-white tracking-tight">QRlex</span>
                         </div>
-                    )}
-                    {collapsed && (
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
+                    ) : (
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                             <QrCode size={18} className="text-white" />
                         </div>
                     )}
-                    {!mobile && (
-                        <button
-                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                            className={`w-7 h-7 rounded-full border border-gray-700 flex items-center justify-center text-gray-500 hover:text-white hover:border-gray-500 transition-all ${collapsed ? 'mx-auto mt-3 rotate-180' : ''}`}
-                        >
-                            <ChevronLeft size={14} />
-                        </button>
-                    )}
                 </div>
 
-                {/* User Profile Card */}
+                {/* Search Input */}
                 <div className="px-3 mb-3">
-                    <div className={`rounded-2xl bg-gray-900 p-3 flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0 text-white font-bold text-sm shadow-md">
-                            {userName.charAt(0).toUpperCase()}
+                    {!collapsed ? (
+                        <div className="relative">
+                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                            <input
+                                type="text"
+                                placeholder="Ara..."
+                                className="w-full bg-gray-900 border border-gray-800 rounded-xl py-2.5 pl-9 pr-3 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-gray-600 focus:ring-1 focus:ring-gray-700 transition-all"
+                            />
                         </div>
-                        {!collapsed && (
-                            <>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-white truncate">{userName}</p>
-                                    <p className="text-[11px] text-gray-500">{userRole === 'superadmin' ? 'Süper Admin' : 'Restoran Yöneticisi'}</p>
-                                </div>
-                                <button className="text-gray-600 hover:text-gray-400 transition-colors" onClick={handleLogout} title="Çıkış Yap">
-                                    <MoreVertical size={16} />
-                                </button>
-                            </>
-                        )}
-                    </div>
+                    ) : (
+                        <button className="w-full flex items-center justify-center h-10 rounded-xl bg-gray-900 border border-gray-800 text-gray-500 hover:text-gray-300 hover:border-gray-600 transition-all">
+                            <Search size={16} />
+                        </button>
+                    )}
                 </div>
 
                 {/* Primary Navigation */}
@@ -292,6 +281,13 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
             {/* Desktop Sidebar */}
             <aside className={`hidden lg:flex ${sidebarWidth} bg-black border-r border-gray-800/50 flex-col fixed inset-y-0 left-0 z-30 transition-all duration-300`}>
                 <SidebarContent />
+                {/* Floating collapse/expand button on sidebar edge */}
+                <button
+                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    className="absolute -right-3 top-7 w-6 h-6 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition-all z-40 shadow-md"
+                >
+                    <ChevronLeft size={12} className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
+                </button>
             </aside>
 
             {/* Mobile Sidebar */}

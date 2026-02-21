@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 // Using regular img tags for external URLs
-import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users } from "lucide-react";
+import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users, Menu } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -118,6 +118,7 @@ export default function MenuClient({
         }).catch(() => { });
     };
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isSidebarDrawerOpen, setIsSidebarDrawerOpen] = useState(false);
     const [isReviewsOpen, setIsReviewsOpen] = useState(false);
     const [isWriteReviewOpen, setIsWriteReviewOpen] = useState(false);
     const [reviewName, setReviewName] = useState("");
@@ -671,9 +672,9 @@ export default function MenuClient({
             <div className="min-h-screen pb-20 overflow-x-clip" style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}>
                 {/* Custom Header */}
                 <div className="h-[60px] bg-white flex items-center justify-between px-4 shadow-sm relative">
-                    {/* Left: Info Icon */}
-                    <button onClick={() => setIsProfileOpen(true)} className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors z-10">
-                        <Info size={20} />
+                    {/* Left: Hamburger Menu */}
+                    <button onClick={() => setIsSidebarDrawerOpen(true)} className="w-[42px] h-[42px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors z-10">
+                        <Menu size={20} />
                     </button>
 
                     {/* Center: Business Name */}
@@ -685,40 +686,42 @@ export default function MenuClient({
                     </button>
                 </div>
 
-                {/* Hero Slider (JS Based) */}
-                <div className="w-full h-[300px] relative overflow-hidden bg-gray-100">
-                    <div
-                        className="flex h-full w-full transition-transform duration-700 ease-in-out"
-                        style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                    >
-                        {/* Slide 1 */}
-                        <div className="min-w-full h-full relative flex-shrink-0">
-                            <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
-                                <h3 className="text-xl font-medium mb-2 opacity-80">{t('specialRecipes')}</h3>
-                                <h1 className="text-4xl font-bold leading-tight">{t('flavorFeast')}</h1>
+                {/* Hero Slider (JS Based) — toggle from design panel */}
+                {T.showHeroSlider !== 'false' && (
+                    <div className="w-full h-[300px] relative overflow-hidden bg-gray-100">
+                        <div
+                            className="flex h-full w-full transition-transform duration-700 ease-in-out"
+                            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                        >
+                            {/* Slide 1 */}
+                            <div className="min-w-full h-full relative flex-shrink-0">
+                                <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
+                                    <h3 className="text-xl font-medium mb-2 opacity-80">{t('specialRecipes')}</h3>
+                                    <h1 className="text-4xl font-bold leading-tight">{t('flavorFeast')}</h1>
+                                </div>
+                            </div>
+                            {/* Slide 2 */}
+                            <div className="min-w-full h-full relative flex-shrink-0">
+                                <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
+                                    <h3 className="text-xl font-medium mb-2 opacity-80">{t('freshNatural')}</h3>
+                                    <h1 className="text-4xl font-bold leading-tight">{t('bestOfSeason')}</h1>
+                                </div>
                             </div>
                         </div>
-                        {/* Slide 2 */}
-                        <div className="min-w-full h-full relative flex-shrink-0">
-                            <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
-                                <h3 className="text-xl font-medium mb-2 opacity-80">{t('freshNatural')}</h3>
-                                <h1 className="text-4xl font-bold leading-tight">{t('bestOfSeason')}</h1>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Slider Dots */}
-                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                        <button
-                            onClick={() => setCurrentSlide(0)}
-                            className={`w-2 h-2 rounded-full transition-all ${currentSlide === 0 ? 'bg-black w-6' : 'bg-gray-400'}`}
-                        />
-                        <button
-                            onClick={() => setCurrentSlide(1)}
-                            className={`w-2 h-2 rounded-full transition-all ${currentSlide === 1 ? 'bg-black w-6' : 'bg-gray-400'}`}
-                        />
+                        {/* Slider Dots */}
+                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                            <button
+                                onClick={() => setCurrentSlide(0)}
+                                className={`w-2 h-2 rounded-full transition-all ${currentSlide === 0 ? 'bg-black w-6' : 'bg-gray-400'}`}
+                            />
+                            <button
+                                onClick={() => setCurrentSlide(1)}
+                                className={`w-2 h-2 rounded-full transition-all ${currentSlide === 1 ? 'bg-black w-6' : 'bg-gray-400'}`}
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
 
 
                 {/* Sticky Category Navbar */}
@@ -1569,6 +1572,122 @@ export default function MenuClient({
                 </div>
             )}
 
+            {/* Sidebar Drawer */}
+            {isSidebarDrawerOpen && (
+                <div className="fixed inset-0 z-[60]" style={{ fontFamily: T.fontFamily }}>
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={() => setIsSidebarDrawerOpen(false)}
+                        style={{ animation: 'fadeIn 0.2s ease-out' }}
+                    />
+                    {/* Drawer */}
+                    <div
+                        className="absolute top-0 left-0 bottom-0 w-[280px] bg-white shadow-2xl flex flex-col"
+                        style={{ animation: 'slideInLeft 0.3s ease-out' }}
+                    >
+                        {/* Drawer Header */}
+                        <div className="px-5 pt-5 pb-4 border-b border-gray-100 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                {BUSINESS_INFO.image ? (
+                                    <img src={BUSINESS_INFO.image} alt={BUSINESS_INFO.name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-200" />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
+                                        {BUSINESS_INFO.name.charAt(0)}
+                                    </div>
+                                )}
+                                <div>
+                                    <p className="font-bold text-gray-900 text-sm">{BUSINESS_INFO.name}</p>
+                                    <p className="text-[11px] text-gray-400">{BUSINESS_INFO.description?.slice(0, 30)}{BUSINESS_INFO.description?.length > 30 ? '...' : ''}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setIsSidebarDrawerOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        {/* Categories */}
+                        <div className="px-4 py-3 border-b border-gray-100">
+                            <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">{selectedLang === 'tr' ? 'Kategoriler' : 'Categories'}</p>
+                            <div className="space-y-0.5 max-h-[200px] overflow-y-auto">
+                                {DISPLAY_CATEGORIES.map((cat) => (
+                                    <button
+                                        key={cat.id}
+                                        onClick={() => {
+                                            setIsSidebarDrawerOpen(false);
+                                            setTimeout(() => scrollToCategory(cat.id), 300);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeCategory === cat.id
+                                            ? 'bg-gray-900 text-white'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        {cat.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Quick Actions */}
+                        <div className="px-4 py-3 space-y-1">
+                            <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">{selectedLang === 'tr' ? 'Hızlı Erişim' : 'Quick Access'}</p>
+                            <button
+                                onClick={() => { setIsSidebarDrawerOpen(false); setIsProfileOpen(true); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                            >
+                                <Info size={18} className="text-gray-400" />
+                                {selectedLang === 'tr' ? 'Hakkımızda' : 'About Us'}
+                            </button>
+                            <button
+                                onClick={() => { setIsSidebarDrawerOpen(false); setIsReservationOpen(true); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                            >
+                                <CalendarDays size={18} className="text-gray-400" />
+                                {selectedLang === 'tr' ? 'Rezervasyon' : 'Reservation'}
+                            </button>
+                            <button
+                                onClick={() => { setIsSidebarDrawerOpen(false); setIsReviewsOpen(true); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                            >
+                                <Star size={18} className="text-gray-400" />
+                                {selectedLang === 'tr' ? 'Yorum Yap' : 'Write a Review'}
+                            </button>
+                            <button
+                                onClick={() => { setIsSidebarDrawerOpen(false); setIsSearchOpen(true); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                            >
+                                <Search size={18} className="text-gray-400" />
+                                {selectedLang === 'tr' ? 'Ürün Ara' : 'Search'}
+                            </button>
+                        </div>
+
+                        {/* Spacer */}
+                        <div className="flex-1" />
+
+                        {/* Contact & Language */}
+                        <div className="px-4 py-3 border-t border-gray-100">
+                            {BUSINESS_INFO.phone && (
+                                <a href={`tel:${BUSINESS_INFO.phone}`} className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors">
+                                    <Phone size={16} className="text-green-500" />
+                                    {BUSINESS_INFO.phone}
+                                </a>
+                            )}
+                            {BUSINESS_INFO.instagram && (
+                                <a href={`https://instagram.com/${BUSINESS_INFO.instagram}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors">
+                                    <Instagram size={16} className="text-pink-500" />
+                                    @{BUSINESS_INFO.instagram}
+                                </a>
+                            )}
+                        </div>
+
+                        {/* Powered by */}
+                        <div className="px-5 py-3 border-t border-gray-100 text-center">
+                            <p className="text-[10px] text-gray-300 font-medium">Powered by QRlex</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Product Detail Overlay */}
             {selectedProduct && (
                 <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain" style={{ backgroundColor: T.pageBg || '#ffffff' }}>
@@ -1793,6 +1912,10 @@ export default function MenuClient({
                 @keyframes scaleIn {
                     from { transform: scale(0.7); opacity: 0; }
                     to { transform: scale(1); opacity: 1; }
+                }
+                @keyframes slideInLeft {
+                    from { transform: translateX(-100%); }
+                    to { transform: translateX(0); }
                 }
             `}</style>
         </>
