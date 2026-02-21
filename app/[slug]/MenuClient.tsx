@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 // Using regular img tags for external URLs
-import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign } from "lucide-react";
+import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -123,7 +123,7 @@ export default function MenuClient({
     const [reviewName, setReviewName] = useState("");
     const [reviewPhone, setReviewPhone] = useState("");
     const [reviewComment, setReviewComment] = useState("");
-    const [categoryRatings, setCategoryRatings] = useState({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0 });
+    const [categoryRatings, setCategoryRatings] = useState({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
     const categoryNavRef = useRef<HTMLDivElement>(null);
     const isScrollingRef = useRef(false);
 
@@ -908,124 +908,16 @@ export default function MenuClient({
                 </div>
             )}
 
-            {/* Reviews Overlay */}
+            {/* Review Form Overlay — direct form with 6 category ratings */}
             {isReviewsOpen && (
                 <div className="fixed inset-0 z-50 flex flex-col overflow-hidden overscroll-none" style={{ width: '100vw', height: '100dvh', backgroundColor: T.pageBg || '#ffffff' }}>
-                    {/* Header Section */}
-                    <div className="relative w-full shrink-0 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500" style={{ height: '45%' }}>
-                        {/* Back Button */}
-                        <button
-                            onClick={() => setIsReviewsOpen(false)}
-                            className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/40 transition-colors z-10"
-                        >
-                            <ChevronLeft size={22} />
-                        </button>
-
-                        {/* Rating Summary */}
-                        <div className="h-full flex flex-col items-center justify-center px-6">
-                            <div className="text-7xl font-bold text-white drop-shadow-md">{REVIEWS.average}</div>
-                            <div className="flex gap-1 mt-2 mb-1">
-                                {[1, 2, 3, 4, 5].map((s) => (
-                                    <Star
-                                        key={s}
-                                        size={22}
-                                        className={s <= Math.round(REVIEWS.average) ? 'text-white fill-white' : 'text-white/40'}
-                                    />
-                                ))}
-                            </div>
-                            <p className="text-white/90 text-sm font-medium">{REVIEWS.totalCount} {t('reviewCount')}</p>
-
-                            {/* Star Distribution Bars */}
-                            <div className="w-full max-w-[240px] mt-5 space-y-1.5">
-                                {REVIEWS.distribution.map((d) => (
-                                    <div key={d.stars} className="flex items-center gap-2">
-                                        <span className="text-xs text-white/80 w-3 text-right">{d.stars}</span>
-                                        <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-white rounded-full transition-all"
-                                                style={{ width: `${REVIEWS.totalCount > 0 ? (d.count / REVIEWS.totalCount) * 100 : 0}%` }}
-                                            />
-                                        </div>
-                                        <span className="text-xs text-white/70 w-6">{d.count}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Reviews List */}
-                    <div
-                        className="flex-1 overflow-y-auto -mt-6 relative overscroll-contain"
-                        style={{ borderRadius: '25px 25px 0 0', backgroundColor: T.cardBg || '#ffffff' }}
-                    >
-                        <div className="px-5 pt-7 pb-24">
-                            <div className="flex items-center justify-between mb-5">
-                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                    <MessageCircle size={20} className="text-gray-400" />
-                                    {t('reviews')}
-                                </h3>
-                                <span className="text-sm text-gray-400">{userReviews.length + REVIEWS.items.length} {t('reviewsLabel')}</span>
-                            </div>
-
-                            <div className="space-y-4">
-                                {[...userReviews, ...REVIEWS.items].map((review) => (
-                                    <div key={review.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                        {/* Review Header */}
-                                        <div className="flex items-center justify-between mb-2.5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white text-sm font-bold">
-                                                    {review.name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-semibold text-gray-900">{review.name}</p>
-                                                    <p className="text-[11px] text-gray-400">{review.date}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-0.5">
-                                                {[1, 2, 3, 4, 5].map((s) => (
-                                                    <Star
-                                                        key={s}
-                                                        size={14}
-                                                        className={s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                        {/* Review Comment */}
-                                        <p className="text-sm text-gray-600 leading-relaxed mb-3">{review.comment}</p>
-                                        {/* Helpful */}
-                                        <div className="flex items-center gap-1.5 text-gray-400">
-                                            <ThumbsUp size={14} />
-                                            <span className="text-xs">{review.helpful} {t('helpful')}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Floating Write Review Button */}
-                    <button
-                        onClick={() => setIsWriteReviewOpen(true)}
-                        className="absolute left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-black text-white font-semibold px-6 py-3.5 rounded-full shadow-xl hover:bg-gray-800 transition-all hover:shadow-2xl"
-                        style={{ bottom: 20 }}
-                    >
-                        <Send size={16} />
-                        {t('writeReview')}
-                    </button>
-                </div>
-            )}
-
-            {/* Write Review Popup — Simple version */}
-            {isWriteReviewOpen && (
-                <div className="fixed inset-0 z-[60] flex flex-col overflow-hidden overscroll-none" style={{ width: '100vw', height: '100dvh', backgroundColor: T.pageBg || '#ffffff' }}>
-                    {/* Header */}
-                    <div className="relative w-full shrink-0 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500" style={{ height: '35%' }}>
+                    {/* Orange header with category ratings inside */}
+                    <div className="relative w-full shrink-0 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 px-5 pb-10 pt-16">
                         {/* Back Button */}
                         <button
                             onClick={() => {
-                                setIsWriteReviewOpen(false);
-                                setCategoryRatings({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0 });
+                                setIsReviewsOpen(false);
+                                setCategoryRatings({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
                                 setReviewName("");
                                 setReviewComment("");
                             }}
@@ -1034,35 +926,51 @@ export default function MenuClient({
                             <ChevronLeft size={22} />
                         </button>
 
-                        <div className="h-full flex flex-col items-center justify-center px-5">
-                            <h2 className="text-2xl font-bold text-white drop-shadow-md mb-2">{t('rateUs')}</h2>
-                            {/* Single overall star rating */}
-                            <div className="flex gap-2 mt-2">
-                                {[1, 2, 3, 4, 5].map((s) => (
-                                    <button
-                                        key={s}
-                                        onClick={() => setCategoryRatings((prev) => ({ ...prev, yemek: s, hizmet: s, ambiyans: s, fiyat: s }))}
-                                        className="transition-all hover:scale-125 active:scale-90"
-                                    >
-                                        <Star
-                                            size={36}
-                                            className={s <= categoryRatings.yemek ? 'text-white fill-white drop-shadow-md' : 'text-white/30'}
-                                        />
-                                    </button>
-                                ))}
-                            </div>
-                            {categoryRatings.yemek > 0 && (
-                                <p className="text-white/90 text-sm mt-3 font-medium">{categoryRatings.yemek}/5</p>
-                            )}
+                        <div className="flex flex-col items-center mb-5">
+                            <h2 className="text-2xl font-bold text-white drop-shadow-md">{t('rateUs')}</h2>
+                            <p className="text-white/80 text-sm mt-1">{t('rateCategoryDesc')}</p>
+                        </div>
+
+                        {/* Category Ratings — inside the orange area */}
+                        <div className="space-y-2.5">
+                            {[
+                                { key: 'yemek' as const, label: t('foodQuality'), icon: <Utensils size={16} /> },
+                                { key: 'hizmet' as const, label: t('service'), icon: <HandHeart size={16} /> },
+                                { key: 'ambiyans' as const, label: t('ambiance'), icon: <Music size={16} /> },
+                                { key: 'fiyat' as const, label: t('pricePerformance'), icon: <BadgeDollarSign size={16} /> },
+                                { key: 'temizlik' as const, label: selectedLang === 'tr' ? 'Temizlik' : 'Cleanliness', icon: <AlertTriangle size={16} /> },
+                                { key: 'sunum' as const, label: selectedLang === 'tr' ? 'Sunum' : 'Presentation', icon: <Flame size={16} /> },
+                            ].map((cat) => (
+                                <div key={cat.key} className="flex items-center justify-between bg-white/15 backdrop-blur-sm rounded-xl px-4 py-2.5">
+                                    <div className="flex items-center gap-2.5">
+                                        <span className="text-white/80">{cat.icon}</span>
+                                        <span className="text-white text-sm font-medium">{cat.label}</span>
+                                    </div>
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map((s) => (
+                                            <button
+                                                key={s}
+                                                onClick={() => setCategoryRatings((prev) => ({ ...prev, [cat.key]: s }))}
+                                                className="transition-all hover:scale-110 active:scale-90"
+                                            >
+                                                <Star
+                                                    size={18}
+                                                    className={s <= categoryRatings[cat.key] ? 'text-white fill-white' : 'text-white/30'}
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Form Section */}
+                    {/* Form section — name, comment, submit */}
                     <div
-                        className="flex-1 overflow-y-auto -mt-6 relative overscroll-contain"
-                        style={{ borderRadius: '25px 25px 0 0', backgroundColor: T.cardBg || '#ffffff' }}
+                        className="flex-1 overflow-y-auto -mt-5 relative overscroll-contain"
+                        style={{ borderRadius: '20px 20px 0 0', backgroundColor: T.cardBg || '#ffffff' }}
                     >
-                        <div className="px-5 pt-7 pb-10">
+                        <div className="px-5 pt-6 pb-10">
                             {/* Ad Soyad */}
                             <div className="mb-4">
                                 <p className="text-xs text-gray-500 mb-2 font-medium">{t('fullName')}</p>
@@ -1075,6 +983,18 @@ export default function MenuClient({
                                 />
                             </div>
 
+                            {/* Telefon */}
+                            <div className="mb-4">
+                                <p className="text-xs text-gray-500 mb-2 font-medium">{t('phone')}</p>
+                                <input
+                                    type="tel"
+                                    placeholder={t('phonePlaceholder')}
+                                    value={reviewPhone}
+                                    onChange={(e) => setReviewPhone(e.target.value)}
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 focus:bg-white transition-colors"
+                                />
+                            </div>
+
                             {/* Mesaj */}
                             <div className="mb-6">
                                 <p className="text-xs text-gray-500 mb-2 font-medium">{t('message')}</p>
@@ -1082,7 +1002,7 @@ export default function MenuClient({
                                     placeholder={t('messagePlaceholder')}
                                     value={reviewComment}
                                     onChange={(e) => setReviewComment(e.target.value)}
-                                    rows={4}
+                                    rows={3}
                                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 focus:bg-white transition-colors resize-none"
                                 />
                             </div>
@@ -1090,38 +1010,39 @@ export default function MenuClient({
                             {/* Submit Button */}
                             <button
                                 onClick={async () => {
-                                    const rating = categoryRatings.yemek;
-                                    if (rating > 0 && reviewName.trim() && reviewComment.trim()) {
+                                    const avgRating = Math.round(
+                                        (categoryRatings.yemek + categoryRatings.hizmet + categoryRatings.ambiyans + categoryRatings.fiyat + categoryRatings.temizlik + categoryRatings.sunum) / 6
+                                    );
+                                    if (avgRating > 0 && reviewName.trim() && reviewComment.trim()) {
                                         try {
-                                            await fetch('/api/admin/reviews', {
+                                            await fetch('/api/reviews', {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
                                                 body: JSON.stringify({
                                                     restaurantId,
                                                     authorName: reviewName.trim(),
-                                                    rating,
+                                                    rating: avgRating,
                                                     comment: reviewComment.trim(),
                                                 }),
                                             });
                                         } catch (err) {
                                             console.error('Review submit error:', err);
                                         }
-                                        // Reset and close
-                                        setIsWriteReviewOpen(false);
+                                        // Reset and close — go back to menu
                                         setIsReviewsOpen(false);
                                         setReviewName("");
                                         setReviewComment("");
-                                        setCategoryRatings({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0 });
+                                        setCategoryRatings({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
                                     }
                                 }}
-                                disabled={categoryRatings.yemek === 0 || !reviewName.trim() || !reviewComment.trim()}
-                                className={`w-full py-4 rounded-xl text-base font-semibold transition-colors flex items-center justify-center gap-2 ${categoryRatings.yemek > 0 && reviewName.trim() && reviewComment.trim()
+                                disabled={Object.values(categoryRatings).some((v) => v === 0) || !reviewName.trim() || !reviewComment.trim()}
+                                className={`w-full py-4 rounded-xl text-base font-semibold transition-colors flex items-center justify-center gap-2 ${Object.values(categoryRatings).every((v) => v > 0) && reviewName.trim() && reviewComment.trim()
                                     ? 'bg-black text-white hover:bg-gray-800 shadow-lg'
                                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                     }`}
                             >
-                                <Send size={16} />
-                                {t('submitReview')}
+                                {selectedLang === 'tr' ? 'Gönder' : 'Submit'}
+                                <ArrowRight size={18} />
                             </button>
                         </div>
                     </div>
