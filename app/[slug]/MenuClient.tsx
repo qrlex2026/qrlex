@@ -670,7 +670,7 @@ export default function MenuClient({
                 </div>
             )}
 
-            <div className="min-h-screen pb-20 overflow-x-clip" style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}>
+            <div className="min-h-screen pb-20" style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}>
                 {/* Hero Slider (JS Based) — toggle from design panel */}
                 {T.showHeroSlider !== 'false' && (
                     <div className="w-full h-[300px] relative overflow-hidden bg-gray-100">

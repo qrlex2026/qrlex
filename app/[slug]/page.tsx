@@ -108,8 +108,8 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
             <link rel="stylesheet" href={fontUrl} />
             <style dangerouslySetInnerHTML={{
                 __html: `
-                body { background-color: ${theme.pageBg} !important; margin: 0; overflow-x: hidden; }
-                html { background-color: ${theme.pageBg} !important; overflow-x: hidden; }
+                body { background-color: ${theme.pageBg} !important; margin: 0; overflow-x: clip; }
+                html { background-color: ${theme.pageBg} !important; overflow-x: clip; }
             `}} />
             <MenuClient
                 initialCategories={categories}
