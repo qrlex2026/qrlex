@@ -750,8 +750,8 @@ export default function MenuClient({
                         // === CENTER-LOGO ===
                         if (hVariant === 'center-logo') return (
                             <div className="flex flex-col items-center pb-2 pt-3 px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
-                                <div className="absolute left-4 top-3">{hamburger}</div>
-                                <div className="absolute right-4 top-3">{searchBtn}</div>
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2">{hamburger}</div>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2">{searchBtn}</div>
                                 {logoImg ? <div className="w-12 h-12 rounded-full overflow-hidden border-2 mb-1" style={{ borderColor: hIcon + '33' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center mb-1 text-lg font-bold" style={{ borderColor: hIcon + '33', color: hText, backgroundColor: hBg }}>{bName.charAt(0)}</div>}
                                 <span className="font-bold text-sm truncate max-w-[70%]" style={{ color: hText }}>{bName}</span>
                             </div>
@@ -773,10 +773,13 @@ export default function MenuClient({
 
                         // === LANG ===
                         if (hVariant === 'lang') return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
-                                {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[50%] text-center" style={{ color: hText }}>{bName}</span>
-                                <div className="flex items-center gap-1 z-10">
+                            <div className="h-[60px] flex items-center justify-between px-4" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    {hamburger}
+                                    {logoImg ? <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border" style={{ borderColor: hIcon + '22' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-sm font-bold" style={{ backgroundColor: hBg, color: hText, border: `1px solid ${hIcon}22` }}>{bName.charAt(0)}</div>}
+                                    <span className="font-bold text-lg truncate" style={{ color: hText }}>{bName}</span>
+                                </div>
+                                <div className="flex items-center gap-1 flex-shrink-0">
                                     <button className="flex items-center justify-center p-2" style={{ color: hIcon }}><Globe size={18} /></button>
                                     {searchBtn}
                                 </div>
