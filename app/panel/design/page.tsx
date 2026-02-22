@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
     Save, Loader2, Palette, Type, Square, Layers, Eye, RotateCcw,
-    Sun, Moon, Sparkles, Paintbrush, SlidersHorizontal, Monitor,
+    Sun, Moon, Sparkles, Paintbrush, SlidersHorizontal, Monitor, Menu, Upload, X, Globe,
     LayoutGrid, ChevronDown, ChevronUp, Check, Smartphone, RefreshCw, Search, Image as ImageIcon,
     LayoutList, Grid2X2, Grid3X3, GalleryHorizontal, Newspaper, AlignJustify, RectangleHorizontal, Rows3, LayoutDashboard, FileText
 } from "lucide-react";
@@ -88,6 +88,15 @@ const DEFAULT_THEME = {
     // Layout
     layoutVariant: "list",
     categorySectionBg: "transparent",
+
+    // Menu Header
+    menuHeaderBg: "#ffffff",
+    menuHeaderTextColor: "#111827",
+    menuHeaderIconColor: "#374151",
+    menuHeaderShadow: "sm",
+    menuHeaderSearchBtnBg: "#f3f4f6",
+    headerVariant: "classic",
+    headerLogo: "",
 
     // Category Nav Bar
     categoryNavBg: "#ffffff",
@@ -215,6 +224,8 @@ export default function PanelDesign() {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [fontSearch, setFontSearch] = useState("");
     const [searchedFonts, setSearchedFonts] = useState<{ name: string; label: string }[]>([]);
+    const [headerLogoUploading, setHeaderLogoUploading] = useState(false);
+    const headerLogoRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (!restaurantId) return;
@@ -476,6 +487,222 @@ export default function PanelDesign() {
                                                 <span className={isActive ? 'text-emerald-400' : 'text-gray-500'}>{v.icon}</span>
                                                 <p className={`text-[11px] font-semibold ${isActive ? 'text-emerald-300' : 'text-gray-200 group-hover:text-emerald-300'} transition-colors`}>{v.name}</p>
                                             </div>
+                                            <p className="text-[9px] text-gray-500">{v.desc}</p>
+                                            {isActive && <div className="mx-auto mt-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </Section>
+
+                    {/* Menu Header */}
+                    <Section title="Menü Header" icon={<Menu size={18} />} defaultOpen={false}>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-2">Renkler</p>
+                        <ColorPicker label="Arkaplan" value={theme.menuHeaderBg} onChange={(v) => updateTheme("menuHeaderBg", v)} />
+                        <ColorPicker label="Yazı Rengi" value={theme.menuHeaderTextColor} onChange={(v) => updateTheme("menuHeaderTextColor", v)} />
+                        <ColorPicker label="Icon Rengi" value={theme.menuHeaderIconColor} onChange={(v) => updateTheme("menuHeaderIconColor", v)} />
+
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-2">Gölge</p>
+                        <div className="grid grid-cols-4 gap-1.5">
+                            {[
+                                { value: "none", label: "Yok" },
+                                { value: "sm", label: "Hafif" },
+                                { value: "md", label: "Orta" },
+                                { value: "lg", label: "Güçlü" },
+                            ].map((s) => (
+                                <button key={s.value} onClick={() => updateTheme("menuHeaderShadow", s.value)} className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.menuHeaderShadow === s.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{s.label}</button>
+                            ))}
+                        </div>
+                        <div className="border-t border-gray-800 my-3" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-2">Header Temaları</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {([
+                                { name: 'Klasik Beyaz', desc: 'Temiz ve minimal', bg: '#ffffff', text: '#111827', icon: '#374151', shadow: 'sm', searchBg: '#f3f4f6' },
+                                { name: 'Koyu Zarif', desc: 'Premium koyu tema', bg: '#1a1a2e', text: '#e0e0e0', icon: '#a0a0b8', shadow: 'none', searchBg: '#2a2a3e' },
+                                { name: 'Krem Naturel', desc: 'Sıcak ve doğal', bg: '#faf7f2', text: '#5c4a3a', icon: '#8b7355', shadow: 'sm', searchBg: '#f0ebe3' },
+                                { name: 'Cam Efekti', desc: 'Yarı saydam modern', bg: '#ffffffcc', text: '#1f2937', icon: '#4b5563', shadow: 'md', searchBg: '#f9fafb80' },
+                                { name: 'Lacivert', desc: 'Denizci temalı', bg: '#0f1b33', text: '#c8d6e5', icon: '#54a0ff', shadow: 'md', searchBg: '#1a2d4d' },
+                                { name: 'Yeşil Doğa', desc: 'Organik hissiyat', bg: '#f0f9f4', text: '#1a4731', icon: '#2d8659', shadow: 'sm', searchBg: '#e0f2e9' },
+                                { name: 'Altın Premium', desc: 'Lüks ve şık', bg: '#1c1917', text: '#f5e6cc', icon: '#d4a853', shadow: 'lg', searchBg: '#2c2520' },
+                            ] as { name: string; desc: string; bg: string; text: string; icon: string; shadow: string; searchBg: string }[]).map((preset) => {
+                                const isActive = theme.menuHeaderBg === preset.bg && theme.menuHeaderTextColor === preset.text;
+                                return (
+                                    <button
+                                        key={preset.name}
+                                        onClick={() => {
+                                            updateTheme('menuHeaderBg', preset.bg);
+                                            updateTheme('menuHeaderTextColor', preset.text);
+                                            updateTheme('menuHeaderIconColor', preset.icon);
+                                            updateTheme('menuHeaderShadow', preset.shadow);
+                                            updateTheme('menuHeaderSearchBtnBg', preset.searchBg);
+                                        }}
+                                        className={`group rounded-2xl border overflow-hidden transition-all ${isActive
+                                            ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                                            : 'border-gray-700 bg-gray-800/40 hover:border-gray-600 hover:bg-gray-800'
+                                            }`}
+                                    >
+                                        {/* Mini header preview */}
+                                        <div className="px-2 pt-2">
+                                            <div className="h-8 rounded-lg flex items-center justify-between px-2" style={{ backgroundColor: preset.bg, boxShadow: preset.shadow !== 'none' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
+                                                <div className="flex flex-col gap-[2px]">
+                                                    <div className="w-3 h-[1.5px] rounded-full" style={{ backgroundColor: preset.icon }} />
+                                                    <div className="w-2 h-[1.5px] rounded-full" style={{ backgroundColor: preset.icon }} />
+                                                </div>
+                                                <div className="h-2 w-10 rounded-full" style={{ backgroundColor: preset.text, opacity: 0.7 }} />
+                                                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.searchBg }}>
+                                                    <Search size={6} style={{ color: preset.icon, margin: '2px auto' }} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* Label */}
+                                        <div className="px-2 py-2 text-center">
+                                            <p className={`text-[11px] font-semibold ${isActive ? 'text-emerald-300' : 'text-gray-200 group-hover:text-emerald-300'} transition-colors`}>{preset.name}</p>
+                                            <p className="text-[9px] text-gray-500">{preset.desc}</p>
+                                            {isActive && <div className="mx-auto mt-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <div className="border-t border-gray-800 my-3" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-2">Header Logo / Resim</p>
+                        {theme.headerLogo ? (
+                            <div className="relative group">
+                                <img src={theme.headerLogo} alt="Header Logo" className="w-full h-20 object-contain rounded-xl border border-gray-700 bg-gray-800" />
+                                <button onClick={async () => { try { await fetch("/api/upload", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: theme.headerLogo }) }); } catch { } updateTheme("headerLogo", ""); }} className="absolute top-1 right-1 w-6 h-6 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} className="text-white" /></button>
+                            </div>
+                        ) : (
+                            <div onClick={() => headerLogoRef.current?.click()} className="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-xl p-4 text-center cursor-pointer transition-colors">
+                                {headerLogoUploading ? (
+                                    <div className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin text-emerald-500" /><span className="text-xs text-gray-400">Yükleniyor...</span></div>
+                                ) : (
+                                    <><Upload size={18} className="mx-auto mb-1 text-gray-600" /><p className="text-[10px] text-gray-400">Logo / Resim yükleyin</p></>
+                                )}
+                            </div>
+                        )}
+                        <input ref={headerLogoRef} type="file" accept="image/*" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; setHeaderLogoUploading(true); try { const fd = new FormData(); fd.append("file", f); fd.append("folder", "header"); const res = await fetch("/api/upload", { method: "POST", body: fd }); const data = await res.json(); if (data.success) updateTheme("headerLogo", data.url); } catch { } setHeaderLogoUploading(false); e.target.value = ""; }} />
+                        <div className="border-t border-gray-800 my-3" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-2">Header Varyasyonları</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            {([
+                                { id: 'classic', name: 'Klasik', desc: 'Hamburger + İsim + Arama' },
+                                { id: 'tall', name: 'Yüksek', desc: 'Daha büyük header alanı' },
+                                { id: 'center-logo', name: 'Logo Merkezli', desc: 'Ortada daire logo' },
+                                { id: 'left-logo', name: 'Sol Logo', desc: 'Logo + İsim sol taraf' },
+                                { id: 'lang', name: 'Dil Seçici', desc: 'Dil butonu içerir' },
+                                { id: 'banner', name: 'Banner', desc: 'Arkaplan görsel header' },
+                                { id: 'minimal', name: 'Minimal', desc: 'Kompakt ince header' },
+                                { id: 'rounded', name: 'Yuvarlatılmış', desc: 'Alt köşeler yuvarlak' },
+                                { id: 'split', name: 'Split', desc: 'İsim solda, ikon sağda' },
+                                { id: 'accent-bar', name: 'Accent Çizgi', desc: 'Alt kenarda renk çizgisi' },
+                                { id: 'glass', name: 'Cam Efekti', desc: 'Bulanık cam header' },
+                            ] as { id: string; name: string; desc: string }[]).map((v) => {
+                                const isActive = theme.headerVariant === v.id;
+                                const hBg = theme.menuHeaderBg;
+                                const hText = theme.menuHeaderTextColor;
+                                const hIcon = theme.menuHeaderIconColor;
+                                // Standard hamburger mini-preview helper
+                                const miniHamburger = <div className="flex flex-col gap-[1.5px]"><div className="w-3 h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} /><div className="w-2 h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} /></div>;
+                                const miniSearch = <Search size={6} style={{ color: hIcon }} />;
+                                return (
+                                    <button
+                                        key={v.id}
+                                        onClick={() => updateTheme('headerVariant', v.id)}
+                                        className={`group rounded-2xl border overflow-hidden transition-all ${isActive
+                                            ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                                            : 'border-gray-700 bg-gray-800/40 hover:border-gray-600 hover:bg-gray-800'
+                                            }`}
+                                    >
+                                        {/* Mini preview */}
+                                        <div className="px-2 pt-2">
+                                            <div className="rounded-lg overflow-hidden" style={{ backgroundColor: hBg }}>
+                                                {v.id === 'classic' && (
+                                                    <div className="h-7 flex items-center justify-between px-2">
+                                                        {miniHamburger}
+                                                        <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: hText, opacity: 0.6 }} />
+                                                        {miniSearch}
+                                                    </div>
+                                                )}
+                                                {v.id === 'tall' && (
+                                                    <div className="h-10 flex items-center justify-between px-2">
+                                                        {miniHamburger}
+                                                        <div className="text-center"><div className="h-1.5 w-10 rounded-full mx-auto mb-1" style={{ backgroundColor: hText, opacity: 0.7 }} /><div className="h-1 w-6 rounded-full mx-auto" style={{ backgroundColor: hText, opacity: 0.3 }} /></div>
+                                                        {miniSearch}
+                                                    </div>
+                                                )}
+                                                {v.id === 'center-logo' && (
+                                                    <div className="h-12 flex flex-col items-center justify-center relative">
+                                                        <div className="absolute left-2 top-1/2 -translate-y-1/2">{miniHamburger}</div>
+                                                        <div className="w-5 h-5 rounded-full border-2 mb-0.5" style={{ borderColor: hIcon, backgroundColor: hBg }} />
+                                                        <div className="h-1 w-8 rounded-full" style={{ backgroundColor: hText, opacity: 0.6 }} />
+                                                        <div className="absolute right-2 top-1/2 -translate-y-1/2">{miniSearch}</div>
+                                                    </div>
+                                                )}
+                                                {v.id === 'left-logo' && (
+                                                    <div className="h-7 flex items-center justify-between px-2">
+                                                        <div className="flex items-center gap-1.5"><div className="w-4 h-4 rounded-md border" style={{ borderColor: hIcon + '33', backgroundColor: hBg }} /><div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: hText, opacity: 0.6 }} /></div>
+                                                        <div className="flex items-center gap-1">{miniSearch}{miniHamburger}</div>
+                                                    </div>
+                                                )}
+                                                {v.id === 'lang' && (
+                                                    <div className="h-7 flex items-center justify-between px-2">
+                                                        {miniHamburger}
+                                                        <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: hText, opacity: 0.6 }} />
+                                                        <div className="flex items-center gap-1"><Globe size={5} style={{ color: hIcon }} />{miniSearch}</div>
+                                                    </div>
+                                                )}
+                                                {v.id === 'banner' && (
+                                                    <div className="h-12 flex items-end justify-between px-2 pb-1 relative" style={{ background: `linear-gradient(to bottom, ${hIcon}44, ${hBg})` }}>
+                                                        <div className="absolute inset-0 bg-black/20 rounded-lg" />
+                                                        <div className="relative flex flex-col gap-[1.5px]"><div className="w-3 h-[1.5px] rounded-full bg-white/80" /><div className="w-2 h-[1.5px] rounded-full bg-white/80" /></div>
+                                                        <div className="relative h-1.5 w-10 rounded-full bg-white/70 mb-1" />
+                                                        <Search size={6} className="relative" style={{ color: 'rgba(255,255,255,0.7)' }} />
+                                                    </div>
+                                                )}
+                                                {v.id === 'minimal' && (
+                                                    <div className="h-5 flex items-center justify-between px-2">
+                                                        {miniHamburger}
+                                                        <div className="h-1 w-6 rounded-full" style={{ backgroundColor: hText, opacity: 0.5 }} />
+                                                        {miniSearch}
+                                                    </div>
+                                                )}
+                                                {v.id === 'rounded' && (
+                                                    <div className="h-7 flex items-center justify-between px-2" style={{ borderRadius: '0 0 8px 8px' }}>
+                                                        {miniHamburger}
+                                                        <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: hText, opacity: 0.6 }} />
+                                                        {miniSearch}
+                                                    </div>
+                                                )}
+                                                {v.id === 'split' && (
+                                                    <div className="h-7 flex items-center justify-between px-2">
+                                                        <div className="flex items-center gap-1">{miniHamburger}<div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: hText, opacity: 0.6 }} /></div>
+                                                        {miniSearch}
+                                                    </div>
+                                                )}
+                                                {v.id === 'accent-bar' && (
+                                                    <div>
+                                                        <div className="h-7 flex items-center justify-between px-2">
+                                                            {miniHamburger}
+                                                            <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: hText, opacity: 0.6 }} />
+                                                            {miniSearch}
+                                                        </div>
+                                                        <div className="h-[2px] w-full" style={{ background: `linear-gradient(90deg, ${theme.accentColor || '#000'}, ${theme.accentColor || '#000'}44)` }} />
+                                                    </div>
+                                                )}
+                                                {v.id === 'glass' && (
+                                                    <div className="h-7 flex items-center justify-between px-2" style={{ backgroundColor: hBg + 'cc', borderBottom: `1px solid ${hIcon}15` }}>
+                                                        {miniHamburger}
+                                                        <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: hText, opacity: 0.6 }} />
+                                                        {miniSearch}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {/* Label */}
+                                        <div className="px-2 py-2 text-center">
+                                            <p className={`text-[11px] font-semibold ${isActive ? 'text-emerald-300' : 'text-gray-200 group-hover:text-emerald-300'} transition-colors`}>{v.name}</p>
                                             <p className="text-[9px] text-gray-500">{v.desc}</p>
                                             {isActive && <div className="mx-auto mt-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
                                         </div>

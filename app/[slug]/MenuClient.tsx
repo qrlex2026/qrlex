@@ -709,22 +709,157 @@ export default function MenuClient({
 
                 {/* Sticky Header + Category Nav */}
                 <div className="sticky top-0 z-10">
-                    {/* Custom Header */}
-                    <div className="h-[60px] bg-white flex items-center justify-between px-4 shadow-sm relative">
-                        {/* Left: Hamburger Menu */}
-                        <button onClick={() => setIsSidebarDrawerOpen(true)} className="flex flex-col items-start justify-center gap-[4px] text-gray-700 z-10 p-2">
-                            <span className="block w-[18px] h-[2px] bg-current rounded-full" />
-                            <span className="block w-[14px] h-[2px] bg-current rounded-full" />
-                        </button>
+                    {/* Custom Header — variant-aware */}
+                    {(() => {
+                        const hVariant = (T as any).headerVariant || 'classic';
+                        const hBg = (T as any).menuHeaderBg || '#ffffff';
+                        const hText = (T as any).menuHeaderTextColor || '#111827';
+                        const hIcon = (T as any).menuHeaderIconColor || '#374151';
+                        const hShadow = (() => { const s = (T as any).menuHeaderShadow || 'sm'; switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } })();
+                        const hLogo = (T as any).headerLogo || '';
+                        const bName = BUSINESS_INFO.name || 'Yükleniyor...';
+                        const accentColor = (T as any).accentColor || '#000000';
 
-                        {/* Center: Business Name */}
-                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg text-gray-900 truncate max-w-[60%] text-center">{BUSINESS_INFO.name || "Yükleniyor..."}</span>
+                        // Reusable elements — standard hamburger icon always (18px top + 14px bottom)
+                        const hamburger = <button onClick={() => setIsSidebarDrawerOpen(true)} className="flex flex-col items-start justify-center gap-[4px] z-10 p-2" style={{ color: hIcon }}><span className="block w-[18px] h-[2px] bg-current rounded-full" /><span className="block w-[14px] h-[2px] bg-current rounded-full" /></button>;
+                        // Search button — no circle bg, just icon
+                        const searchBtn = <button onClick={() => setIsSearchOpen(true)} className="flex items-center justify-center z-10 p-2" style={{ color: hIcon }}><Search size={20} /></button>;
+                        const logoImg = hLogo ? <img src={hLogo} alt="" className="object-contain" /> : null;
 
-                        {/* Right: Search Icon */}
-                        <button onClick={() => setIsSearchOpen(true)} className="w-[38px] h-[38px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 z-10">
-                            <Search size={20} />
-                        </button>
-                    </div>
+                        // === CLASSIC ===
+                        if (hVariant === 'classic') return (
+                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                                {hamburger}
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                {searchBtn}
+                            </div>
+                        );
+
+                        // === TALL ===
+                        if (hVariant === 'tall') return (
+                            <div className="h-[80px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                                {hamburger}
+                                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center max-w-[60%]">
+                                    <span className="font-bold text-xl truncate block" style={{ color: hText }}>{bName}</span>
+                                    {BUSINESS_INFO.description && <span className="text-xs truncate block mt-0.5" style={{ color: hText, opacity: 0.5 }}>{BUSINESS_INFO.description}</span>}
+                                </div>
+                                {searchBtn}
+                            </div>
+                        );
+
+                        // === CENTER-LOGO ===
+                        if (hVariant === 'center-logo') return (
+                            <div className="flex flex-col items-center pb-2 pt-3 px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                                <div className="absolute left-4 top-3">{hamburger}</div>
+                                <div className="absolute right-4 top-3">{searchBtn}</div>
+                                {logoImg ? <div className="w-12 h-12 rounded-full overflow-hidden border-2 mb-1" style={{ borderColor: hIcon + '33' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center mb-1 text-lg font-bold" style={{ borderColor: hIcon + '33', color: hText, backgroundColor: hBg }}>{bName.charAt(0)}</div>}
+                                <span className="font-bold text-sm truncate max-w-[70%]" style={{ color: hText }}>{bName}</span>
+                            </div>
+                        );
+
+                        // === LEFT-LOGO ===
+                        if (hVariant === 'left-logo') return (
+                            <div className="h-[60px] flex items-center justify-between px-4" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    {logoImg ? <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 border" style={{ borderColor: hIcon + '22' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-lg font-bold" style={{ backgroundColor: hBg, color: hText, border: `1px solid ${hIcon}22` }}>{bName.charAt(0)}</div>}
+                                    <span className="font-bold text-lg truncate" style={{ color: hText }}>{bName}</span>
+                                </div>
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                    {searchBtn}
+                                    {hamburger}
+                                </div>
+                            </div>
+                        );
+
+                        // === LANG ===
+                        if (hVariant === 'lang') return (
+                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                                {hamburger}
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[50%] text-center" style={{ color: hText }}>{bName}</span>
+                                <div className="flex items-center gap-1 z-10">
+                                    <button className="flex items-center justify-center p-2" style={{ color: hIcon }}><Globe size={18} /></button>
+                                    {searchBtn}
+                                </div>
+                            </div>
+                        );
+
+                        // === BANNER ===
+                        if (hVariant === 'banner') return (
+                            <div className="h-[100px] flex items-end justify-between px-4 pb-3 relative overflow-hidden" style={{ boxShadow: hShadow }}>
+                                <div className="absolute inset-0" style={{ backgroundColor: hBg }} />
+                                {hLogo && <img src={hLogo} alt="" className="absolute inset-0 w-full h-full object-cover" />}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+                                <div className="relative flex items-end justify-between w-full">
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={() => setIsSidebarDrawerOpen(true)} className="flex flex-col items-start justify-center gap-[4px] p-2 text-white/90"><span className="block w-[18px] h-[2px] bg-current rounded-full" /><span className="block w-[14px] h-[2px] bg-current rounded-full" /></button>
+                                        <span className="font-bold text-xl text-white drop-shadow-lg truncate max-w-[200px]">{bName}</span>
+                                    </div>
+                                    <button onClick={() => setIsSearchOpen(true)} className="flex items-center justify-center p-2 text-white/90"><Search size={20} /></button>
+                                </div>
+                            </div>
+                        );
+
+                        // === MINIMAL ===
+                        if (hVariant === 'minimal') return (
+                            <div className="h-[48px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                                {hamburger}
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-semibold text-sm tracking-wide uppercase truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                {searchBtn}
+                            </div>
+                        );
+
+                        // === ROUNDED ===
+                        if (hVariant === 'rounded') return (
+                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow, borderRadius: '0 0 20px 20px' }}>
+                                {hamburger}
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                {searchBtn}
+                            </div>
+                        );
+
+                        // === SPLIT (name left, icons right) ===
+                        if (hVariant === 'split') return (
+                            <div className="h-[60px] flex items-center justify-between px-4" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    {hamburger}
+                                    <span className="font-bold text-lg truncate" style={{ color: hText }}>{bName}</span>
+                                </div>
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                    {searchBtn}
+                                </div>
+                            </div>
+                        );
+
+                        // === ACCENT-BAR (colored accent line at bottom) ===
+                        if (hVariant === 'accent-bar') return (
+                            <div className="relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                                <div className="h-[60px] flex items-center justify-between px-4 relative">
+                                    {hamburger}
+                                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                    {searchBtn}
+                                </div>
+                                <div className="h-[3px] w-full" style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88, ${accentColor}22)` }} />
+                            </div>
+                        );
+
+                        // === GLASS (glassmorphism) ===
+                        if (hVariant === 'glass') return (
+                            <div className="h-[60px] flex items-center justify-between px-4 relative backdrop-blur-md" style={{ backgroundColor: hBg + 'cc', boxShadow: hShadow, borderBottom: `1px solid ${hIcon}15` }}>
+                                {hamburger}
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                {searchBtn}
+                            </div>
+                        );
+
+                        // Fallback = classic
+                        return (
+                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                                {hamburger}
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                {searchBtn}
+                            </div>
+                        );
+                    })()}
 
                     {/* Category Navbar */}
                     <div ref={categoryNavRef} className="overflow-x-auto no-scrollbar py-3 px-4 flex gap-2" style={{
