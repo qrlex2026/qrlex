@@ -84,6 +84,9 @@ const DEFAULT_THEME = {
     welcomeLogoRadius: "16",
     welcomeLogoSize: "96",
     welcomeSeparatorColor: "#ffffff33",
+    welcomeVariant: "classic",
+    welcomeVideo: "",
+    welcomeImage: "",
 
     // Layout
     layoutVariant: "list",
@@ -888,6 +891,124 @@ export default function PanelDesign() {
 
                     {/* Welcome Screen */}
                     <Section title="Hoşgeldiniz Ekranı" icon={<ImageIcon size={18} />} defaultOpen={false}>
+                        {/* Welcome Variant Selector */}
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-2">Giriş Ekranı Varyasyonları</p>
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                            {([
+                                { id: 'classic', name: 'Klasik', desc: 'Ortada logo + 3 buton' },
+                                { id: 'left-text', name: 'Sol Yazı', desc: 'Yazılar solda, butonlar alta' },
+                                { id: 'fullscreen', name: 'Tam Ekran', desc: 'Dev logo + tek buton' },
+                                { id: 'split-btn', name: 'Ayrık Buton', desc: 'Dikey butonlar altta' },
+                                { id: 'minimal', name: 'Minimal', desc: 'Temiz ve sade giriş' },
+                                { id: 'editorial', name: 'Editöryal', desc: 'Büyük yazı + ince stil' },
+                                { id: 'neon', name: 'Neon', desc: 'Işıklı glow efekti' },
+                            ] as { id: string; name: string; desc: string }[]).map((v) => {
+                                const isActive = theme.welcomeVariant === v.id;
+                                return (
+                                    <button
+                                        key={v.id}
+                                        onClick={() => updateTheme('welcomeVariant', v.id)}
+                                        className={`group rounded-2xl border overflow-hidden transition-all ${isActive
+                                            ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                                            : 'border-gray-700 bg-gray-800/40 hover:border-gray-600 hover:bg-gray-800'
+                                            }`}
+                                    >
+                                        {/* Mini preview */}
+                                        <div className="px-2 pt-2">
+                                            <div className="rounded-lg overflow-hidden h-16 relative" style={{ backgroundColor: theme.welcomeBg || '#000' }}>
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                                                {v.id === 'classic' && (
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                                                        <div className="w-4 h-4 rounded-full border border-white/40" />
+                                                        <div className="h-1 w-8 rounded-full bg-white/60" />
+                                                        <div className="flex gap-1 mt-1"><div className="h-2 w-5 rounded-sm bg-white/80" /><div className="h-2 w-5 rounded-sm bg-white/30" /><div className="h-2 w-5 rounded-sm bg-white/30" /></div>
+                                                    </div>
+                                                )}
+                                                {v.id === 'left-text' && (
+                                                    <div className="absolute inset-0 flex flex-col justify-end p-2">
+                                                        <div className="h-1.5 w-10 rounded-full bg-white/70 mb-0.5" />
+                                                        <div className="h-1 w-6 rounded-full bg-white/40 mb-2" />
+                                                        <div className="flex gap-1"><div className="h-2 w-5 rounded-sm bg-white/80" /><div className="h-2 w-5 rounded-sm bg-white/30" /><div className="h-2 w-5 rounded-sm bg-white/30" /></div>
+                                                    </div>
+                                                )}
+                                                {v.id === 'fullscreen' && (
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                                                        <div className="w-6 h-6 rounded-lg border border-white/40" />
+                                                        <div className="h-1 w-10 rounded-full bg-white/50" />
+                                                        <div className="h-2.5 w-12 rounded-md bg-white/80 mt-1" />
+                                                    </div>
+                                                )}
+                                                {v.id === 'split-btn' && (
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                                                        <div className="w-4 h-4 rounded-full border border-white/40" />
+                                                        <div className="h-1 w-8 rounded-full bg-white/60" />
+                                                        <div className="flex flex-col gap-0.5 mt-1 w-10"><div className="h-2 w-full rounded-sm bg-white/80" /><div className="h-2 w-full rounded-sm bg-white/30" /><div className="h-2 w-full rounded-sm bg-white/30" /></div>
+                                                    </div>
+                                                )}
+                                                {v.id === 'minimal' && (
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+                                                        <div className="h-1 w-8 rounded-full bg-white/50" />
+                                                        <div className="h-2.5 w-10 rounded-md bg-white/80" />
+                                                    </div>
+                                                )}
+                                                {v.id === 'editorial' && (
+                                                    <div className="absolute inset-0 flex flex-col justify-end p-2">
+                                                        <div className="h-2 w-12 rounded-full bg-white/70 mb-0.5" />
+                                                        <div className="h-1 w-8 rounded-full bg-white/40 mb-1" />
+                                                        <div className="h-2 w-8 rounded-sm bg-white/60" />
+                                                    </div>
+                                                )}
+                                                {v.id === 'neon' && (
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                                                        <div className="w-4 h-4 rounded-full" style={{ border: `1px solid ${theme.welcomeBtnBg || '#fff'}`, boxShadow: `0 0 6px ${theme.welcomeBtnBg || '#fff'}44` }} />
+                                                        <div className="h-1 w-8 rounded-full" style={{ backgroundColor: theme.welcomeBtnBg || '#fff', opacity: 0.5 }} />
+                                                        <div className="h-2 w-8 rounded-sm mt-0.5" style={{ border: `1px solid ${theme.welcomeBtnBg || '#fff'}66` }} />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="px-2 py-2 text-center">
+                                            <p className={`text-[11px] font-semibold ${isActive ? 'text-emerald-300' : 'text-gray-200 group-hover:text-emerald-300'} transition-colors`}>{v.name}</p>
+                                            <p className="text-[9px] text-gray-500">{v.desc}</p>
+                                            {isActive && <div className="mx-auto mt-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <div className="border-t border-gray-800 my-3" />
+
+                        {/* Background Video/Image Upload */}
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-2">Arka Plan Video / Resim</p>
+                        <input ref={headerLogoRef} type="file" accept="image/*,video/*" className="hidden" id="welcomeBgUpload" onChange={async (e) => {
+                            const file = e.target.files?.[0]; if (!file) return;
+                            setHeaderLogoUploading(true);
+                            const form = new FormData(); form.append('file', file);
+                            try {
+                                const res = await fetch('/api/upload', { method: 'POST', body: form }); const data = await res.json();
+                                if (data.url) {
+                                    if (file.type.startsWith('video/')) updateTheme('welcomeVideo', data.url);
+                                    else updateTheme('welcomeImage', data.url);
+                                }
+                            } catch (err) { console.error(err); } finally { setHeaderLogoUploading(false); }
+                        }} />
+                        {(theme.welcomeVideo || theme.welcomeImage) ? (
+                            <div className="relative rounded-xl overflow-hidden border border-gray-700 mb-2">
+                                {theme.welcomeVideo ? (
+                                    <video src={theme.welcomeVideo} className="w-full h-24 object-cover" muted autoPlay loop playsInline />
+                                ) : (
+                                    <img src={theme.welcomeImage} className="w-full h-24 object-cover" alt="" />
+                                )}
+                                <button onClick={() => { updateTheme('welcomeVideo', ''); updateTheme('welcomeImage', ''); }} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500/90 flex items-center justify-center"><X size={12} className="text-white" /></button>
+                            </div>
+                        ) : (
+                            <button onClick={() => document.getElementById('welcomeBgUpload')?.click()} className="w-full py-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-emerald-500/50 transition-colors flex flex-col items-center gap-1.5 mb-2">
+                                <Upload size={18} className="text-gray-500" />
+                                <span className="text-[10px] text-gray-500">Video veya resim yükle</span>
+                            </button>
+                        )}
+                        <div className="border-t border-gray-800 my-3" />
+
                         <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Arka Plan</p>
                         <ColorPicker label="Arka Plan Rengi" value={theme.welcomeBg} onChange={(v) => updateTheme("welcomeBg", v)} />
                         <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Video/Resim Opaklığı</label><div className="flex items-center gap-2"><input type="range" min={0} max={100} value={theme.welcomeOverlayOpacity} onChange={(e) => updateTheme("welcomeOverlayOpacity", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.welcomeOverlayOpacity}%</span></div></div>

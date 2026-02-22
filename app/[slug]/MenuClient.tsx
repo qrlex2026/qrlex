@@ -498,168 +498,265 @@ export default function MenuClient({
 
     return (
         <>
-            {/* Welcome Screen */}
-            {showLangSplash && (
-                <div
-                    className={`fixed inset-0 z-[100] flex flex-col overflow-hidden transition-opacity duration-500 ${splashFading ? 'opacity-0' : 'opacity-100'}`}
-                    style={{ fontFamily: T.fontFamily, backgroundColor: T.welcomeBg || '#000000' }}
-                >
-                    {/* Fullscreen Video Background */}
-                    <div className="absolute inset-0 overflow-hidden" style={{ backgroundColor: T.welcomeBg || '#000000' }}>
-                        <video
-                            src="https://github.com/qrlex2026/qrlexvideo/raw/refs/heads/main/1.mp4"
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                            className="absolute inset-0 w-full h-full object-cover"
-                            style={{ opacity: (parseInt(T.welcomeOverlayOpacity || '60') / 100) }}
-                        />
-                    </div>
+            {/* Welcome Screen — variant-aware */}
+            {showLangSplash && (() => {
+                const wVariant = (T as any).welcomeVariant || 'classic';
+                const wVideo = (T as any).welcomeVideo || '';
+                const wImage = (T as any).welcomeImage || '';
+                const wBg = T.welcomeBg || '#000000';
+                const wText = T.welcomeTextColor || '#ffffff';
+                const wSub = T.welcomeSubtextColor || '#ffffff80';
+                const wBtnBg = T.welcomeBtnBg || '#ffffff';
+                const wBtnText = T.welcomeBtnText || '#000000';
+                const wBtnRadius = T.welcomeBtnRadius || '12';
+                const wBtnShadow = T.welcomeBtnShadow === 'none' ? 'none' : T.welcomeBtnShadow === 'sm' ? '0 1px 2px rgba(0,0,0,0.1)' : T.welcomeBtnShadow === 'md' ? '0 4px 6px rgba(0,0,0,0.1)' : '0 10px 15px rgba(0,0,0,0.2)';
+                const wSecBg = T.welcomeSecondaryBtnBg || '#ffffff1a';
+                const wSecText = T.welcomeSecondaryBtnText || '#ffffff';
+                const wSecBorder = T.welcomeSecondaryBtnBorder || '#ffffff33';
+                const wLogoSize = T.welcomeLogoSize || '96';
+                const wLogoRadius = T.welcomeLogoRadius || '16';
+                const wLogoBorder = T.welcomeLogoBorder || '#ffffff33';
+                const bName = BUSINESS_INFO.name;
+                const bImg = BUSINESS_INFO.image;
+                const overlayOpacity = parseInt(T.welcomeOverlayOpacity || '60') / 100;
+                const gradFrom = T.welcomeGradientFrom || '#000000';
+                const gradOpacity = T.welcomeGradientOpacity || '85';
 
-                    {/* Bottom-to-Top Gradient */}
-                    <div className="absolute inset-0 pointer-events-none" style={{
-                        background: `linear-gradient(to top, ${T.welcomeGradientFrom || '#000000'} 0%, ${T.welcomeGradientFrom || '#000000'}${Math.round((parseInt(T.welcomeGradientOpacity || '85') / 100) * 255).toString(16).padStart(2, '0')} 15%, transparent 60%, transparent 100%)`
-                    }} />
-
-                    {/* Content */}
-                    <div className="relative flex-1 flex flex-col items-center justify-center z-10">
-                        {/* Restaurant Logo */}
-                        {BUSINESS_INFO.image ? (
-                            <div className="overflow-hidden shadow-2xl mb-5" style={{
-                                width: `${T.welcomeLogoSize || '96'}px`,
-                                height: `${T.welcomeLogoSize || '96'}px`,
-                                borderRadius: `${T.welcomeLogoRadius || '16'}px`,
-                                border: `2px solid ${T.welcomeLogoBorder || '#ffffff33'}`
-                            }}>
-                                <img src={BUSINESS_INFO.image} alt={BUSINESS_INFO.name} className="w-full h-full object-cover" />
-                            </div>
+                // Background layer (shared by all variants)
+                const bgLayer = (
+                    <div className="absolute inset-0 overflow-hidden" style={{ backgroundColor: wBg }}>
+                        {wVideo ? (
+                            <video src={wVideo} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" style={{ opacity: overlayOpacity }} />
+                        ) : wImage ? (
+                            <img src={wImage} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: overlayOpacity }} />
                         ) : (
-                            <div className="backdrop-blur-md flex items-center justify-center mb-5" style={{
-                                width: `${T.welcomeLogoSize || '96'}px`,
-                                height: `${T.welcomeLogoSize || '96'}px`,
-                                borderRadius: `${T.welcomeLogoRadius || '16'}px`,
-                                border: `1px solid ${T.welcomeLogoBorder || '#ffffff33'}`,
-                                backgroundColor: `${T.welcomeSecondaryBtnBg || '#ffffff1a'}`
-                            }}>
-                                <span className="text-4xl font-bold" style={{ color: T.welcomeTextColor || '#ffffff' }}>{BUSINESS_INFO.name.charAt(0)}</span>
-                            </div>
+                            <video src="https://github.com/qrlex2026/qrlexvideo/raw/refs/heads/main/1.mp4" autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" style={{ opacity: overlayOpacity }} />
                         )}
-                        <h1 className="text-3xl font-bold tracking-tight drop-shadow-lg" style={{ color: T.welcomeTextColor || '#ffffff' }}>{BUSINESS_INFO.name}</h1>
-                        <p className="text-lg mt-3 font-light tracking-wide" style={{ color: T.welcomeSubtextColor || '#ffffff80' }}>{t('welcome')}</p>
                     </div>
+                );
 
-                    {/* Bottom Navigation */}
-                    <div className="relative z-10 pb-8" style={{ padding: '0 13px 32px 13px' }}>
+                // Gradient overlay (shared)
+                const gradient = (
+                    <div className="absolute inset-0 pointer-events-none" style={{
+                        background: `linear-gradient(to top, ${gradFrom} 0%, ${gradFrom}${Math.round((parseInt(gradOpacity) / 100) * 255).toString(16).padStart(2, '0')} 15%, transparent 60%, transparent 100%)`
+                    }} />
+                );
 
+                // Logo element (shared)
+                const logo = bImg ? (
+                    <div className="overflow-hidden shadow-2xl" style={{ width: `${wLogoSize}px`, height: `${wLogoSize}px`, borderRadius: `${wLogoRadius}px`, border: `2px solid ${wLogoBorder}` }}>
+                        <img src={bImg} alt={bName} className="w-full h-full object-cover" />
+                    </div>
+                ) : (
+                    <div className="backdrop-blur-md flex items-center justify-center" style={{ width: `${wLogoSize}px`, height: `${wLogoSize}px`, borderRadius: `${wLogoRadius}px`, border: `1px solid ${wLogoBorder}`, backgroundColor: wSecBg }}>
+                        <span className="text-4xl font-bold" style={{ color: wText }}>{bName.charAt(0)}</span>
+                    </div>
+                );
 
-                        {/* 3 Buttons */}
-                        <div className="flex items-center justify-center gap-3">
-                            {/* MENÜ Button */}
-                            <button
-                                onClick={goToMenu}
-                                className="flex-1 py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all"
-                                style={{
-                                    backgroundColor: T.welcomeBtnBg || '#ffffff',
-                                    color: T.welcomeBtnText || '#000000',
-                                    borderRadius: `${T.welcomeBtnRadius || '12'}px`,
-                                    boxShadow: T.welcomeBtnShadow === 'none' ? 'none' : T.welcomeBtnShadow === 'sm' ? '0 1px 2px rgba(0,0,0,0.1)' : T.welcomeBtnShadow === 'md' ? '0 4px 6px rgba(0,0,0,0.1)' : '0 10px 15px rgba(0,0,0,0.2)',
-                                    animation: 'fadeInUp 0.5s ease-out 0.1s both'
-                                }}
-                            >
-                                MENÜ
-                            </button>
+                // Button styles
+                const primaryBtn = { backgroundColor: wBtnBg, color: wBtnText, borderRadius: `${wBtnRadius}px`, boxShadow: wBtnShadow };
+                const secondaryBtn = { backgroundColor: wSecBg, color: wSecText, border: `1px solid ${wSecBorder}`, borderRadius: `${wBtnRadius}px` };
 
-                            {/* LANGUAGE Button */}
-                            <button
-                                onClick={() => setShowLangPicker(true)}
-                                className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all"
-                                style={{
-                                    backgroundColor: T.welcomeSecondaryBtnBg || '#ffffff1a',
-                                    color: T.welcomeSecondaryBtnText || '#ffffff',
-                                    border: `1px solid ${T.welcomeSecondaryBtnBorder || '#ffffff33'}`,
-                                    borderRadius: `${T.welcomeBtnRadius || '12'}px`,
-                                    animation: 'fadeInUp 0.5s ease-out 0.2s both'
-                                }}
-                            >
-                                {t('btnLanguage')}
-                            </button>
+                // Shared actions
+                const menuAction = goToMenu;
+                const langAction = () => setShowLangPicker(true);
+                const resAction = () => { setShowLangSplash(false); setIsReservationOpen(true); };
 
-                            {/* REZERVE Button */}
-                            <button
-                                onClick={() => { setShowLangSplash(false); setIsReservationOpen(true); }}
-                                className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all"
-                                style={{
-                                    backgroundColor: T.welcomeSecondaryBtnBg || '#ffffff1a',
-                                    color: T.welcomeSecondaryBtnText || '#ffffff',
-                                    border: `1px solid ${T.welcomeSecondaryBtnBorder || '#ffffff33'}`,
-                                    borderRadius: `${T.welcomeBtnRadius || '12'}px`,
-                                    animation: 'fadeInUp 0.5s ease-out 0.3s both'
-                                }}
-                            >
-                                REZERVE
-                            </button>
+                // Powered by
+                const poweredBy = <p className="text-center mt-5 text-[10px] font-medium tracking-widest" style={{ color: wSub, opacity: 0.5 }}>Powered by <span className="font-bold">QRLEX</span></p>;
+
+                // === CLASSIC ===
+                const classicContent = (
+                    <>
+                        <div className="relative flex-1 flex flex-col items-center justify-center z-10">
+                            <div style={{ animation: 'fadeInUp 0.5s ease-out both' }}>{logo}</div>
+                            <h1 className="text-3xl font-bold tracking-tight drop-shadow-lg mt-5" style={{ color: wText, animation: 'fadeInUp 0.5s ease-out 0.1s both' }}>{bName}</h1>
+                            <p className="text-lg mt-3 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{t('welcome')}</p>
                         </div>
+                        <div className="relative z-10 pb-8" style={{ padding: '0 13px 32px 13px' }}>
+                            <div className="flex items-center justify-center gap-3">
+                                <button onClick={menuAction} className="flex-1 py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.1s both' }}>MENÜ</button>
+                                <button onClick={langAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>{t('btnLanguage')}</button>
+                                <button onClick={resAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>REZERVE</button>
+                            </div>
+                            {poweredBy}
+                        </div>
+                    </>
+                );
 
-                        {/* Powered by */}
-                        <p className="text-center mt-5 text-[10px] font-medium tracking-widest" style={{ color: T.welcomeSubtextColor || '#ffffff80', opacity: 0.5 }}>
-                            Powered by <span className="font-bold">QRLEX</span>
-                        </p>
-                    </div>
+                // === LEFT-TEXT ===
+                const leftTextContent = (
+                    <>
+                        <div className="relative flex-1 flex flex-col justify-end z-10 px-6 pb-4">
+                            <div className="mb-3" style={{ animation: 'fadeInUp 0.5s ease-out both' }}>{logo}</div>
+                            <h1 className="text-4xl font-bold tracking-tight drop-shadow-lg" style={{ color: wText, animation: 'fadeInUp 0.5s ease-out 0.1s both' }}>{bName}</h1>
+                            <p className="text-base mt-2 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{t('welcome')}</p>
+                        </div>
+                        <div className="relative z-10 pb-8" style={{ padding: '0 13px 32px 13px' }}>
+                            <div className="flex items-center justify-center gap-3">
+                                <button onClick={menuAction} className="flex-1 py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>MENÜ</button>
+                                <button onClick={langAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>{t('btnLanguage')}</button>
+                                <button onClick={resAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.4s both' }}>REZERVE</button>
+                            </div>
+                            {poweredBy}
+                        </div>
+                    </>
+                );
 
-                    {/* Language Picker Overlay */}
-                    {showLangPicker && (
-                        <div className="absolute inset-0 z-20 flex flex-col" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-                            {/* Close area */}
-                            <div className="flex-1 bg-black/50" onClick={() => setShowLangPicker(false)} />
+                // === FULLSCREEN ===
+                const fullscreenContent = (
+                    <>
+                        <div className="relative flex-1 flex flex-col items-center justify-center z-10">
+                            <div style={{ animation: 'fadeInUp 0.6s ease-out both', transform: 'scale(1.3)' }}>{logo}</div>
+                            <h1 className="text-2xl font-bold tracking-tight drop-shadow-lg mt-8" style={{ color: wText, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>{bName}</h1>
+                            <p className="text-sm mt-2 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.25s both' }}>{t('welcome')}</p>
+                        </div>
+                        <div className="relative z-10 pb-8" style={{ padding: '0 24px 32px 24px' }}>
+                            <button onClick={menuAction} className="w-full py-4 text-base font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>MENÜYÜ GÖRÜNTÜLE</button>
+                            <div className="flex items-center justify-center gap-4 mt-4">
+                                <button onClick={langAction} className="text-sm font-medium tracking-wide active:scale-[0.97] transition-all" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.4s both' }}>{t('btnLanguage')}</button>
+                                <span style={{ color: wSub, opacity: 0.3 }}>|</span>
+                                <button onClick={resAction} className="text-sm font-medium tracking-wide active:scale-[0.97] transition-all" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.4s both' }}>REZERVE</button>
+                            </div>
+                            {poweredBy}
+                        </div>
+                    </>
+                );
 
-                            {/* Language Sheet - 40% height */}
-                            <div
-                                className="bg-[#1a1a1a] rounded-t-2xl px-4 pt-4 flex flex-col"
-                                style={{ height: '40dvh', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', animation: 'slideUp 0.35s ease-out' }}
-                            >
-                                {/* Handle bar */}
-                                <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-3 shrink-0" />
+                // === SPLIT-BTN (vertical stacked buttons) ===
+                const splitBtnContent = (
+                    <>
+                        <div className="relative flex-1 flex flex-col items-center justify-center z-10">
+                            <div style={{ animation: 'fadeInUp 0.5s ease-out both' }}>{logo}</div>
+                            <h1 className="text-3xl font-bold tracking-tight drop-shadow-lg mt-5" style={{ color: wText, animation: 'fadeInUp 0.5s ease-out 0.1s both' }}>{bName}</h1>
+                            <p className="text-lg mt-3 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{t('welcome')}</p>
+                        </div>
+                        <div className="relative z-10 pb-8" style={{ padding: '0 24px 32px 24px' }}>
+                            <div className="flex flex-col gap-2.5">
+                                <button onClick={menuAction} className="w-full py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>MENÜ</button>
+                                <button onClick={langAction} className="w-full py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>{t('btnLanguage')}</button>
+                                <button onClick={resAction} className="w-full py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.4s both' }}>REZERVE</button>
+                            </div>
+                            {poweredBy}
+                        </div>
+                    </>
+                );
 
-                                <div className="flex-1 flex flex-wrap gap-2.5 justify-center content-center overflow-y-auto">
-                                    {languages.map((lang) => (
-                                        <button
-                                            key={lang.code}
-                                            onClick={() => {
-                                                setShowLangPicker(false);
-                                                selectLanguage(lang.code);
-                                            }}
-                                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${selectedLang === lang.code
-                                                ? 'bg-white text-black'
-                                                : 'bg-white/10 text-white hover:bg-white/20'
-                                                }`}
-                                        >
-                                            <span className="text-base">{lang.flag}</span>
-                                            <span>{lang.name}</span>
-                                        </button>
-                                    ))}
+                // === MINIMAL ===
+                const minimalContent = (
+                    <>
+                        <div className="relative flex-1 flex flex-col items-center justify-center z-10">
+                            <h1 className="text-4xl font-extralight tracking-[0.2em] uppercase drop-shadow-lg" style={{ color: wText, animation: 'fadeInUp 0.6s ease-out both' }}>{bName}</h1>
+                            <div className="w-12 h-[1px] mt-4 mb-3" style={{ backgroundColor: wSub, animation: 'fadeInUp 0.5s ease-out 0.1s both' }} />
+                            <p className="text-xs font-light tracking-[0.15em] uppercase" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{t('welcome')}</p>
+                        </div>
+                        <div className="relative z-10 pb-8" style={{ padding: '0 24px 32px 24px' }}>
+                            <button onClick={menuAction} className="w-full py-3.5 text-xs font-bold tracking-[0.2em] uppercase text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>MENÜYÜ GÖRÜNTÜLE</button>
+                            <div className="flex items-center justify-center gap-6 mt-4">
+                                <button onClick={langAction} className="text-xs tracking-[0.1em] uppercase active:scale-[0.97] transition-all" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>{t('btnLanguage')}</button>
+                                <button onClick={resAction} className="text-xs tracking-[0.1em] uppercase active:scale-[0.97] transition-all" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>REZERVE</button>
+                            </div>
+                            {poweredBy}
+                        </div>
+                    </>
+                );
+
+                // === EDITORIAL ===
+                const editorialContent = (
+                    <>
+                        <div className="relative flex-1 z-10" />
+                        <div className="relative z-10 px-6 pb-8">
+                            <div className="mb-4" style={{ animation: 'fadeInUp 0.5s ease-out both' }}>{logo}</div>
+                            <h1 className="text-5xl font-black tracking-tight leading-none drop-shadow-lg" style={{ color: wText, animation: 'fadeInUp 0.5s ease-out 0.1s both' }}>{bName}</h1>
+                            <p className="text-base mt-3 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{BUSINESS_INFO.description || t('welcome')}</p>
+                            <div className="flex items-center gap-3 mt-6">
+                                <button onClick={menuAction} className="flex-1 py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>MENÜ</button>
+                                <button onClick={langAction} className="py-3.5 px-4 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>{t('btnLanguage')}</button>
+                                <button onClick={resAction} className="py-3.5 px-4 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.35s both' }}>REZERVE</button>
+                            </div>
+                            {poweredBy}
+                        </div>
+                    </>
+                );
+
+                // === NEON ===
+                const neonContent = (
+                    <>
+                        <div className="relative flex-1 flex flex-col items-center justify-center z-10">
+                            <div className="p-1 rounded-full mb-5" style={{ border: `2px solid ${wBtnBg}`, boxShadow: `0 0 30px ${wBtnBg}33, 0 0 60px ${wBtnBg}11`, animation: 'fadeInUp 0.5s ease-out both' }}>
+                                {bImg ? (
+                                    <div className="overflow-hidden" style={{ width: `${wLogoSize}px`, height: `${wLogoSize}px`, borderRadius: '50%' }}>
+                                        <img src={bImg} alt={bName} className="w-full h-full object-cover" />
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center" style={{ width: `${wLogoSize}px`, height: `${wLogoSize}px`, borderRadius: '50%', backgroundColor: `${wBtnBg}11` }}>
+                                        <span className="text-4xl font-bold" style={{ color: wBtnBg, textShadow: `0 0 20px ${wBtnBg}44` }}>{bName.charAt(0)}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <h1 className="text-3xl font-bold tracking-tight" style={{ color: wText, textShadow: `0 0 40px ${wBtnBg}22`, animation: 'fadeInUp 0.5s ease-out 0.1s both' }}>{bName}</h1>
+                            <p className="text-lg mt-3 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{t('welcome')}</p>
+                        </div>
+                        <div className="relative z-10 pb-8" style={{ padding: '0 13px 32px 13px' }}>
+                            <div className="flex items-center justify-center gap-3">
+                                <button onClick={menuAction} className="flex-1 py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, boxShadow: `0 0 20px ${wBtnBg}44`, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>MENÜ</button>
+                                <button onClick={langAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, borderColor: `${wBtnBg}44`, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>{t('btnLanguage')}</button>
+                                <button onClick={resAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, borderColor: `${wBtnBg}44`, animation: 'fadeInUp 0.5s ease-out 0.35s both' }}>REZERVE</button>
+                            </div>
+                            {poweredBy}
+                        </div>
+                    </>
+                );
+
+                // Pick content by variant
+                const variantContent = wVariant === 'left-text' ? leftTextContent
+                    : wVariant === 'fullscreen' ? fullscreenContent
+                        : wVariant === 'split-btn' ? splitBtnContent
+                            : wVariant === 'minimal' ? minimalContent
+                                : wVariant === 'editorial' ? editorialContent
+                                    : wVariant === 'neon' ? neonContent
+                                        : classicContent;
+
+                return (
+                    <div
+                        className={`fixed inset-0 z-[100] flex flex-col overflow-hidden transition-opacity duration-500 ${splashFading ? 'opacity-0' : 'opacity-100'}`}
+                        style={{ fontFamily: T.fontFamily, backgroundColor: wBg }}
+                    >
+                        {bgLayer}
+                        {gradient}
+                        {variantContent}
+
+                        {/* Language Picker Overlay */}
+                        {showLangPicker && (
+                            <div className="absolute inset-0 z-20 flex flex-col" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                                <div className="flex-1 bg-black/50" onClick={() => setShowLangPicker(false)} />
+                                <div className="bg-[#1a1a1a] rounded-t-2xl px-4 pt-4 flex flex-col" style={{ height: '40dvh', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', animation: 'slideUp 0.35s ease-out' }}>
+                                    <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-3 shrink-0" />
+                                    <div className="flex-1 flex flex-wrap gap-2.5 justify-center content-center overflow-y-auto">
+                                        {languages.map((lang) => (
+                                            <button
+                                                key={lang.code}
+                                                onClick={() => { setShowLangPicker(false); selectLanguage(lang.code); }}
+                                                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${selectedLang === lang.code ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                                            >
+                                                <span className="text-base">{lang.flag}</span>
+                                                <span>{lang.name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    <style dangerouslySetInnerHTML={{
-                        __html: `
-                        @keyframes fadeInUp {
-                            from { opacity: 0; transform: translateY(16px); }
-                            to { opacity: 1; transform: translateY(0); }
-                        }
-                        @keyframes fadeIn {
-                            from { opacity: 0; }
-                            to { opacity: 1; }
-                        }
-                        @keyframes slideUp {
-                            from { transform: translateY(100%); }
-                            to { transform: translateY(0); }
-                        }
-                    `}} />
-                </div>
-            )}
+                        <style dangerouslySetInnerHTML={{
+                            __html: `
+                            @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+                            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                            @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+                        `}} />
+                    </div>
+                );
+            })()}
 
             {/* Translation Loading Overlay */}
             {isTranslating && (
