@@ -77,6 +77,8 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
         workingHours: wh,
         cuisines: (restaurant.cuisines || []) as string[],
         features: (restaurant.features || []) as string[],
+        wifiName: restaurant.wifiName || '',
+        wifiPassword: restaurant.wifiPassword || '',
     };
 
     const now = new Date();

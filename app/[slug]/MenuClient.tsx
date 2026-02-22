@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 // Using regular img tags for external URLs
-import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users, Menu, LayoutGrid, LayoutList, Bell, Inbox, User, CigaretteOff, Baby, Car, Wifi, Accessibility, TreePine, Home, PawPrint, Wine, Coffee, Truck, ShoppingBag } from "lucide-react";
+import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users, Menu, LayoutGrid, LayoutList, Bell, Inbox, User, CigaretteOff, Baby, Car, Wifi, Accessibility, TreePine, Home, PawPrint, Wine, Coffee, Truck, ShoppingBag, Copy, Filter, BellRing, Languages } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -32,6 +32,7 @@ type MenuClientProps = {
         email: string; website: string; instagram: string; whatsapp: string;
         workingHours: { day: string; hours: string }[];
         cuisines: string[]; features: string[];
+        wifiName: string; wifiPassword: string;
     };
     initialReviews: {
         average: number; totalCount: number;
@@ -1934,6 +1935,40 @@ export default function MenuClient({
                                 </div>
                             )}
 
+                            {/* ── Wi-Fi Bilgileri ── */}
+                            {(BUSINESS_INFO.wifiName || BUSINESS_INFO.wifiPassword) && (
+                                <div className="px-5 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
+                                    <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: T.sidebarLabelColor || '#9ca3af' }}>
+                                        <Wifi size={12} className="inline mr-1" />
+                                        {selectedLang === 'tr' ? 'Wi-Fi' : 'Wi-Fi'}
+                                    </p>
+                                    <div className="space-y-2">
+                                        {BUSINESS_INFO.wifiName && (
+                                            <div className="flex items-center justify-between py-1.5 text-sm">
+                                                <div>
+                                                    <p className="text-[10px] uppercase tracking-wider" style={{ color: T.sidebarDescColor || '#9ca3af' }}>{selectedLang === 'tr' ? 'Ağ Adı' : 'Network'}</p>
+                                                    <p className="font-medium" style={{ color: T.sidebarItemColor || '#374151' }}>{BUSINESS_INFO.wifiName}</p>
+                                                </div>
+                                                <button onClick={() => { navigator.clipboard.writeText(BUSINESS_INFO.wifiName); }} className="p-1.5 rounded-lg transition-colors" style={{ color: T.sidebarItemIconColor || '#9ca3af' }} title="Kopyala">
+                                                    <Copy size={14} />
+                                                </button>
+                                            </div>
+                                        )}
+                                        {BUSINESS_INFO.wifiPassword && (
+                                            <div className="flex items-center justify-between py-1.5 text-sm">
+                                                <div>
+                                                    <p className="text-[10px] uppercase tracking-wider" style={{ color: T.sidebarDescColor || '#9ca3af' }}>{selectedLang === 'tr' ? 'Şifre' : 'Password'}</p>
+                                                    <p className="font-medium font-mono" style={{ color: T.sidebarItemColor || '#374151' }}>{BUSINESS_INFO.wifiPassword}</p>
+                                                </div>
+                                                <button onClick={() => { navigator.clipboard.writeText(BUSINESS_INFO.wifiPassword); }} className="p-1.5 rounded-lg transition-colors" style={{ color: T.sidebarItemIconColor || '#9ca3af' }} title="Kopyala">
+                                                    <Copy size={14} />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* ── Çalışma Saatleri ── */}
                             {BUSINESS_INFO.workingHours && BUSINESS_INFO.workingHours.length > 0 && (
                                 <div className="px-5 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
@@ -2153,21 +2188,31 @@ export default function MenuClient({
                         categoryNavRef.current?.scrollTo({ left: 0, behavior: "smooth" });
                     }}
                     className="fixed z-30 w-[50px] h-[50px] rounded-full bg-black text-white flex items-center justify-center shadow-lg hover:bg-gray-800 transition-all"
-                    style={{ bottom: 10, right: 10 }}
+                    style={{ bottom: 74, right: 10 }}
                 >
                     <ChevronUp size={24} />
                 </button>
             )}
 
-            {/* Floating Review Button — bottom left */}
-            <button
-                onClick={() => setIsReviewsOpen(true)}
-                className="fixed z-30 flex items-center gap-2 bg-amber-500 text-white px-5 py-3 rounded-full shadow-lg hover:bg-amber-600 active:scale-95 transition-all font-semibold text-sm"
-                style={{ bottom: 20, left: 20 }}
-            >
-                <Star size={16} className="fill-white" />
-                {selectedLang === 'tr' ? 'Yorum Yap' : 'Review'}
-            </button>
+            {/* Bottom Action Bar — full width */}
+            <div className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around py-2.5 shadow-[0_-2px_10px_rgba(0,0,0,0.08)]" style={{ backgroundColor: T.bottomNavBg || '#ffffff', borderTop: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
+                <button onClick={() => { setShowLangSplash(true); setShowLangPicker(true); }} className="flex flex-col items-center gap-1 py-1 px-3 transition-colors" style={{ color: T.bottomNavInactive || '#9ca3af' }}>
+                    <Languages size={20} />
+                    <span className="text-[10px] font-medium">{selectedLang === 'tr' ? 'Dil' : 'Lang'}</span>
+                </button>
+                <button onClick={() => setIsSearchOpen(true)} className="flex flex-col items-center gap-1 py-1 px-3 transition-colors" style={{ color: T.bottomNavInactive || '#9ca3af' }}>
+                    <Filter size={20} />
+                    <span className="text-[10px] font-medium">{selectedLang === 'tr' ? 'Filtrele' : 'Filter'}</span>
+                </button>
+                <button onClick={() => setIsReviewsOpen(true)} className="flex flex-col items-center gap-1 py-1 px-3 transition-colors" style={{ color: T.bottomNavInactive || '#9ca3af' }}>
+                    <Star size={20} />
+                    <span className="text-[10px] font-medium">{selectedLang === 'tr' ? 'Yorum' : 'Review'}</span>
+                </button>
+                <button onClick={() => { /* Garson çağır - notification */ }} className="flex flex-col items-center gap-1 py-1 px-3 transition-colors" style={{ color: T.bottomNavInactive || '#9ca3af' }}>
+                    <BellRing size={20} />
+                    <span className="text-[10px] font-medium">{selectedLang === 'tr' ? 'Garson' : 'Waiter'}</span>
+                </button>
+            </div>
 
             {/* Success Toast Alert */}
             {reviewSubmitted && (

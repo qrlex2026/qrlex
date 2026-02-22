@@ -4,7 +4,7 @@ import { Save, Loader2 } from "lucide-react";
 import { useSession } from "@/lib/useSession";
 
 interface WorkingHour { day: string; open: string; close: string; isOpen: boolean; }
-interface Settings { name: string; slug: string; description: string; address: string; phone: string; email: string; website: string; instagram: string; whatsapp: string; cuisines: string[]; features: string[]; workingHours: WorkingHour[]; }
+interface Settings { name: string; slug: string; description: string; address: string; phone: string; email: string; website: string; instagram: string; whatsapp: string; cuisines: string[]; features: string[]; wifiName: string; wifiPassword: string; workingHours: WorkingHour[]; }
 
 const CUISINE_OPTIONS = ["Türk", "İtalyan", "Japon", "Çin", "Hint", "Meksika", "Fransız", "Kore", "Amerikan", "Akdeniz", "Ortadoğu", "Deniz Ürünleri", "Vejeteryan", "Vegan"];
 
@@ -51,6 +51,8 @@ export default function PanelSettings() {
                     ...data,
                     cuisines: data.cuisines || [],
                     features: data.features || [],
+                    wifiName: data.wifiName || '',
+                    wifiPassword: data.wifiPassword || '',
                     workingHours: (data.workingHours && data.workingHours.length > 0) ? data.workingHours : defaultHours,
                 });
                 setLoading(false);
@@ -62,7 +64,7 @@ export default function PanelSettings() {
         setSaving(true);
         await fetch(`/api/admin/settings?restaurantId=${restaurantId}`, {
             method: "PUT", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: settings.name, description: settings.description, address: settings.address, phone: settings.phone, email: settings.email, website: settings.website, instagram: settings.instagram, whatsapp: settings.whatsapp, cuisines: settings.cuisines, features: settings.features, workingHours: settings.workingHours }),
+            body: JSON.stringify({ name: settings.name, description: settings.description, address: settings.address, phone: settings.phone, email: settings.email, website: settings.website, instagram: settings.instagram, whatsapp: settings.whatsapp, cuisines: settings.cuisines, features: settings.features, wifiName: settings.wifiName, wifiPassword: settings.wifiPassword, workingHours: settings.workingHours }),
         });
         setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
     };
@@ -131,6 +133,15 @@ export default function PanelSettings() {
                             {f.label}
                         </button>
                     ))}
+                </div>
+            </div>
+            {/* Wi-Fi Bilgileri */}
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+                <h3 className="text-sm font-semibold text-gray-300 mb-2">Wi-Fi Bilgileri</h3>
+                <p className="text-xs text-gray-500 -mt-2">Müşterilerinizin kolay bağlanması için Wi-Fi bilgilerinizi girin</p>
+                <div className="grid grid-cols-2 gap-3">
+                    <div><label className="text-xs text-gray-400 mb-1 block">Wi-Fi Adı (SSID)</label><input value={settings.wifiName || ''} onChange={(e) => updateField('wifiName', e.target.value)} placeholder="örn: CafeBütor_WiFi" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-emerald-500" /></div>
+                    <div><label className="text-xs text-gray-400 mb-1 block">Wi-Fi Şifresi</label><input value={settings.wifiPassword || ''} onChange={(e) => updateField('wifiPassword', e.target.value)} placeholder="örn: 12345678" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-emerald-500" /></div>
                 </div>
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">

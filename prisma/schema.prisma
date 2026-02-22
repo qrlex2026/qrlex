@@ -35,6 +35,8 @@ model Restaurant {
   whatsapp     String?
   cuisines     String[]   @default([])
   features     String[]   @default([])
+  wifiName     String?    @map("wifi_name")
+  wifiPassword String?    @map("wifi_password")
   workingHours Json?      @map("working_hours")
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
