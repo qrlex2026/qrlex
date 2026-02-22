@@ -32,6 +32,9 @@ model Restaurant {
   website      String?
   instagram    String?
   image        String?
+  whatsapp     String?
+  cuisines     String[]   @default([])
+  features     String[]   @default([])
   workingHours Json?      @map("working_hours")
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")

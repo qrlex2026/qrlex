@@ -110,6 +110,47 @@ const DEFAULT_THEME = {
 
     // Slider
     showHeroSlider: "true",
+
+    // Product Detail Overlay
+    detailBg: "#ffffff",
+    detailNameColor: "#111827",
+    detailPriceColor: "#000000",
+    detailDescColor: "#6b7280",
+    detailLabelColor: "#111827",
+    detailInfoBg: "#f9fafb",
+    detailInfoBorder: "#f3f4f6",
+    detailIngredientBg: "#ffffff",
+    detailIngredientText: "#374151",
+    detailIngredientBorder: "#e5e7eb",
+    detailBackBtnBg: "#00000066",
+    detailBackBtnColor: "#ffffff",
+
+    // Search Overlay
+    searchOverlayBg: "#ffffff",
+    searchOverlayInputColor: "#000000",
+    searchOverlayPlaceholderColor: "#9ca3af",
+    searchOverlayBorderColor: "#f3f4f6",
+    searchOverlayIconColor: "#9ca3af",
+    searchOverlayCloseColor: "#1f2937",
+    searchOverlayResultBg: "#f9fafb",
+    searchOverlayResultNameColor: "#111827",
+    searchOverlayResultDescColor: "#6b7280",
+    searchOverlayResultPriceColor: "#000000",
+    searchOverlayEmptyColor: "#9ca3af",
+
+    // Sidebar Drawer
+    sidebarBg: "#ffffff",
+    sidebarNameColor: "#111827",
+    sidebarDescColor: "#9ca3af",
+    sidebarBorder: "#f3f4f6",
+    sidebarLabelColor: "#9ca3af",
+    sidebarItemColor: "#374151",
+    sidebarItemHover: "#f3f4f6",
+    sidebarItemIconColor: "#9ca3af",
+    sidebarActiveItemBg: "#111827",
+    sidebarActiveItemColor: "#ffffff",
+    sidebarCloseBtnBorder: "#e5e7eb",
+    sidebarCloseBtnColor: "#9ca3af",
 };
 
 type ThemeType = typeof DEFAULT_THEME;
@@ -1047,6 +1088,73 @@ export default function PanelDesign() {
                         <ColorPicker label="Aktif İkon" value={theme.bottomNavActive} onChange={(v) => updateTheme("bottomNavActive", v)} />
                         <ColorPicker label="Pasif İkon" value={theme.bottomNavInactive} onChange={(v) => updateTheme("bottomNavInactive", v)} />
                     </Section>
+
+                    {/* Product Detail Overlay */}
+                    <Section title="Ürün Detay Sayfası" icon={<Eye size={18} />} defaultOpen={false}>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Arka Plan & Kart</p>
+                        <ColorPicker label="Kart Arka Planı" value={theme.detailBg} onChange={(v) => updateTheme("detailBg", v)} />
+                        <ColorPicker label="Geri Butonu BG" value={theme.detailBackBtnBg} onChange={(v) => updateTheme("detailBackBtnBg", v)} />
+                        <ColorPicker label="Geri Butonu İkon" value={theme.detailBackBtnColor} onChange={(v) => updateTheme("detailBackBtnColor", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Yazılar</p>
+                        <ColorPicker label="Ürün Adı" value={theme.detailNameColor} onChange={(v) => updateTheme("detailNameColor", v)} />
+                        <ColorPicker label="Fiyat" value={theme.detailPriceColor} onChange={(v) => updateTheme("detailPriceColor", v)} />
+                        <ColorPicker label="Açıklama" value={theme.detailDescColor} onChange={(v) => updateTheme("detailDescColor", v)} />
+                        <ColorPicker label="Etiket / Başlık" value={theme.detailLabelColor} onChange={(v) => updateTheme("detailLabelColor", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Bilgi Kutuları</p>
+                        <ColorPicker label="Bilgi Kutusu BG" value={theme.detailInfoBg} onChange={(v) => updateTheme("detailInfoBg", v)} />
+                        <ColorPicker label="Bilgi Kutusu Border" value={theme.detailInfoBorder} onChange={(v) => updateTheme("detailInfoBorder", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Malzeme Etiketleri</p>
+                        <ColorPicker label="Etiket BG" value={theme.detailIngredientBg} onChange={(v) => updateTheme("detailIngredientBg", v)} />
+                        <ColorPicker label="Etiket Yazı" value={theme.detailIngredientText} onChange={(v) => updateTheme("detailIngredientText", v)} />
+                        <ColorPicker label="Etiket Border" value={theme.detailIngredientBorder} onChange={(v) => updateTheme("detailIngredientBorder", v)} />
+                    </Section>
+
+                    {/* Search Overlay */}
+                    <Section title="Arama Sayfası" icon={<Search size={18} />} defaultOpen={false}>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Genel</p>
+                        <ColorPicker label="Arka Plan" value={theme.searchOverlayBg} onChange={(v) => updateTheme("searchOverlayBg", v)} />
+                        <ColorPicker label="Arama İkon" value={theme.searchOverlayIconColor} onChange={(v) => updateTheme("searchOverlayIconColor", v)} />
+                        <ColorPicker label="Kapatma İkon" value={theme.searchOverlayCloseColor} onChange={(v) => updateTheme("searchOverlayCloseColor", v)} />
+                        <ColorPicker label="Border Çizgi" value={theme.searchOverlayBorderColor} onChange={(v) => updateTheme("searchOverlayBorderColor", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Yazılar</p>
+                        <ColorPicker label="Yazı Rengi" value={theme.searchOverlayInputColor} onChange={(v) => updateTheme("searchOverlayInputColor", v)} />
+                        <ColorPicker label="Placeholder" value={theme.searchOverlayPlaceholderColor} onChange={(v) => updateTheme("searchOverlayPlaceholderColor", v)} />
+                        <ColorPicker label="Boş Mesaj" value={theme.searchOverlayEmptyColor} onChange={(v) => updateTheme("searchOverlayEmptyColor", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Sonuç Kartları</p>
+                        <ColorPicker label="Kart BG" value={theme.searchOverlayResultBg} onChange={(v) => updateTheme("searchOverlayResultBg", v)} />
+                        <ColorPicker label="Ürün Adı" value={theme.searchOverlayResultNameColor} onChange={(v) => updateTheme("searchOverlayResultNameColor", v)} />
+                        <ColorPicker label="Açıklama" value={theme.searchOverlayResultDescColor} onChange={(v) => updateTheme("searchOverlayResultDescColor", v)} />
+                        <ColorPicker label="Fiyat" value={theme.searchOverlayResultPriceColor} onChange={(v) => updateTheme("searchOverlayResultPriceColor", v)} />
+                    </Section>
+
+                    {/* Sidebar Drawer */}
+                    <Section title="Sol Menü (Drawer)" icon={<Menu size={18} />} defaultOpen={false}>
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Genel</p>
+                        <ColorPicker label="Arka Plan" value={theme.sidebarBg} onChange={(v) => updateTheme("sidebarBg", v)} />
+                        <ColorPicker label="Bölüm Çizgisi" value={theme.sidebarBorder} onChange={(v) => updateTheme("sidebarBorder", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Başlık</p>
+                        <ColorPicker label="İşletme Adı" value={theme.sidebarNameColor} onChange={(v) => updateTheme("sidebarNameColor", v)} />
+                        <ColorPicker label="İşletme Açıklama" value={theme.sidebarDescColor} onChange={(v) => updateTheme("sidebarDescColor", v)} />
+                        <ColorPicker label="Kapatma Buton Çerçeve" value={theme.sidebarCloseBtnBorder} onChange={(v) => updateTheme("sidebarCloseBtnBorder", v)} />
+                        <ColorPicker label="Kapatma Buton İkon" value={theme.sidebarCloseBtnColor} onChange={(v) => updateTheme("sidebarCloseBtnColor", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Menü Öğeleri</p>
+                        <ColorPicker label="Bölüm Başlığı" value={theme.sidebarLabelColor} onChange={(v) => updateTheme("sidebarLabelColor", v)} />
+                        <ColorPicker label="Menü Yazısı" value={theme.sidebarItemColor} onChange={(v) => updateTheme("sidebarItemColor", v)} />
+                        <ColorPicker label="Menü İkon" value={theme.sidebarItemIconColor} onChange={(v) => updateTheme("sidebarItemIconColor", v)} />
+                        <ColorPicker label="Hover Arka Plan" value={theme.sidebarItemHover} onChange={(v) => updateTheme("sidebarItemHover", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Aktif Kategori</p>
+                        <ColorPicker label="Aktif BG" value={theme.sidebarActiveItemBg} onChange={(v) => updateTheme("sidebarActiveItemBg", v)} />
+                        <ColorPicker label="Aktif Yazı" value={theme.sidebarActiveItemColor} onChange={(v) => updateTheme("sidebarActiveItemColor", v)} />
+                    </Section>
+
                 </div>
 
 

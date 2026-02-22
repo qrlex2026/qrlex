@@ -73,7 +73,10 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
         email: restaurant.email || "",
         website: restaurant.website || "",
         instagram: restaurant.instagram || "",
+        whatsapp: restaurant.whatsapp || "",
         workingHours: wh,
+        cuisines: (restaurant.cuisines || []) as string[],
+        features: (restaurant.features || []) as string[],
     };
 
     const now = new Date();
