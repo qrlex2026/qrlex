@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -37,10 +37,7 @@ const SECONDARY_NAV = [
     { href: "/panel/settings", label: "Ayarlar", icon: Settings },
 ];
 
-const BOTTOM_NAV = [
-    { href: "/panel/profile", label: "Profil", icon: UserCircle },
-    { href: "/panel/inbox", label: "Gelen Kutusu", icon: Mail },
-];
+
 
 const NOTIF_ICONS: Record<string, string> = {
     review: '⭐',
@@ -54,6 +51,8 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+    const profileRef = useRef<HTMLDivElement>(null);
     const [restaurantName, setRestaurantName] = useState("Restoran");
     const [userName, setUserName] = useState("Kullanıcı");
     const [userRole, setUserRole] = useState("owner");
@@ -98,11 +97,14 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
         return () => clearInterval(interval);
     }, []);
 
-    // Close dropdown on outside click
+    // Close dropdowns on outside click
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
             if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
                 setShowNotifDropdown(false);
+            }
+            if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+                setShowProfileDropdown(false);
             }
         };
         document.addEventListener('mousedown', handleClick);
@@ -136,7 +138,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
     const sidebarWidth = isSidebarCollapsed ? "w-[72px]" : "w-[260px]";
     const sidebarMargin = isSidebarCollapsed ? "lg:ml-[72px]" : "lg:ml-[260px]";
 
-    const allNavItems = [...PRIMARY_NAV, ...SECONDARY_NAV, ...BOTTOM_NAV];
+    const allNavItems = [...PRIMARY_NAV, ...SECONDARY_NAV];
 
     // ─── Navigation Item ─────────────────────────────────────────
     const NavItem = ({ href, label, icon: Icon, showBadge }: { href: string; label: string; icon: React.ElementType; showBadge?: boolean }) => {
@@ -218,51 +220,6 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
 
                 {/* Spacer */}
                 <div className="flex-1" />
-
-                {/* Bottom Links */}
-                <nav className="px-3 space-y-0.5">
-                    {BOTTOM_NAV.map((item) => (
-                        <NavItem key={item.href} href={item.href} label={item.label} icon={item.icon} showBadge={item.href === '/panel/inbox'} />
-                    ))}
-                </nav>
-
-                {/* Divider */}
-                <div className="mx-4 my-3 border-t border-gray-800/80" />
-
-                {/* Language */}
-                {!collapsed && (
-                    <div className="px-3 mb-2">
-                        <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-medium text-gray-400 hover:bg-gray-800/60 hover:text-gray-300 transition-all">
-                            <span>Dil</span>
-                            <div className="w-6 h-6 rounded-full bg-gray-800" />
-                        </button>
-                    </div>
-                )}
-                {collapsed && (
-                    <div className="px-3 mb-2 flex justify-center">
-                        <div className="w-6 h-6 rounded-full bg-gray-800" />
-                    </div>
-                )}
-
-                {/* Support Widget */}
-                {!collapsed && (
-                    <div className="px-3 pb-4">
-                        <div className="rounded-2xl overflow-hidden relative" style={{ background: 'linear-gradient(160deg, #e8c4a0 0%, #d4a07a 30%, #b8869c 60%, #8b7db8 100%)' }}>
-                            <div className="flex flex-col items-center py-5 px-4 relative z-10">
-                                {/* Icon circles */}
-                                <div className="relative mb-3">
-                                    <div className="w-14 h-14 rounded-full border-2 border-black/10 flex items-center justify-center">
-                                        <div className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center">
-                                            <HeadphonesIcon size={20} className="text-gray-900" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <p className="text-sm font-bold text-gray-900">Yardım mı lazım?</p>
-                                <p className="text-xs text-gray-800/70 mt-0.5">Destek ekibimiz 7/24 online</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         );
     };
@@ -295,12 +252,15 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
             {/* Main Content */}
             <div className={`flex-1 ${sidebarMargin} flex flex-col min-h-dvh transition-all duration-300`}>
                 <header className="h-16 bg-gray-950 border-b border-gray-800/50 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-20">
+                    {/* Left: Hamburger (mobile) + Logo + Page Title */}
                     <div className="flex items-center gap-3">
                         <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden w-10 h-10 rounded-xl bg-gray-800/50 flex items-center justify-center text-gray-400 hover:text-white transition-colors"><Menu size={20} /></button>
+                        <span className="hidden lg:block text-lg font-extrabold text-white tracking-tight">QRLEX</span>
+                        <span className="hidden lg:block w-px h-6 bg-gray-700" />
                         <h2 className="text-base font-bold text-white">{allNavItems.find((n) => n.href === pathname)?.label || "Panel"}</h2>
                     </div>
 
-                    {/* Right: Notification + Messages + Profile */}
+                    {/* Right: Notification + Messages + Inbox + Profile */}
                     <div className="flex items-center gap-2">
                         {/* Notification Bell */}
                         <div className="relative" ref={notifRef}>
@@ -379,13 +339,62 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                             )}
                         </Link>
 
-                        {/* Profile */}
+                        {/* Inbox */}
                         <Link
-                            href="/panel/profile"
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm hover:opacity-90 transition-opacity shadow-md"
+                            href="/panel/inbox"
+                            className="relative w-10 h-10 rounded-xl bg-gray-800/50 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
                         >
-                            {userName.charAt(0).toUpperCase()}
+                            <Inbox size={20} />
                         </Link>
+
+                        {/* Profile with Dropdown */}
+                        <div className="relative" ref={profileRef}>
+                            <button
+                                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                                className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm hover:opacity-90 transition-opacity shadow-md"
+                            >
+                                {userName.charAt(0).toUpperCase()}
+                            </button>
+
+                            {/* Profile Dropdown */}
+                            {showProfileDropdown && (
+                                <div className="absolute right-0 top-12 w-56 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden z-50">
+                                    {/* User Info */}
+                                    <div className="px-4 py-3 border-b border-gray-800">
+                                        <p className="text-sm font-bold text-white">{userName}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">{restaurantName}</p>
+                                    </div>
+                                    {/* Menu Items */}
+                                    <div className="py-1">
+                                        <Link
+                                            href="/panel/profile"
+                                            onClick={() => setShowProfileDropdown(false)}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/60 hover:text-white transition-colors"
+                                        >
+                                            <UserCircle size={18} />
+                                            <span>Profil</span>
+                                        </Link>
+                                        <Link
+                                            href="/panel/settings"
+                                            onClick={() => setShowProfileDropdown(false)}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800/60 hover:text-white transition-colors"
+                                        >
+                                            <Settings size={18} />
+                                            <span>Ayarlar</span>
+                                        </Link>
+                                    </div>
+                                    <div className="border-t border-gray-800">
+                                        <button
+                                            onClick={() => { setShowProfileDropdown(false); handleLogout(); }}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors w-full"
+                                        >
+                                            <LogOut size={18} />
+                                            <span>Çıkış Yap</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </header>
                 <main className="flex-1 p-4 lg:p-6">{children}</main>

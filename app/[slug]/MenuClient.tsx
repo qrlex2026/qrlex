@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 // Using regular img tags for external URLs
-import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users, Menu, LayoutGrid, LayoutList } from "lucide-react";
+import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users, Menu, LayoutGrid, LayoutList, Bell, Inbox, User } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -722,8 +722,8 @@ export default function MenuClient({
                         <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg text-gray-900 truncate max-w-[60%] text-center">{BUSINESS_INFO.name || "Yükleniyor..."}</span>
 
                         {/* Right: Search Icon */}
-                        <button onClick={() => setIsSearchOpen(true)} className="text-gray-700 z-10 p-2">
-                            <Search size={22} />
+                        <button onClick={() => setIsSearchOpen(true)} className="w-[38px] h-[38px] rounded-full bg-gray-100 flex items-center justify-center text-gray-700 z-10">
+                            <Search size={20} />
                         </button>
                     </div>
 
@@ -787,7 +787,7 @@ export default function MenuClient({
                                 {/* Category Header */}
                                 {layout !== 'banner-scroll' && (
                                     <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-                                        <h2 style={{ color: T.categoryTitleColor, fontSize: `${T.categoryTitleSize}px`, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
+                                        <h2 className="text-2xl" style={{ color: T.categoryTitleColor, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
                                         <div className="flex items-center gap-1">
                                             <button
                                                 onClick={() => setCategoryLayoutOverrides(prev => ({ ...prev, [cat.id]: defaultLayout }))}
@@ -821,11 +821,11 @@ export default function MenuClient({
                                                 {renderImage(product, 'w-20 h-full shrink-0')}
                                                 <div className="flex-1 flex flex-col justify-between py-1">
                                                     <div>
-                                                        <h3 className="line-clamp-1" style={{ color: T.productNameColor, fontSize: `${T.productNameSize}px`, fontWeight: T.productNameWeight }}>{product.name}</h3>
-                                                        <p className="mt-1 line-clamp-2" style={{ color: T.productDescColor, fontSize: `${T.productDescSize}px` }}>{product.description}</p>
+                                                        <h3 className="line-clamp-1 text-base" style={{ color: T.productNameColor, fontWeight: T.productNameWeight }}>{product.name}</h3>
+                                                        <p className="mt-1 line-clamp-2 text-xs" style={{ color: T.productDescColor }}>{product.description}</p>
                                                     </div>
                                                     <div className="flex items-center justify-between mt-2">
-                                                        <span style={{ color: T.priceColor, fontSize: `${T.priceSize}px`, fontWeight: T.priceWeight }}>{product.price} TL</span>
+                                                        <span className="text-lg" style={{ color: T.priceColor, fontWeight: T.priceWeight }}>{product.price} TL</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -840,9 +840,9 @@ export default function MenuClient({
                                             <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
                                                 {renderImage(product, 'w-full h-28', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
                                                 <div className="p-2.5">
-                                                    <h3 className="line-clamp-1 mb-0.5" style={{ color: T.productNameColor, fontSize: `${Number(T.productNameSize) - 2}px`, fontWeight: T.productNameWeight }}>{product.name}</h3>
-                                                    <p className="line-clamp-1 mb-1.5" style={{ color: T.productDescColor, fontSize: `${Number(T.productDescSize) - 1}px` }}>{product.description}</p>
-                                                    <span style={{ color: T.priceColor, fontSize: `${Number(T.priceSize) - 2}px`, fontWeight: T.priceWeight }}>{product.price} TL</span>
+                                                    <h3 className="line-clamp-1 mb-0.5 text-sm" style={{ color: T.productNameColor, fontWeight: T.productNameWeight }}>{product.name}</h3>
+                                                    <p className="line-clamp-1 mb-1.5 text-[11px]" style={{ color: T.productDescColor }}>{product.description}</p>
+                                                    <span className="text-sm" style={{ color: T.priceColor, fontWeight: T.priceWeight }}>{product.price} TL</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -903,9 +903,9 @@ export default function MenuClient({
                                             <div onClick={() => handleClick(products[0])} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
                                                 {renderImage(products[0], 'w-full h-44', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
                                                 <div className="p-3">
-                                                    <h3 className="line-clamp-1" style={{ color: T.productNameColor, fontSize: `${T.productNameSize}px`, fontWeight: T.productNameWeight }}>{products[0].name}</h3>
-                                                    <p className="line-clamp-2 mt-1" style={{ color: T.productDescColor, fontSize: `${T.productDescSize}px` }}>{products[0].description}</p>
-                                                    <span className="mt-2 block" style={{ color: T.priceColor, fontSize: `${T.priceSize}px`, fontWeight: T.priceWeight }}>{products[0].price} TL</span>
+                                                    <h3 className="line-clamp-1 text-base" style={{ color: T.productNameColor, fontWeight: T.productNameWeight }}>{products[0].name}</h3>
+                                                    <p className="line-clamp-2 mt-1 text-xs" style={{ color: T.productDescColor }}>{products[0].description}</p>
+                                                    <span className="mt-2 block text-lg" style={{ color: T.priceColor, fontWeight: T.priceWeight }}>{products[0].price} TL</span>
                                                 </div>
                                             </div>
                                         )}
@@ -947,10 +947,10 @@ export default function MenuClient({
                                             <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
                                                 {renderImage(product, 'w-full h-48', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
                                                 <div className="p-4">
-                                                    <h3 className="line-clamp-1" style={{ color: T.productNameColor, fontSize: `${Number(T.productNameSize) + 2}px`, fontWeight: T.productNameWeight }}>{product.name}</h3>
-                                                    <p className="line-clamp-2 mt-1" style={{ color: T.productDescColor, fontSize: `${T.productDescSize}px` }}>{product.description}</p>
+                                                    <h3 className="line-clamp-1 text-lg" style={{ color: T.productNameColor, fontWeight: T.productNameWeight }}>{product.name}</h3>
+                                                    <p className="line-clamp-2 mt-1 text-xs" style={{ color: T.productDescColor }}>{product.description}</p>
                                                     <div className="flex items-center justify-between mt-3">
-                                                        <span style={{ color: T.priceColor, fontSize: `${Number(T.priceSize) + 2}px`, fontWeight: T.priceWeight }}>{product.price} TL</span>
+                                                        <span className="text-xl" style={{ color: T.priceColor, fontWeight: T.priceWeight }}>{product.price} TL</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1630,23 +1630,45 @@ export default function MenuClient({
                         style={{ animation: 'slideInLeft 0.3s ease-out' }}
                     >
                         {/* Drawer Header */}
-                        <div className="px-5 pt-5 pb-4 border-b border-gray-100 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                {BUSINESS_INFO.image ? (
-                                    <img src={BUSINESS_INFO.image} alt={BUSINESS_INFO.name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-200" />
-                                ) : (
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
-                                        {BUSINESS_INFO.name.charAt(0)}
+                        <div className="px-5 pt-5 pb-4 border-b border-gray-100">
+                            {/* Top row: Logo + Name + Close arrow */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    {BUSINESS_INFO.image ? (
+                                        <img src={BUSINESS_INFO.image} alt={BUSINESS_INFO.name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-200" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
+                                            {BUSINESS_INFO.name.charAt(0)}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <p className="font-bold text-gray-900 text-sm">{BUSINESS_INFO.name}</p>
+                                        <p className="text-[11px] text-gray-400">{BUSINESS_INFO.description?.slice(0, 30)}{BUSINESS_INFO.description?.length > 30 ? '...' : ''}</p>
                                     </div>
-                                )}
-                                <div>
-                                    <p className="font-bold text-gray-900 text-sm">{BUSINESS_INFO.name}</p>
-                                    <p className="text-[11px] text-gray-400">{BUSINESS_INFO.description?.slice(0, 30)}{BUSINESS_INFO.description?.length > 30 ? '...' : ''}</p>
                                 </div>
+                                <button onClick={() => setIsSidebarDrawerOpen(false)} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors">
+                                    <ChevronLeft size={16} />
+                                </button>
                             </div>
-                            <button onClick={() => setIsSidebarDrawerOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
-                                <X size={16} />
-                            </button>
+                            {/* Icon row: Notification, Message, Inbox, Profile */}
+                            <div className="flex items-center gap-4 mt-4">
+                                <button className="flex flex-col items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
+                                    <Bell size={18} />
+                                    <span className="text-[9px] font-medium">Bildirim</span>
+                                </button>
+                                <button className="flex flex-col items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
+                                    <MessageCircle size={18} />
+                                    <span className="text-[9px] font-medium">Mesaj</span>
+                                </button>
+                                <button className="flex flex-col items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
+                                    <Inbox size={18} />
+                                    <span className="text-[9px] font-medium">Gelen Kutusu</span>
+                                </button>
+                                <button onClick={() => { setIsSidebarDrawerOpen(false); setIsProfileOpen(true); }} className="flex flex-col items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
+                                    <User size={18} />
+                                    <span className="text-[9px] font-medium">Profil</span>
+                                </button>
+                            </div>
                         </div>
 
                         {/* Categories */}
