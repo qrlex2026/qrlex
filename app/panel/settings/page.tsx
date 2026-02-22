@@ -38,7 +38,21 @@ export default function PanelSettings() {
         fetch(`/api/admin/settings?restaurantId=${restaurantId}`)
             .then((r) => r.json())
             .then((data) => {
-                setSettings({ ...data, cuisines: data.cuisines || [], features: data.features || [] });
+                const defaultHours = [
+                    { day: "Pazartesi", open: "09:00", close: "22:00", isOpen: true },
+                    { day: "Salı", open: "09:00", close: "22:00", isOpen: true },
+                    { day: "Çarşamba", open: "09:00", close: "22:00", isOpen: true },
+                    { day: "Perşembe", open: "09:00", close: "22:00", isOpen: true },
+                    { day: "Cuma", open: "09:00", close: "22:00", isOpen: true },
+                    { day: "Cumartesi", open: "09:00", close: "23:00", isOpen: true },
+                    { day: "Pazar", open: "09:00", close: "22:00", isOpen: true },
+                ];
+                setSettings({
+                    ...data,
+                    cuisines: data.cuisines || [],
+                    features: data.features || [],
+                    workingHours: (data.workingHours && data.workingHours.length > 0) ? data.workingHours : defaultHours,
+                });
                 setLoading(false);
             });
     }, [restaurantId]);

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 // Using regular img tags for external URLs
-import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users, Menu, LayoutGrid, LayoutList, Bell, Inbox, User } from "lucide-react";
+import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users, Menu, LayoutGrid, LayoutList, Bell, Inbox, User, CigaretteOff, Baby, Car, Wifi, Accessibility, TreePine, Home, PawPrint, Wine, Coffee, Truck, ShoppingBag } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -1801,22 +1801,22 @@ export default function MenuClient({
 
             {/* Sidebar Drawer */}
             {isSidebarDrawerOpen && (() => {
-                const FEATURE_MAP: Record<string, { tr: string; en: string; icon: string }> = {
-                    no_smoking: { tr: 'Sigara İçilmez', en: 'No Smoking', icon: '🚭' },
-                    kids_area: { tr: 'Çocuk Alanı', en: 'Kids Area', icon: '🧒' },
-                    parking: { tr: 'Park Alanı', en: 'Parking', icon: '🅿️' },
-                    wifi: { tr: 'Ücretsiz Wi-Fi', en: 'Free Wi-Fi', icon: '📶' },
-                    live_music: { tr: 'Canlı Müzik', en: 'Live Music', icon: '🎵' },
-                    valet: { tr: 'Vale Hizmeti', en: 'Valet Service', icon: '🚗' },
-                    wheelchair: { tr: 'Engelli Erişimi', en: 'Wheelchair Access', icon: '♿' },
-                    outdoor: { tr: 'Açık Alan', en: 'Outdoor Seating', icon: '🌿' },
-                    indoor: { tr: 'Kapalı Alan', en: 'Indoor Seating', icon: '🏠' },
-                    pet_friendly: { tr: 'Pet Friendly', en: 'Pet Friendly', icon: '🐾' },
-                    alcohol: { tr: 'Alkol Servisi', en: 'Alcohol Served', icon: '🍷' },
-                    breakfast: { tr: 'Kahvaltı', en: 'Breakfast', icon: '🥐' },
-                    delivery: { tr: 'Paket Servis', en: 'Delivery', icon: '🛵' },
-                    takeaway: { tr: 'Gel-Al', en: 'Takeaway', icon: '📦' },
-                    reservation_available: { tr: 'Rezervasyon', en: 'Reservation', icon: '📋' },
+                const FEATURE_MAP: Record<string, { tr: string; en: string; Icon: React.FC<{ size?: number; className?: string; style?: React.CSSProperties }> }> = {
+                    no_smoking: { tr: 'Sigara İçilmez', en: 'No Smoking', Icon: CigaretteOff },
+                    kids_area: { tr: 'Çocuk Alanı', en: 'Kids Area', Icon: Baby },
+                    parking: { tr: 'Park Alanı', en: 'Parking', Icon: Car },
+                    wifi: { tr: 'Ücretsiz Wi-Fi', en: 'Free Wi-Fi', Icon: Wifi },
+                    live_music: { tr: 'Canlı Müzik', en: 'Live Music', Icon: Music },
+                    valet: { tr: 'Vale Hizmeti', en: 'Valet Service', Icon: Car },
+                    wheelchair: { tr: 'Engelli Erişimi', en: 'Wheelchair Access', Icon: Accessibility },
+                    outdoor: { tr: 'Açık Alan', en: 'Outdoor Seating', Icon: TreePine },
+                    indoor: { tr: 'Kapalı Alan', en: 'Indoor Seating', Icon: Home },
+                    pet_friendly: { tr: 'Pet Friendly', en: 'Pet Friendly', Icon: PawPrint },
+                    alcohol: { tr: 'Alkol Servisi', en: 'Alcohol Served', Icon: Wine },
+                    breakfast: { tr: 'Kahvaltı', en: 'Breakfast', Icon: Coffee },
+                    delivery: { tr: 'Paket Servis', en: 'Delivery', Icon: Truck },
+                    takeaway: { tr: 'Gel-Al', en: 'Takeaway', Icon: ShoppingBag },
+                    reservation_available: { tr: 'Rezervasyon', en: 'Reservation', Icon: CalendarDays },
                 };
                 const mapsUrl = BUSINESS_INFO.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(BUSINESS_INFO.address)}` : '';
                 return (
@@ -1833,50 +1833,46 @@ export default function MenuClient({
                             style={{ backgroundColor: T.sidebarBg || '#ffffff', animation: 'slideInLeft 0.3s ease-out' }}
                         >
                             {/* ── Logo + Name + Description ── */}
-                            <div className="px-5 pt-6 pb-4" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-3">
-                                        {/* Circular Logo */}
-                                        {BUSINESS_INFO.image ? (
-                                            <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0" style={{ border: `2px solid ${T.sidebarBorder || '#e5e7eb'}` }}>
-                                                <img src={BUSINESS_INFO.image} alt={BUSINESS_INFO.name} className="w-full h-full object-cover" />
-                                            </div>
-                                        ) : (
-                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
-                                                {BUSINESS_INFO.name.charAt(0)}
-                                            </div>
-                                        )}
-                                        <div className="min-w-0">
-                                            <p className="font-bold text-base truncate" style={{ color: T.sidebarNameColor || '#111827' }}>{BUSINESS_INFO.name}</p>
-                                            {BUSINESS_INFO.description && <p className="text-xs mt-0.5 line-clamp-2" style={{ color: T.sidebarDescColor || '#9ca3af' }}>{BUSINESS_INFO.description}</p>}
-                                        </div>
+                            <div className="px-5 pt-6 pb-4 relative" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
+                                {/* Close button - top right */}
+                                <button onClick={() => setIsSidebarDrawerOpen(false)} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors" style={{ border: `1px solid ${T.sidebarCloseBtnBorder || '#e5e7eb'}`, color: T.sidebarCloseBtnColor || '#9ca3af' }}>
+                                    <ChevronLeft size={16} />
+                                </button>
+                                {/* Logo */}
+                                {BUSINESS_INFO.image ? (
+                                    <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 mb-3" style={{ border: `2px solid ${T.sidebarBorder || '#e5e7eb'}` }}>
+                                        <img src={BUSINESS_INFO.image} alt={BUSINESS_INFO.name} className="w-full h-full object-cover" />
                                     </div>
-                                    <button onClick={() => setIsSidebarDrawerOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors mt-0.5" style={{ border: `1px solid ${T.sidebarCloseBtnBorder || '#e5e7eb'}`, color: T.sidebarCloseBtnColor || '#9ca3af' }}>
-                                        <ChevronLeft size={16} />
-                                    </button>
-                                </div>
+                                ) : (
+                                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0 mb-3" style={{ backgroundColor: '#000000' }}>
+                                        {BUSINESS_INFO.name.charAt(0)}
+                                    </div>
+                                )}
+                                {/* Name + Description below logo */}
+                                <p className="font-bold text-sm leading-tight" style={{ color: T.sidebarNameColor || '#111827' }}>{BUSINESS_INFO.name}</p>
+                                {BUSINESS_INFO.description && <p className="text-xs mt-1 leading-relaxed break-words pr-8" style={{ color: T.sidebarDescColor || '#9ca3af' }}>{BUSINESS_INFO.description}</p>}
                             </div>
 
                             {/* ── Navigation: MENÜ / DİL / REZERVE ── */}
-                            <div className="px-4 py-3 flex gap-2" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
+                            <div className="px-5 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
                                 <button
                                     onClick={() => { setIsSidebarDrawerOpen(false); }}
-                                    className="flex-1 py-2.5 rounded-xl text-xs font-bold tracking-wider text-center transition-all active:scale-[0.97]"
-                                    style={{ backgroundColor: T.sidebarActiveItemBg || '#111827', color: T.sidebarActiveItemColor || '#ffffff' }}
+                                    className="w-full text-left py-2.5 text-sm font-semibold tracking-wide transition-colors"
+                                    style={{ color: T.sidebarItemColor || '#374151' }}
                                 >
                                     {t('btnMenu')}
                                 </button>
                                 <button
                                     onClick={() => { setIsSidebarDrawerOpen(false); setShowLangSplash(true); setShowLangPicker(true); }}
-                                    className="flex-1 py-2.5 rounded-xl text-xs font-bold tracking-wider text-center transition-all active:scale-[0.97]"
-                                    style={{ backgroundColor: T.sidebarItemHover || '#f3f4f6', color: T.sidebarItemColor || '#374151' }}
+                                    className="w-full text-left py-2.5 text-sm font-semibold tracking-wide transition-colors"
+                                    style={{ color: T.sidebarItemColor || '#374151' }}
                                 >
                                     {t('btnLanguage')}
                                 </button>
                                 <button
                                     onClick={() => { setIsSidebarDrawerOpen(false); setIsReservationOpen(true); }}
-                                    className="flex-1 py-2.5 rounded-xl text-xs font-bold tracking-wider text-center transition-all active:scale-[0.97]"
-                                    style={{ backgroundColor: T.sidebarItemHover || '#f3f4f6', color: T.sidebarItemColor || '#374151' }}
+                                    className="w-full text-left py-2.5 text-sm font-semibold tracking-wide transition-colors"
+                                    style={{ color: T.sidebarItemColor || '#374151' }}
                                 >
                                     REZERVE
                                 </button>
@@ -1884,54 +1880,52 @@ export default function MenuClient({
 
                             {/* ── İletişim: WhatsApp / E-posta / Yol Tarifi ── */}
                             {(BUSINESS_INFO.whatsapp || BUSINESS_INFO.email || BUSINESS_INFO.address) && (
-                                <div className="px-4 py-3 space-y-1" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
+                                <div className="px-5 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
                                     <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: T.sidebarLabelColor || '#9ca3af' }}>{selectedLang === 'tr' ? 'İletişim' : 'Contact'}</p>
-                                    {BUSINESS_INFO.whatsapp && (
-                                        <a href={`https://wa.me/${BUSINESS_INFO.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors" style={{ color: T.sidebarItemColor || '#374151' }}>
-                                            <span className="text-base">💬</span>
-                                            WhatsApp
-                                        </a>
-                                    )}
-                                    {BUSINESS_INFO.email && (
-                                        <a href={`mailto:${BUSINESS_INFO.email}`} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors" style={{ color: T.sidebarItemColor || '#374151' }}>
-                                            <Mail size={18} style={{ color: T.sidebarItemIconColor || '#9ca3af' }} />
-                                            {selectedLang === 'tr' ? 'E-posta' : 'Email'}
-                                        </a>
-                                    )}
-                                    {mapsUrl && (
-                                        <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors" style={{ color: T.sidebarItemColor || '#374151' }}>
-                                            <MapPin size={18} style={{ color: T.sidebarItemIconColor || '#9ca3af' }} />
-                                            {selectedLang === 'tr' ? 'Yol Tarifi Al' : 'Get Directions'}
-                                        </a>
-                                    )}
+                                    <div className="space-y-1">
+                                        {BUSINESS_INFO.whatsapp && (
+                                            <a href={`https://wa.me/${BUSINESS_INFO.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-medium transition-colors" style={{ color: T.sidebarItemColor || '#374151' }}>
+                                                <MessageCircle size={16} style={{ color: T.sidebarItemIconColor || '#9ca3af' }} />
+                                                WhatsApp
+                                            </a>
+                                        )}
+                                        {BUSINESS_INFO.email && (
+                                            <a href={`mailto:${BUSINESS_INFO.email}`} className="flex items-center gap-3 py-2 text-sm font-medium transition-colors" style={{ color: T.sidebarItemColor || '#374151' }}>
+                                                <Mail size={16} style={{ color: T.sidebarItemIconColor || '#9ca3af' }} />
+                                                {selectedLang === 'tr' ? 'E-posta' : 'Email'}
+                                            </a>
+                                        )}
+                                        {mapsUrl && (
+                                            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-2 text-sm font-medium transition-colors" style={{ color: T.sidebarItemColor || '#374151' }}>
+                                                <MapPin size={16} style={{ color: T.sidebarItemIconColor || '#9ca3af' }} />
+                                                {selectedLang === 'tr' ? 'Yol Tarifi Al' : 'Get Directions'}
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             )}
 
                             {/* ── Mutfaklar ── */}
                             {BUSINESS_INFO.cuisines && BUSINESS_INFO.cuisines.length > 0 && (
-                                <div className="px-4 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
+                                <div className="px-5 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
                                     <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: T.sidebarLabelColor || '#9ca3af' }}>{selectedLang === 'tr' ? 'Mutfaklar' : 'Cuisines'}</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {BUSINESS_INFO.cuisines.map((c: string) => (
-                                            <span key={c} className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: T.sidebarItemHover || '#f3f4f6', color: T.sidebarItemColor || '#374151' }}>
-                                                {c}
-                                            </span>
-                                        ))}
-                                    </div>
+                                    <p className="text-sm leading-relaxed" style={{ color: T.sidebarItemColor || '#374151' }}>
+                                        {BUSINESS_INFO.cuisines.join(' · ')}
+                                    </p>
                                 </div>
                             )}
 
                             {/* ── İşletme Özellikleri ── */}
                             {BUSINESS_INFO.features && BUSINESS_INFO.features.length > 0 && (
-                                <div className="px-4 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
+                                <div className="px-5 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
                                     <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: T.sidebarLabelColor || '#9ca3af' }}>{selectedLang === 'tr' ? 'İşletme Özellikleri' : 'Amenities'}</p>
                                     <div className="space-y-1">
                                         {BUSINESS_INFO.features.map((f: string) => {
                                             const feat = FEATURE_MAP[f];
                                             if (!feat) return null;
                                             return (
-                                                <div key={f} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm" style={{ color: T.sidebarItemColor || '#374151' }}>
-                                                    <span className="text-base">{feat.icon}</span>
+                                                <div key={f} className="flex items-center gap-2.5 py-1.5 text-sm" style={{ color: T.sidebarItemColor || '#374151' }}>
+                                                    <feat.Icon size={16} style={{ color: T.sidebarItemIconColor || '#9ca3af' }} />
                                                     <span className="font-medium">{selectedLang === 'tr' ? feat.tr : feat.en}</span>
                                                 </div>
                                             );
@@ -1942,11 +1936,11 @@ export default function MenuClient({
 
                             {/* ── Çalışma Saatleri ── */}
                             {BUSINESS_INFO.workingHours && BUSINESS_INFO.workingHours.length > 0 && (
-                                <div className="px-4 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
+                                <div className="px-5 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
                                     <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: T.sidebarLabelColor || '#9ca3af' }}>{t('workingHours')}</p>
                                     <div className="space-y-1">
                                         {BUSINESS_INFO.workingHours.map((wh: { day: string; hours: string }) => (
-                                            <div key={wh.day} className="flex items-center justify-between px-3 py-1.5 rounded-lg text-xs" style={{ color: T.sidebarItemColor || '#374151' }}>
+                                            <div key={wh.day} className="flex items-center justify-between py-1 text-xs" style={{ color: T.sidebarItemColor || '#374151' }}>
                                                 <span className="font-medium">{wh.day}</span>
                                                 <span style={{ color: wh.hours === 'Kapalı' ? '#ef4444' : (T.sidebarDescColor || '#9ca3af') }}>{wh.hours}</span>
                                             </div>
