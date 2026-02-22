@@ -955,14 +955,14 @@ export default function MenuClient({
                                 {layout === 'list' && (
                                     <div className="px-4 space-y-2.5">
                                         {products.map((product) => (
-                                            <div key={product.id} onClick={() => handleClick(product)} className="p-2 flex gap-3 h-[88px] active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
-                                                {renderImage(product, 'w-20 h-full shrink-0')}
-                                                <div className="flex-1 flex flex-col justify-between py-1">
+                                            <div key={product.id} onClick={() => handleClick(product)} className="p-2 flex gap-3 min-h-[88px] active:scale-[0.98] transition-transform cursor-pointer overflow-hidden" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
+                                                {renderImage(product, 'w-20 h-[72px] shrink-0')}
+                                                <div className="flex-1 flex flex-col justify-between py-0.5 min-w-0 overflow-hidden">
                                                     <div>
                                                         <h3 className="line-clamp-1 text-base" style={{ color: T.productNameColor, fontWeight: T.productNameWeight }}>{product.name}</h3>
-                                                        <p className="mt-1 line-clamp-2 text-xs" style={{ color: T.productDescColor }}>{product.description}</p>
+                                                        <p className="mt-0.5 line-clamp-2 text-xs" style={{ color: T.productDescColor }}>{product.description}</p>
                                                     </div>
-                                                    <div className="flex items-center justify-between mt-2">
+                                                    <div className="flex items-center justify-between">
                                                         <span className="text-lg" style={{ color: T.priceColor, fontWeight: T.priceWeight }}>{product.price} TL</span>
                                                     </div>
                                                 </div>
