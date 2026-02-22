@@ -551,8 +551,7 @@ export default function MenuClient({
 
                     {/* Bottom Navigation */}
                     <div className="relative z-10 pb-8" style={{ padding: '0 13px 32px 13px' }}>
-                        {/* Separator Line */}
-                        <div className="mb-5 h-px" style={{ backgroundColor: T.welcomeSeparatorColor || '#ffffff33' }} />
+
 
                         {/* 3 Buttons */}
                         <div className="flex items-center justify-center gap-3">
@@ -604,7 +603,7 @@ export default function MenuClient({
 
                         {/* Powered by */}
                         <p className="text-center mt-5 text-[10px] font-medium tracking-widest" style={{ color: T.welcomeSubtextColor || '#ffffff80', opacity: 0.5 }}>
-                            Powered by <span className="font-bold">QRlex</span>
+                            Powered by <span className="font-bold">QRLEX</span>
                         </p>
                     </div>
 
@@ -730,23 +729,26 @@ export default function MenuClient({
                     {/* Category Navbar */}
                     <div ref={categoryNavRef} className="overflow-x-auto no-scrollbar py-3 px-4 flex gap-2" style={{
                         backgroundColor: (T as any).categoryNavBg || T.pageBg,
-                        ...(Number((T as any).categoryNavBlur || 0) > 0 ? { backdropFilter: `blur(${(T as any).categoryNavBlur}px)`, WebkitBackdropFilter: `blur(${(T as any).categoryNavBlur}px)` } : {}),
                     }}>
-                        {DISPLAY_CATEGORIES.map((cat) => (
-                            <button
-                                key={cat.id}
-                                data-cat={cat.id}
-                                onClick={() => scrollToCategory(cat.id)}
-                                className="whitespace-nowrap text-sm font-medium transition-all px-4 py-2"
-                                style={{
-                                    backgroundColor: activeCategory === cat.id ? T.categoryActiveBg : T.categoryInactiveBg,
-                                    color: activeCategory === cat.id ? T.categoryActiveText : T.categoryInactiveText,
-                                    borderRadius: `${T.categoryRadius}px`,
-                                }}
-                            >
-                                {cat.name}
-                            </button>
-                        ))}
+                        {DISPLAY_CATEGORIES.map((cat) => {
+                            const btnShadow = (T as any).categoryBtnCustomShadow || ((T as any).categoryBtnShadow && (T as any).categoryBtnShadow !== 'none' ? getShadow((T as any).categoryBtnShadow) : 'none');
+                            return (
+                                <button
+                                    key={cat.id}
+                                    data-cat={cat.id}
+                                    onClick={() => scrollToCategory(cat.id)}
+                                    className="whitespace-nowrap text-sm font-medium transition-all px-4 py-2"
+                                    style={{
+                                        backgroundColor: activeCategory === cat.id ? T.categoryActiveBg : T.categoryInactiveBg,
+                                        color: activeCategory === cat.id ? T.categoryActiveText : T.categoryInactiveText,
+                                        borderRadius: `${T.categoryRadius}px`,
+                                        boxShadow: btnShadow,
+                                    }}
+                                >
+                                    {cat.name}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -785,33 +787,31 @@ export default function MenuClient({
                         return (
                             <div key={cat.id} id={cat.id} className="rounded-xl" style={{ backgroundColor: (T as any).categorySectionBg || 'transparent', padding: (T as any).categorySectionBg && (T as any).categorySectionBg !== 'transparent' ? '8px' : '0', marginBottom: '4px' }}>
                                 {/* Category Header */}
-                                {layout !== 'banner-scroll' && (
-                                    <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-                                        <h2 className="text-2xl" style={{ color: T.categoryTitleColor, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
-                                        <div className="flex items-center gap-1">
-                                            <button
-                                                onClick={() => setCategoryLayoutOverrides(prev => ({ ...prev, [cat.id]: defaultLayout }))}
-                                                className="p-1.5 rounded-lg transition-all"
-                                                style={{
-                                                    backgroundColor: layout === defaultLayout ? `${T.accentColor}20` : 'transparent',
-                                                    color: layout === defaultLayout ? T.accentColor : (T.productDescColor || '#888'),
-                                                }}
-                                            >
-                                                <LayoutGrid size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => setCategoryLayoutOverrides(prev => ({ ...prev, [cat.id]: 'list' }))}
-                                                className="p-1.5 rounded-lg transition-all"
-                                                style={{
-                                                    backgroundColor: layout === 'list' && defaultLayout !== 'list' ? `${T.accentColor}20` : (defaultLayout === 'list' && layout === 'list' ? `${T.accentColor}20` : 'transparent'),
-                                                    color: layout === 'list' ? T.accentColor : (T.productDescColor || '#888'),
-                                                }}
-                                            >
-                                                <LayoutList size={16} />
-                                            </button>
-                                        </div>
+                                <div className="px-4 pt-6 pb-3 flex items-center justify-between">
+                                    <h2 className="text-2xl" style={{ color: T.categoryTitleColor, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={() => setCategoryLayoutOverrides(prev => ({ ...prev, [cat.id]: defaultLayout }))}
+                                            className="p-1.5 rounded-lg transition-all"
+                                            style={{
+                                                backgroundColor: layout === defaultLayout ? `${T.accentColor}20` : 'transparent',
+                                                color: layout === defaultLayout ? T.accentColor : (T.productDescColor || '#888'),
+                                            }}
+                                        >
+                                            <LayoutGrid size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => setCategoryLayoutOverrides(prev => ({ ...prev, [cat.id]: 'list' }))}
+                                            className="p-1.5 rounded-lg transition-all"
+                                            style={{
+                                                backgroundColor: layout === 'list' && defaultLayout !== 'list' ? `${T.accentColor}20` : (defaultLayout === 'list' && layout === 'list' ? `${T.accentColor}20` : 'transparent'),
+                                                color: layout === 'list' ? T.accentColor : (T.productDescColor || '#888'),
+                                            }}
+                                        >
+                                            <LayoutList size={16} />
+                                        </button>
                                     </div>
-                                )}
+                                </div>
 
                                 {/* ── LAYOUT: list (default) ── */}
                                 {layout === 'list' && (
@@ -958,58 +958,6 @@ export default function MenuClient({
                                     </div>
                                 )}
 
-                                {/* ── LAYOUT: banner-scroll ── */}
-                                {layout === 'banner-scroll' && (
-                                    <div className="mb-2">
-                                        {/* Banner header with gradient */}
-                                        <div className="relative h-24 mx-4 rounded-2xl overflow-hidden mb-3" style={{ backgroundColor: T.categoryActiveBg }}>
-                                            <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
-                                            <div className="relative h-full flex items-center px-5">
-                                                <h2 className="text-white text-xl font-bold drop-shadow-lg">{cat.name}</h2>
-                                            </div>
-                                        </div>
-                                        {/* Horizontal scroll */}
-                                        <div className="px-4 overflow-x-auto no-scrollbar">
-                                            <div className="flex gap-3" style={{ width: 'max-content' }}>
-                                                {products.map((product) => (
-                                                    <div key={product.id} onClick={() => handleClick(product)} className="w-[150px] overflow-hidden active:scale-[0.98] transition-transform cursor-pointer shrink-0" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
-                                                        {renderImage(product, 'w-full h-28', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
-                                                        <div className="p-2.5">
-                                                            <h3 className="line-clamp-1 text-sm font-semibold" style={{ color: T.productNameColor }}>{product.name}</h3>
-                                                            <span className="text-sm font-bold mt-1 block" style={{ color: T.priceColor }}>{product.price} TL</span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* ── LAYOUT: mosaic ── */}
-                                {layout === 'mosaic' && (
-                                    <div className="px-4">
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {products.map((product, idx) => {
-                                                // Alternating: every 3rd item takes 2 columns
-                                                const isLarge = idx % 3 === 0;
-                                                return (
-                                                    <div
-                                                        key={product.id}
-                                                        onClick={() => handleClick(product)}
-                                                        className={`overflow-hidden active:scale-[0.98] transition-transform cursor-pointer ${isLarge ? 'col-span-2 row-span-2' : ''}`}
-                                                        style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}
-                                                    >
-                                                        {renderImage(product, `w-full ${isLarge ? 'h-40' : 'h-20'}`, `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
-                                                        <div className={isLarge ? 'p-3' : 'p-1.5'}>
-                                                            <h3 className={`line-clamp-1 ${isLarge ? 'text-sm font-bold' : 'text-xs font-semibold'}`} style={{ color: T.productNameColor }}>{product.name}</h3>
-                                                            <span className={`${isLarge ? 'text-sm' : 'text-xs'} font-bold mt-0.5 block`} style={{ color: T.priceColor }}>{product.price} TL</span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
 
                                 {/* ── LAYOUT: text-only ── */}
                                 {layout === 'text-only' && (

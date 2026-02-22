@@ -91,7 +91,10 @@ const DEFAULT_THEME = {
 
     // Category Nav Bar
     categoryNavBg: "#ffffff",
-    categoryNavBlur: "0",
+
+    // Category Button Shadow
+    categoryBtnShadow: "none",
+    categoryBtnCustomShadow: "",
 
     // Slider
     showHeroSlider: "true",
@@ -364,8 +367,7 @@ export default function PanelDesign() {
                                 { id: 'magazine', name: 'Dergi', desc: 'İlk büyük, kalanlar grid', icon: <Newspaper size={14} /> },
                                 { id: 'compact', name: 'Kompakt Liste', desc: 'Dar satırlar', icon: <AlignJustify size={14} /> },
                                 { id: 'full-card', name: 'Tam Kart', desc: 'Büyük resim üstte', icon: <RectangleHorizontal size={14} /> },
-                                { id: 'banner-scroll', name: 'Banner + Kaydır', desc: 'Kategori banner + scroll', icon: <Rows3 size={14} /> },
-                                { id: 'mosaic', name: 'Mozaik', desc: 'Büyük-küçük alternating', icon: <LayoutDashboard size={14} /> },
+
                                 { id: 'text-only', name: 'Sadece Metin', desc: 'Resim yok, minimalist', icon: <FileText size={14} /> },
                             ] as { id: string; name: string; desc: string; icon: React.ReactNode }[]).map((v) => {
                                 const isActive = theme.layoutVariant === v.id;
@@ -456,23 +458,7 @@ export default function PanelDesign() {
                                                     </div>
                                                 </div>
                                             )}
-                                            {v.id === 'banner-scroll' && (
-                                                <div className="flex flex-col gap-1 flex-1">
-                                                    <div className="h-4 rounded bg-gradient-to-r from-gray-700 to-gray-800 border border-gray-700" />
-                                                    <div className="flex gap-0.5 overflow-hidden">
-                                                        {[0, 1, 2].map(i => (
-                                                            <div key={i} className="min-w-[18px] h-6 rounded bg-gray-800 border border-gray-700" />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                            {v.id === 'mosaic' && (
-                                                <div className="grid grid-cols-3 gap-0.5 flex-1">
-                                                    <div className="col-span-2 row-span-2 rounded bg-gray-700" />
-                                                    <div className="rounded bg-gray-800 border border-gray-700" />
-                                                    <div className="rounded bg-gray-800 border border-gray-700" />
-                                                </div>
-                                            )}
+
                                             {v.id === 'text-only' && (
                                                 <div className="space-y-1.5 flex-1">
                                                     {[0, 1, 2, 3].map(i => (
@@ -584,24 +570,43 @@ export default function PanelDesign() {
                     <Section title="Kategori Butonları" icon={<LayoutGrid size={18} />} defaultOpen={false}>
                         <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Buton Bar Arkaplanı</p>
                         <ColorPicker label="Arkaplan Rengi" value={theme.categoryNavBg} onChange={(v) => updateTheme("categoryNavBg", v)} />
-                        <div className="flex items-center justify-between gap-3">
-                            <label className="text-xs text-gray-400">Blur (Bulanıklık)</label>
-                            <div className="flex items-center gap-2">
-                                <input type="range" min={0} max={20} value={theme.categoryNavBlur} onChange={(e) => updateTheme("categoryNavBlur", e.target.value)} className="w-24 accent-emerald-500" />
-                                <span className="text-xs text-gray-500 w-8 text-right">{theme.categoryNavBlur}px</span>
-                            </div>
-                        </div>
                         <div className="border-t border-gray-800 my-2" />
                         <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Buton Renkleri</p>
                         <ColorPicker label="Aktif Arkaplan" value={theme.categoryActiveBg} onChange={(v) => updateTheme("categoryActiveBg", v)} />
                         <ColorPicker label="Aktif Yazı Rengi" value={theme.categoryActiveText} onChange={(v) => updateTheme("categoryActiveText", v)} />
                         <ColorPicker label="Pasif Arkaplan" value={theme.categoryInactiveBg} onChange={(v) => updateTheme("categoryInactiveBg", v)} />
                         <ColorPicker label="Pasif Yazı Rengi" value={theme.categoryInactiveText} onChange={(v) => updateTheme("categoryInactiveText", v)} />
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Köşe Yuvarlaklığı</p>
                         <div className="flex items-center justify-between gap-3">
-                            <label className="text-xs text-gray-400">Köşe Yuvarlaklığı</label>
                             <div className="flex gap-1.5">{RADIUS_PRESETS.map((r) => (
                                 <button key={r.value} onClick={() => updateTheme("categoryRadius", r.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.categoryRadius === r.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{r.label}</button>
                             ))}</div>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 mt-2">
+                            <label className="text-xs text-gray-400">Değer</label>
+                            <div className="flex items-center gap-2">
+                                <input type="range" min={0} max={9999} value={theme.categoryRadius} onChange={(e) => updateTheme("categoryRadius", e.target.value)} className="w-20 accent-emerald-500" />
+                                <input type="number" min={0} max={9999} value={theme.categoryRadius} onChange={(e) => updateTheme("categoryRadius", e.target.value)} className="w-16 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-300 text-right" />
+                                <span className="text-xs text-gray-500">px</span>
+                            </div>
+                        </div>
+                        <div className="border-t border-gray-800 my-2" />
+                        <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Gölge</p>
+                        <div className="grid grid-cols-4 gap-1.5">
+                            {[
+                                { value: "none", label: "Yok" },
+                                { value: "sm", label: "Hafif" },
+                                { value: "md", label: "Orta" },
+                                { value: "lg", label: "Güçlü" },
+                            ].map((s) => (
+                                <button key={s.value} onClick={() => { updateTheme("categoryBtnShadow", s.value); updateTheme("categoryBtnCustomShadow", ""); }} className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.categoryBtnShadow === s.value && !theme.categoryBtnCustomShadow ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{s.label}</button>
+                            ))}
+                        </div>
+                        <div className="mt-2">
+                            <label className="text-xs text-gray-400 block mb-1">Özel Gölge (CSS)</label>
+                            <input type="text" value={theme.categoryBtnCustomShadow || ""} onChange={(e) => { updateTheme("categoryBtnCustomShadow", e.target.value); if (e.target.value) updateTheme("categoryBtnShadow", "custom"); }} placeholder="0 2px 8px rgba(0,0,0,0.15)" className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 placeholder-gray-600 focus:border-emerald-500 focus:outline-none" />
+                            <p className="text-[9px] text-gray-600 mt-1">Örn: 0 2px 8px rgba(0,0,0,0.15)</p>
                         </div>
                     </Section>
 
