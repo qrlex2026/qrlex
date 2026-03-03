@@ -564,6 +564,141 @@ export default function MenuClient({
                 const langAction = () => setShowLangPicker(true);
                 const resAction = () => { setShowLangSplash(false); setIsReservationOpen(true); };
 
+                // Button style variant
+                const wBtnStyle = (T as any).welcomeBtnStyle || 'classic';
+
+                // SVG Icons
+                const iconMenu = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></svg>;
+                const iconLang = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" /></svg>;
+                const iconRes = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>;
+                const iconMenuLg = <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></svg>;
+                const iconLangLg = <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" /></svg>;
+                const iconResLg = <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>;
+
+                const btnItems = [
+                    { label: t('btnMenu') || 'MENÜ', sub: t('welcome'), icon: iconMenu, iconLg: iconMenuLg, action: menuAction, primary: true },
+                    { label: t('btnLanguage'), sub: languages.find(l => l.code === selectedLang)?.name || 'Dil', icon: iconLang, iconLg: iconLangLg, action: langAction, primary: false },
+                    { label: 'REZERVE', sub: 'Masa Ayırt', icon: iconRes, iconLg: iconResLg, action: resAction, primary: false },
+                ];
+
+                // Render buttons based on style
+                const renderButtons = () => {
+                    const delay = (i: number) => `${0.1 + i * 0.1}s`;
+
+                    if (wBtnStyle === 'icon-left') {
+                        return (
+                            <div className="flex flex-col gap-3 w-full">
+                                {btnItems.map((b, i) => (
+                                    <button key={i} onClick={b.action} className="flex items-center gap-3 px-4 py-3.5 text-left active:scale-[0.97] transition-all backdrop-blur-md" style={{ ...(b.primary ? primaryBtn : secondaryBtn), animation: `fadeInUp 0.5s ease-out ${delay(i)} both` }}>
+                                        <span className="shrink-0 flex items-center justify-center w-10 h-10 rounded-xl" style={{ backgroundColor: b.primary ? `${wBtnText}15` : `${wSecText}15` }}>{b.icon}</span>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-bold tracking-wider">{b.label}</span>
+                                            <span className="text-[10px] opacity-60">{b.sub}</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    }
+
+                    if (wBtnStyle === 'icon-top') {
+                        return (
+                            <div className="grid grid-cols-3 gap-3 w-full">
+                                {btnItems.map((b, i) => (
+                                    <button key={i} onClick={b.action} className="flex flex-col items-center gap-2 py-4 px-2 active:scale-[0.97] transition-all backdrop-blur-md" style={{ ...(b.primary ? primaryBtn : secondaryBtn), animation: `fadeInUp 0.5s ease-out ${delay(i)} both` }}>
+                                        <span className="flex items-center justify-center w-12 h-12 rounded-2xl" style={{ backgroundColor: b.primary ? `${wBtnText}15` : `${wSecText}15` }}>{b.iconLg}</span>
+                                        <span className="text-[11px] font-bold tracking-wider text-center">{b.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    }
+
+                    if (wBtnStyle === 'pill') {
+                        return (
+                            <div className="flex flex-col gap-2.5 w-full">
+                                {btnItems.map((b, i) => (
+                                    <button key={i} onClick={b.action} className="flex items-center justify-center gap-2.5 py-3 px-5 active:scale-[0.97] transition-all backdrop-blur-md" style={{ ...(b.primary ? primaryBtn : secondaryBtn), borderRadius: '999px', animation: `fadeInUp 0.5s ease-out ${delay(i)} both` }}>
+                                        {b.icon}
+                                        <span className="text-sm font-bold tracking-wider">{b.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    }
+
+                    if (wBtnStyle === 'outline-glow') {
+                        return (
+                            <div className="flex flex-col gap-3 w-full">
+                                {btnItems.map((b, i) => (
+                                    <button key={i} onClick={b.action} className="flex items-center gap-3 px-4 py-3.5 active:scale-[0.97] transition-all" style={{
+                                        backgroundColor: 'transparent',
+                                        color: b.primary ? wBtnBg : wSecText,
+                                        border: `1.5px solid ${b.primary ? wBtnBg : wSecBorder}`,
+                                        borderRadius: `${wBtnRadius}px`,
+                                        boxShadow: b.primary ? `0 0 15px ${wBtnBg}33, inset 0 0 15px ${wBtnBg}08` : `0 0 10px ${wSecBorder}22`,
+                                        animation: `fadeInUp 0.5s ease-out ${delay(i)} both`
+                                    }}>
+                                        <span className="shrink-0">{b.icon}</span>
+                                        <span className="text-sm font-bold tracking-wider">{b.label}</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-auto opacity-40"><path d="m9 18 6-6-6-6" /></svg>
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    }
+
+                    if (wBtnStyle === 'card') {
+                        return (
+                            <div className="flex flex-col gap-3 w-full">
+                                {btnItems.map((b, i) => (
+                                    <button key={i} onClick={b.action} className="flex items-center gap-4 px-4 py-4 active:scale-[0.97] transition-all backdrop-blur-xl" style={{
+                                        ...(b.primary ? primaryBtn : secondaryBtn),
+                                        animation: `fadeInUp 0.5s ease-out ${delay(i)} both`
+                                    }}>
+                                        <span className="shrink-0 flex items-center justify-center w-14 h-14 rounded-2xl" style={{
+                                            backgroundColor: b.primary ? `${wBtnText}12` : `${wSecText}12`,
+                                            border: `1px solid ${b.primary ? `${wBtnText}20` : `${wSecText}20`}`
+                                        }}>{b.iconLg}</span>
+                                        <div className="flex flex-col text-left">
+                                            <span className="text-sm font-bold tracking-wider">{b.label}</span>
+                                            <span className="text-[11px] mt-0.5 opacity-50">{b.sub}</span>
+                                        </div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-auto opacity-30"><path d="m9 18 6-6-6-6" /></svg>
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    }
+
+                    if (wBtnStyle === 'minimal-line') {
+                        return (
+                            <div className="flex flex-col w-full divide-y" style={{ borderColor: `${wSecBorder}` }}>
+                                {btnItems.map((b, i) => (
+                                    <button key={i} onClick={b.action} className="flex items-center gap-3 px-2 py-4 active:scale-[0.98] transition-all" style={{
+                                        color: b.primary ? wBtnBg : wSecText,
+                                        borderColor: wSecBorder,
+                                        animation: `fadeInUp 0.5s ease-out ${delay(i)} both`
+                                    }}>
+                                        <span className="shrink-0 opacity-70">{b.icon}</span>
+                                        <span className="text-sm font-bold tracking-wider">{b.label}</span>
+                                        <span className="ml-auto text-[10px] opacity-40 tracking-wide">{b.sub}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    }
+
+                    // Default: classic (original plain text buttons)
+                    return (
+                        <div className="flex items-center justify-center gap-3">
+                            {btnItems.map((b, i) => (
+                                <button key={i} onClick={b.action} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...(b.primary ? primaryBtn : secondaryBtn), animation: `fadeInUp 0.5s ease-out ${delay(i)} both` }}>{b.label}</button>
+                            ))}
+                        </div>
+                    );
+                };
+
                 // Powered by
                 const poweredBy = <p className="text-center mt-5 text-[10px] font-medium tracking-widest" style={{ color: wSub, opacity: 0.5 }}>Powered by <span className="font-bold">QRLEX</span></p>;
 
@@ -576,11 +711,7 @@ export default function MenuClient({
                             <p className="text-lg mt-3 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{t('welcome')}</p>
                         </div>
                         <div className="relative z-10 pb-8" style={{ padding: '0 13px 32px 13px' }}>
-                            <div className="flex items-center justify-center gap-3">
-                                <button onClick={menuAction} className="flex-1 py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.1s both' }}>MENÜ</button>
-                                <button onClick={langAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>{t('btnLanguage')}</button>
-                                <button onClick={resAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>REZERVE</button>
-                            </div>
+                            {renderButtons()}
                             {poweredBy}
                         </div>
                     </>
@@ -595,11 +726,7 @@ export default function MenuClient({
                             <p className="text-base mt-2 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{t('welcome')}</p>
                         </div>
                         <div className="relative z-10 pb-8" style={{ padding: '0 13px 32px 13px' }}>
-                            <div className="flex items-center justify-center gap-3">
-                                <button onClick={menuAction} className="flex-1 py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>MENÜ</button>
-                                <button onClick={langAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>{t('btnLanguage')}</button>
-                                <button onClick={resAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.4s both' }}>REZERVE</button>
-                            </div>
+                            {renderButtons()}
                             {poweredBy}
                         </div>
                     </>
@@ -614,12 +741,7 @@ export default function MenuClient({
                             <p className="text-sm mt-2 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.25s both' }}>{t('welcome')}</p>
                         </div>
                         <div className="relative z-10 pb-8" style={{ padding: '0 24px 32px 24px' }}>
-                            <button onClick={menuAction} className="w-full py-4 text-base font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>MENÜYÜ GÖRÜNTÜLE</button>
-                            <div className="flex items-center justify-center gap-4 mt-4">
-                                <button onClick={langAction} className="text-sm font-medium tracking-wide active:scale-[0.97] transition-all" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.4s both' }}>{t('btnLanguage')}</button>
-                                <span style={{ color: wSub, opacity: 0.3 }}>|</span>
-                                <button onClick={resAction} className="text-sm font-medium tracking-wide active:scale-[0.97] transition-all" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.4s both' }}>REZERVE</button>
-                            </div>
+                            {renderButtons()}
                             {poweredBy}
                         </div>
                     </>
@@ -634,11 +756,7 @@ export default function MenuClient({
                             <p className="text-lg mt-3 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{t('welcome')}</p>
                         </div>
                         <div className="relative z-10 pb-8" style={{ padding: '0 24px 32px 24px' }}>
-                            <div className="flex flex-col gap-2.5">
-                                <button onClick={menuAction} className="w-full py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>MENÜ</button>
-                                <button onClick={langAction} className="w-full py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>{t('btnLanguage')}</button>
-                                <button onClick={resAction} className="w-full py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.4s both' }}>REZERVE</button>
-                            </div>
+                            {renderButtons()}
                             {poweredBy}
                         </div>
                     </>
@@ -653,11 +771,7 @@ export default function MenuClient({
                             <p className="text-xs font-light tracking-[0.15em] uppercase" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{t('welcome')}</p>
                         </div>
                         <div className="relative z-10 pb-8" style={{ padding: '0 24px 32px 24px' }}>
-                            <button onClick={menuAction} className="w-full py-3.5 text-xs font-bold tracking-[0.2em] uppercase text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>MENÜYÜ GÖRÜNTÜLE</button>
-                            <div className="flex items-center justify-center gap-6 mt-4">
-                                <button onClick={langAction} className="text-xs tracking-[0.1em] uppercase active:scale-[0.97] transition-all" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>{t('btnLanguage')}</button>
-                                <button onClick={resAction} className="text-xs tracking-[0.1em] uppercase active:scale-[0.97] transition-all" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>REZERVE</button>
-                            </div>
+                            {renderButtons()}
                             {poweredBy}
                         </div>
                     </>
@@ -671,10 +785,8 @@ export default function MenuClient({
                             <div className="mb-4" style={{ animation: 'fadeInUp 0.5s ease-out both' }}>{logo}</div>
                             <h1 className="text-5xl font-black tracking-tight leading-none drop-shadow-lg" style={{ color: wText, animation: 'fadeInUp 0.5s ease-out 0.1s both' }}>{bName}</h1>
                             <p className="text-base mt-3 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{BUSINESS_INFO.description || t('welcome')}</p>
-                            <div className="flex items-center gap-3 mt-6">
-                                <button onClick={menuAction} className="flex-1 py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>MENÜ</button>
-                                <button onClick={langAction} className="py-3.5 px-4 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>{t('btnLanguage')}</button>
-                                <button onClick={resAction} className="py-3.5 px-4 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, animation: 'fadeInUp 0.5s ease-out 0.35s both' }}>REZERVE</button>
+                            <div className="mt-6">
+                                {renderButtons()}
                             </div>
                             {poweredBy}
                         </div>
@@ -700,12 +812,309 @@ export default function MenuClient({
                             <p className="text-lg mt-3 font-light tracking-wide" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{t('welcome')}</p>
                         </div>
                         <div className="relative z-10 pb-8" style={{ padding: '0 13px 32px 13px' }}>
-                            <div className="flex items-center justify-center gap-3">
-                                <button onClick={menuAction} className="flex-1 py-3.5 text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...primaryBtn, boxShadow: `0 0 20px ${wBtnBg}44`, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>MENÜ</button>
-                                <button onClick={langAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, borderColor: `${wBtnBg}44`, animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>{t('btnLanguage')}</button>
-                                <button onClick={resAction} className="flex-1 py-3.5 backdrop-blur-md text-sm font-bold tracking-wider text-center active:scale-[0.97] transition-all" style={{ ...secondaryBtn, borderColor: `${wBtnBg}44`, animation: 'fadeInUp 0.5s ease-out 0.35s both' }}>REZERVE</button>
-                            </div>
+                            {renderButtons()}
                             {poweredBy}
+                        </div>
+                    </>
+                );
+
+                // ═══════════════════════════════════════════════════════
+                // V8: GLASS-CARD — Frosted glass kart, köşelerde dekoratif blur daireler
+                // ═══════════════════════════════════════════════════════
+                const glassCardContent = (
+                    <>
+                        {/* Decorative floating blur circles */}
+                        <div className="absolute top-[10%] left-[-30px] w-[120px] h-[120px] rounded-full z-[2] pointer-events-none" style={{ background: `${wBtnBg}15`, filter: 'blur(40px)' }} />
+                        <div className="absolute bottom-[20%] right-[-20px] w-[100px] h-[100px] rounded-full z-[2] pointer-events-none" style={{ background: `${wBtnBg}20`, filter: 'blur(35px)' }} />
+                        <div className="absolute top-[45%] right-[10%] w-[60px] h-[60px] rounded-full z-[2] pointer-events-none" style={{ background: `${wBtnBg}10`, filter: 'blur(25px)' }} />
+
+                        <div className="relative flex-1 flex flex-col items-center justify-center z-10 px-5">
+                            {/* Main glass card */}
+                            <div className="w-full max-w-[340px] rounded-[28px] overflow-hidden" style={{
+                                background: `linear-gradient(145deg, ${wBg}cc, ${wBg}99)`,
+                                backdropFilter: 'blur(20px)',
+                                WebkitBackdropFilter: 'blur(20px)',
+                                border: `1px solid ${wLogoBorder}`,
+                                boxShadow: `0 25px 60px rgba(0,0,0,0.4), inset 0 1px 0 ${wLogoBorder}`,
+                                animation: 'fadeInUp 0.7s ease-out both'
+                            }}>
+                                {/* Top accent line */}
+                                <div className="h-[3px]" style={{ background: `linear-gradient(90deg, transparent, ${wBtnBg}, transparent)` }} />
+
+                                <div className="p-7 flex flex-col items-center">
+                                    {/* Logo with ring */}
+                                    <div className="relative mb-5">
+                                        <div className="absolute -inset-3 rounded-full" style={{ border: `1px dashed ${wBtnBg}33` }} />
+                                        {logo}
+                                    </div>
+
+                                    <h1 className="text-[26px] font-extrabold tracking-tight text-center leading-tight" style={{ color: wText }}>{bName}</h1>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <div className="w-4 h-[1px]" style={{ backgroundColor: wBtnBg, opacity: 0.4 }} />
+                                        <p className="text-xs font-medium tracking-[0.15em] uppercase" style={{ color: wSub }}>{t('welcome')}</p>
+                                        <div className="w-4 h-[1px]" style={{ backgroundColor: wBtnBg, opacity: 0.4 }} />
+                                    </div>
+
+                                    {/* Buttons inside card */}
+                                    <div className="w-full mt-7">
+                                        {renderButtons()}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="relative z-10 pb-5">{poweredBy}</div>
+                    </>
+                );
+
+                // ═══════════════════════════════════════════════════════
+                // V9: WAVE — Dalga SVG kesim, üstte tam ekran görsel, altta solid panel
+                // ═══════════════════════════════════════════════════════
+                const waveContent = (
+                    <>
+                        {/* Top area: full background visible */}
+                        <div className="relative flex-1 z-10 flex items-center justify-center">
+                            <div className="text-center" style={{ animation: 'fadeInUp 0.6s ease-out both' }}>
+                                {/* Logo floating over the background */}
+                                <div className="mx-auto mb-3 p-4 rounded-full" style={{
+                                    background: `${wBg}88`,
+                                    backdropFilter: 'blur(10px)',
+                                    border: `2px solid ${wLogoBorder}`,
+                                    display: 'inline-block'
+                                }}>
+                                    {logo}
+                                </div>
+                                <h1 className="text-3xl font-black tracking-tight" style={{ color: wText, textShadow: '0 2px 20px rgba(0,0,0,0.5)' }}>{bName}</h1>
+                            </div>
+                        </div>
+                        {/* SVG wave divider */}
+                        <div className="relative z-10">
+                            <svg viewBox="0 0 400 80" className="w-full block -mb-[2px]" preserveAspectRatio="none" style={{ height: '70px' }}>
+                                <path d="M0,60 C50,20 100,70 150,35 C200,0 250,50 300,25 C350,0 380,40 400,30 L400,80 L0,80 Z" style={{ fill: wBg }} />
+                                <path d="M0,65 C60,30 110,75 160,40 C210,5 260,55 310,30 C355,5 385,45 400,35 L400,80 L0,80 Z" style={{ fill: wBg, opacity: 0.5 }} />
+                            </svg>
+                            {/* Bottom solid panel */}
+                            <div style={{ backgroundColor: wBg }} className="px-6 pb-8 pt-2">
+                                <p className="text-center text-sm font-light tracking-[0.1em] mb-5" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>{t('welcome')}</p>
+
+                                {renderButtons()}
+                                {poweredBy}
+                            </div>
+                        </div>
+                    </>
+                );
+
+                // ═══════════════════════════════════════════════════════
+                // V10: CINEMA — Film şeridi kenar, altın yaldızlı lüks atmosfer
+                // ═══════════════════════════════════════════════════════
+                const cinemaContent = (
+                    <>
+                        {/* Film strip borders */}
+                        <div className="absolute top-0 bottom-0 left-0 w-[18px] z-[2] pointer-events-none" style={{ opacity: 0.12 }}>
+                            {Array.from({ length: 20 }).map((_, i) => (
+                                <div key={`l${i}`} className="mx-[4px] my-[3px] h-[22px] rounded-[2px]" style={{ backgroundColor: wText }} />
+                            ))}
+                        </div>
+                        <div className="absolute top-0 bottom-0 right-0 w-[18px] z-[2] pointer-events-none" style={{ opacity: 0.12 }}>
+                            {Array.from({ length: 20 }).map((_, i) => (
+                                <div key={`r${i}`} className="mx-[4px] my-[3px] h-[22px] rounded-[2px]" style={{ backgroundColor: wText }} />
+                            ))}
+                        </div>
+
+                        {/* Golden spotlight cone from top */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[60%] z-[2] pointer-events-none" style={{
+                            background: `linear-gradient(180deg, ${wBtnBg}12 0%, transparent 100%)`,
+                            clipPath: 'polygon(40% 0%, 60% 0%, 90% 100%, 10% 100%)'
+                        }} />
+
+                        <div className="relative flex-1 flex flex-col items-center justify-center z-10 px-10">
+                            {/* Star ornament */}
+                            <div className="text-2xl mb-4" style={{ color: wBtnBg, opacity: 0.6, animation: 'fadeInUp 0.5s ease-out both' }}>★</div>
+
+                            <div style={{ animation: 'fadeInUp 0.6s ease-out 0.1s both' }}>{logo}</div>
+
+                            <h1 className="text-2xl font-black tracking-[0.2em] uppercase mt-5 text-center" style={{ color: wText, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>{bName}</h1>
+
+                            {/* Double line ornament */}
+                            <div className="flex items-center gap-3 mt-3 w-full max-w-[200px]" style={{ animation: 'fadeInUp 0.5s ease-out 0.25s both' }}>
+                                <div className="flex-1 flex flex-col gap-[2px]">
+                                    <div className="h-[1px]" style={{ backgroundColor: wBtnBg, opacity: 0.4 }} />
+                                    <div className="h-[1px]" style={{ backgroundColor: wBtnBg, opacity: 0.2 }} />
+                                </div>
+                                <div className="text-xs" style={{ color: wBtnBg }}>◆</div>
+                                <div className="flex-1 flex flex-col gap-[2px]">
+                                    <div className="h-[1px]" style={{ backgroundColor: wBtnBg, opacity: 0.4 }} />
+                                    <div className="h-[1px]" style={{ backgroundColor: wBtnBg, opacity: 0.2 }} />
+                                </div>
+                            </div>
+
+                            <p className="text-sm font-light tracking-[0.15em] mt-3" style={{ color: wSub, fontStyle: 'italic', animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>{t('welcome')}</p>
+                        </div>
+
+                        <div className="relative z-10 px-10 pb-10" style={{ animation: 'fadeInUp 0.5s ease-out 0.35s both' }}>
+                            {renderButtons()}
+                            {poweredBy}
+                        </div>
+                    </>
+                );
+
+                // ═══════════════════════════════════════════════════════
+                // V11: MOSAIC — Çapraz bölünmüş ekran, diagonal split layout
+                // ═══════════════════════════════════════════════════════
+                const mosaicContent = (
+                    <>
+                        {/* Diagonal clip: top-right triangle stays transparent for bg */}
+                        <div className="absolute inset-0 z-[2] pointer-events-none" style={{
+                            background: `linear-gradient(135deg, transparent 45%, ${wBg} 45%)`,
+                        }} />
+
+                        {/* Content on the dark (bottom-left) triangle */}
+                        <div className="relative flex-1 flex flex-col z-10">
+                            {/* Top area: logo on the visible bg part */}
+                            <div className="flex-1 flex items-start justify-end p-8 pt-16" style={{ animation: 'fadeInUp 0.5s ease-out both' }}>
+                                <div className="p-3 rounded-2xl" style={{ background: `${wBg}99`, backdropFilter: 'blur(10px)' }}>
+                                    {logo}
+                                </div>
+                            </div>
+
+                            {/* Bottom area: text and buttons on the solid bg */}
+                            <div className="px-7 pb-8">
+                                <h1 className="text-4xl font-black tracking-tight leading-none" style={{ color: wText, animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>{bName}</h1>
+                                <p className="text-sm font-light tracking-wide mt-2 mb-6" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>{t('welcome')}</p>
+
+                                <div style={{ animation: 'fadeInUp 0.5s ease-out 0.3s both' }}>
+                                    {renderButtons()}
+                                </div>
+                                {poweredBy}
+                            </div>
+                        </div>
+                    </>
+                );
+
+                // ═══════════════════════════════════════════════════════
+                // V12: HORIZON — Yatay şeritler, her şerit farklı yükseklikte, parallax his
+                // ═══════════════════════════════════════════════════════
+                const horizonContent = (
+                    <>
+                        {/* Horizontal stripe bands */}
+                        <div className="absolute inset-0 z-[2] pointer-events-none flex flex-col">
+                            <div className="flex-[3]" /> {/* bg visible */}
+                            <div className="h-[3px]" style={{ backgroundColor: wBtnBg, opacity: 0.15 }} />
+                            <div className="flex-[0.5]" style={{ backgroundColor: `${wBg}44` }} />
+                            <div className="h-[2px]" style={{ backgroundColor: wBtnBg, opacity: 0.25 }} />
+                            <div className="flex-[0.3]" style={{ backgroundColor: `${wBg}66` }} />
+                            <div className="h-[1px]" style={{ backgroundColor: wBtnBg, opacity: 0.4 }} />
+                            <div className="flex-[4]" style={{ backgroundColor: `${wBg}dd` }} />
+                        </div>
+
+                        <div className="relative flex-1 flex flex-col z-10">
+                            {/* Top: logo floating */}
+                            <div className="flex-1 flex items-center justify-center">
+                                <div className="text-center" style={{ animation: 'fadeInUp 0.6s ease-out both' }}>
+                                    <div className="mx-auto mb-3 relative">
+                                        {logo}
+                                        {/* Pulsing ring */}
+                                        <div className="absolute -inset-4 rounded-full" style={{ border: `1px solid ${wBtnBg}22`, animation: 'pulse 3s ease-in-out infinite' }} />
+                                    </div>
+                                    <h1 className="text-2xl font-bold tracking-tight" style={{ color: wText }}>{bName}</h1>
+                                </div>
+                            </div>
+
+                            {/* Bottom: below the horizon lines */}
+                            <div className="px-6 pb-8">
+                                <p className="text-center text-sm font-light tracking-[0.12em] mb-6" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>{t('welcome')}</p>
+
+                                {renderButtons()}
+                                {poweredBy}
+                            </div>
+                        </div>
+                    </>
+                );
+
+                // ═══════════════════════════════════════════════════════
+                // V13: SPOTLIGHT — Dikey timeline çizgisi + dot navigation tarzı
+                // ═══════════════════════════════════════════════════════
+                const spotlightContent = (
+                    <>
+                        {/* Vertical timeline line */}
+                        <div className="absolute top-[15%] bottom-[15%] left-8 w-[2px] z-[2] pointer-events-none" style={{
+                            background: `linear-gradient(180deg, transparent, ${wBtnBg}33, ${wBtnBg}33, transparent)`
+                        }} />
+
+                        <div className="relative flex-1 flex flex-col justify-center z-10 pl-16 pr-6">
+                            {/* Timeline node 1: Logo */}
+                            <div className="relative mb-8" style={{ animation: 'fadeInUp 0.5s ease-out both' }}>
+                                <div className="absolute -left-[37px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full" style={{ backgroundColor: wBtnBg, boxShadow: `0 0 10px ${wBtnBg}44` }} />
+                                <div className="flex items-center gap-4">
+                                    {logo}
+                                    <div>
+                                        <h1 className="text-2xl font-black tracking-tight" style={{ color: wText }}>{bName}</h1>
+                                        <p className="text-xs font-light tracking-[0.1em] mt-1" style={{ color: wSub }}>{t('welcome')}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Timeline node 2: Buttons */}
+                            <div className="relative" style={{ animation: 'fadeInUp 0.5s ease-out 0.15s both' }}>
+                                <div className="absolute -left-[37px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full" style={{ border: `2px solid ${wBtnBg}`, backgroundColor: 'transparent' }} />
+                                {renderButtons()}
+                            </div>
+                        </div>
+                        <div className="relative z-10 pb-5 pl-16">{poweredBy}</div>
+                    </>
+                );
+
+                // ═══════════════════════════════════════════════════════
+                // V14: STACK — 3D perspektif kartlar, derinlik efekti
+                // ═══════════════════════════════════════════════════════
+                const stackContent = (
+                    <>
+                        <div className="relative flex-1 flex flex-col z-10" style={{ perspective: '800px' }}>
+                            {/* Top: Logo area with 3D tilt */}
+                            <div className="flex-1 flex items-center justify-center px-6">
+                                <div className="text-center w-full max-w-[300px]" style={{
+                                    transform: 'rotateX(2deg)',
+                                    transformStyle: 'preserve-3d',
+                                    animation: 'fadeInUp 0.6s ease-out both'
+                                }}>
+                                    <div className="mx-auto mb-4">{logo}</div>
+                                    <h1 className="text-3xl font-black tracking-tight" style={{ color: wText }}>{bName}</h1>
+                                    <p className="text-sm font-light tracking-wide mt-2" style={{ color: wSub }}>{t('welcome')}</p>
+                                </div>
+                            </div>
+
+                            {/* Bottom: 3D stacked cards */}
+                            <div className="px-5 pb-8" style={{ perspective: '600px' }}>
+                                {/* Back card shadow */}
+                                <div className="mx-4 h-3 rounded-b-2xl mb-[-8px]" style={{
+                                    backgroundColor: `${wBtnBg}08`,
+                                    border: `1px solid ${wLogoBorder}`,
+                                    borderTop: 'none',
+                                    transform: 'rotateX(4deg)',
+                                    transformOrigin: 'top center',
+                                    animation: 'fadeInUp 0.5s ease-out 0.15s both'
+                                }} />
+                                {/* Middle card shadow */}
+                                <div className="mx-2 h-3 rounded-b-2xl mb-[-8px]" style={{
+                                    backgroundColor: `${wBtnBg}10`,
+                                    border: `1px solid ${wLogoBorder}`,
+                                    borderTop: 'none',
+                                    transform: 'rotateX(3deg)',
+                                    transformOrigin: 'top center',
+                                    animation: 'fadeInUp 0.5s ease-out 0.2s both'
+                                }} />
+                                {/* Main front card */}
+                                <div className="rounded-2xl p-5" style={{
+                                    backgroundColor: `${wSecBg}`,
+                                    border: `1px solid ${wLogoBorder}`,
+                                    boxShadow: `0 20px 50px rgba(0,0,0,0.25)`,
+                                    transform: 'rotateX(1deg)',
+                                    transformOrigin: 'top center',
+                                    animation: 'fadeInUp 0.5s ease-out 0.25s both'
+                                }}>
+                                    {renderButtons()}
+                                </div>
+                                {poweredBy}
+                            </div>
                         </div>
                     </>
                 );
@@ -717,7 +1126,14 @@ export default function MenuClient({
                             : wVariant === 'minimal' ? minimalContent
                                 : wVariant === 'editorial' ? editorialContent
                                     : wVariant === 'neon' ? neonContent
-                                        : classicContent;
+                                        : wVariant === 'glass-card' ? glassCardContent
+                                            : wVariant === 'wave' ? waveContent
+                                                : wVariant === 'cinema' ? cinemaContent
+                                                    : wVariant === 'mosaic' ? mosaicContent
+                                                        : wVariant === 'horizon' ? horizonContent
+                                                            : wVariant === 'spotlight' ? spotlightContent
+                                                                : wVariant === 'stack' ? stackContent
+                                                                    : classicContent;
 
                 return (
                     <div

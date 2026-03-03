@@ -37,7 +37,7 @@ async function main() {
     }
 
     console.log("\n--- Login Bilgileri ---");
-    console.log("Super Admin:  0555 123 45 67  /  admin123");
+    console.log("Super Admin:  sun  /  admin123");
     console.log("Restoran:     0555 987 65 43  /  owner123");
 }
 

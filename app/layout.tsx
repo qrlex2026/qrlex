@@ -28,9 +28,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang="tr" suppressHydrationWarning>
       <body
         className={`${plusJakartaSans.variable} antialiased font-sans bg-gray-50 text-gray-900`}
+        suppressHydrationWarning
       >
         {children}
         <div id="google_translate_element" style={{ display: 'none' }} />

@@ -236,12 +236,19 @@ export default function PanelMenu() {
     return (
         <div className="flex gap-6 h-[calc(100dvh-112px)]">
             {/* LEFT: Editor Panel */}
-            <div className="flex-1 flex flex-col min-w-0">
-                <div className="flex items-center justify-between mb-4">
-                    <div><h1 className="text-2xl font-bold text-white">Menü Yönetimi</h1><p className="text-sm text-gray-400 mt-0.5">{categories.length} kategori · {products.length} ürün</p></div>
+            <div className="w-[900px] shrink-0 flex flex-col min-w-0">
+                <div className="flex items-center justify-between mb-5 pb-4 border-b border-white/[0.06]">
+                    <div>
+                        <h1 className="text-xl font-semibold text-white tracking-tight">Menü Yönetimi</h1>
+                        <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[12px] text-gray-500">{categories.length} kategori</span>
+                            <span className="w-1 h-1 rounded-full bg-gray-700" />
+                            <span className="text-[12px] text-gray-500">{products.length} ürün</span>
+                        </div>
+                    </div>
                     <div className="flex items-center gap-2">
-                        <button onClick={() => setShowPricePanel(!showPricePanel)} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${showPricePanel ? "bg-amber-500/10 text-amber-400 border border-amber-500/30" : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"}`}><Percent size={16} /> Toplu Fiyat</button>
-                        <button onClick={openAddCatModal} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition-colors"><Plus size={16} /> Kategori</button>
+                        <button onClick={() => setShowPricePanel(!showPricePanel)} className={`flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-medium transition-all ${showPricePanel ? "bg-amber-500/10 text-amber-400 border border-amber-500/30" : "bg-[#1e1e1e] text-gray-400 hover:text-white border border-white/[0.06]"}`}><Percent size={14} /> Toplu Fiyat</button>
+                        <button onClick={openAddCatModal} className="flex items-center gap-2 h-9 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-[13px] font-medium transition-colors"><Plus size={14} /> Kategori</button>
                     </div>
                 </div>
 

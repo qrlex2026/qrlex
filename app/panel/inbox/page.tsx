@@ -32,9 +32,9 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: React.ReactNode; co
     feature: { label: 'Özellik Talebi', icon: <Lightbulb size={14} />, color: 'text-emerald-500' },
 };
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
-    open: { label: 'Açık', bg: 'bg-amber-50', text: 'text-amber-700' },
-    answered: { label: 'Cevaplandı', bg: 'bg-emerald-50', text: 'text-emerald-700' },
-    closed: { label: 'Kapalı', bg: 'bg-gray-100', text: 'text-gray-500' },
+    open: { label: 'Açık', bg: 'bg-amber-500/10', text: 'text-amber-400' },
+    answered: { label: 'Cevaplandı', bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
+    closed: { label: 'Kapalı', bg: 'bg-gray-800', text: 'text-gray-400' },
 };
 
 export default function InboxPage() {
@@ -139,16 +139,16 @@ export default function InboxPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Gelen Kutusu</h1>
-                    <p className="text-sm text-gray-500 mt-1">Bildirimleriniz ve destek talepleriniz</p>
+                    <h1 className="text-2xl font-bold text-white">Gelen Kutusu</h1>
+                    <p className="text-sm text-gray-400 mt-1">Bildirimleriniz ve destek talepleriniz</p>
                 </div>
             </div>
 
             {/* Tab Switcher */}
-            <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+            <div className="flex items-center gap-1 bg-gray-800 rounded-xl p-1 w-fit">
                 <button
                     onClick={() => setActiveTab('notifications')}
-                    className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'notifications' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'notifications' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
                 >
                     <Bell size={16} /> Bildirimler
                     {unreadCount > 0 && (
@@ -157,7 +157,7 @@ export default function InboxPage() {
                 </button>
                 <button
                     onClick={() => setActiveTab('support')}
-                    className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'support' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'support' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
                 >
                     <MessageSquarePlus size={16} /> Destek Talepleri
                     {tickets.filter(t => t.status === 'open').length > 0 && (
@@ -183,8 +183,8 @@ export default function InboxPage() {
                                     key={f.key}
                                     onClick={() => setNotifFilter(f.key)}
                                     className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${notifFilter === f.key
-                                        ? 'bg-gray-900 text-white'
-                                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-gray-800 border border-gray-700 text-gray-400 hover:bg-gray-700'
                                         }`}
                                 >
                                     {f.label}
@@ -199,7 +199,7 @@ export default function InboxPage() {
                     </div>
 
                     {/* Notification List */}
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
                         {notifLoading ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 className="animate-spin text-gray-400" size={24} />
@@ -213,16 +213,16 @@ export default function InboxPage() {
                             filteredNotifs.map((n, idx) => (
                                 <div
                                     key={n.id}
-                                    className={`flex items-start gap-4 px-5 py-4 transition-colors cursor-pointer group ${!n.isRead ? 'bg-blue-50/40' : 'hover:bg-gray-50'} ${idx > 0 ? 'border-t border-gray-100' : ''}`}
+                                    className={`flex items-start gap-4 px-5 py-4 transition-colors cursor-pointer group ${!n.isRead ? 'bg-emerald-500/5' : 'hover:bg-gray-800'} ${idx > 0 ? 'border-t border-gray-800' : ''}`}
                                     onClick={() => { if (!n.isRead) markRead(n.id); }}
                                 >
                                     <span className="text-xl mt-0.5">{NOTIF_ICONS[n.type] || '🔔'}</span>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-semibold text-gray-900">{n.title}</span>
-                                            {!n.isRead && <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />}
+                                            <span className="text-sm font-semibold text-white">{n.title}</span>
+                                            {!n.isRead && <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />}
                                         </div>
-                                        <p className="text-sm text-gray-500 mt-0.5">{n.message}</p>
+                                        <p className="text-sm text-gray-400 mt-0.5">{n.message}</p>
                                         <p className="text-xs text-gray-400 mt-1">
                                             <Clock size={12} className="inline mr-1" />
                                             {new Date(n.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -230,7 +230,7 @@ export default function InboxPage() {
                                     </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}
-                                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
                                     >
                                         <Trash2 size={14} />
                                     </button>
@@ -257,8 +257,8 @@ export default function InboxPage() {
                                     key={f.key}
                                     onClick={() => setTicketFilter(f.key)}
                                     className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${ticketFilter === f.key
-                                        ? 'bg-gray-900 text-white'
-                                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-gray-800 border border-gray-700 text-gray-400 hover:bg-gray-700'
                                         }`}
                                 >
                                     {f.label}
@@ -267,7 +267,7 @@ export default function InboxPage() {
                         </div>
                         <button
                             onClick={() => setShowNewTicket(!showNewTicket)}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors"
                         >
                             <MessageSquarePlus size={16} /> Yeni Talep
                         </button>
@@ -275,19 +275,19 @@ export default function InboxPage() {
 
                     {/* New Ticket Form */}
                     {showNewTicket && (
-                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-                            <h3 className="text-base font-bold text-gray-900 mb-4">Yeni Destek Talebi</h3>
+                        <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
+                            <h3 className="text-base font-bold text-white mb-4">Yeni Destek Talebi</h3>
 
                             {/* Category Selection */}
-                            <p className="text-xs text-gray-500 mb-2 font-medium">Kategori</p>
+                            <p className="text-xs text-gray-400 mb-2 font-medium">Kategori</p>
                             <div className="flex gap-2 mb-4">
                                 {Object.entries(CATEGORY_CONFIG).map(([key, cfg]) => (
                                     <button
                                         key={key}
                                         onClick={() => setNewCategory(key)}
                                         className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-all ${newCategory === key
-                                            ? 'bg-gray-900 text-white border-gray-900'
-                                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                                            ? 'bg-emerald-600 text-white border-emerald-600'
+                                            : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700'
                                             }`}
                                     >
                                         {cfg.icon} {cfg.label}
@@ -297,23 +297,23 @@ export default function InboxPage() {
 
                             <div className="space-y-3 mb-4">
                                 <div>
-                                    <p className="text-xs text-gray-500 mb-1.5 font-medium">Konu *</p>
+                                    <p className="text-xs text-gray-400 mb-1.5 font-medium">Konu *</p>
                                     <input
                                         type="text"
                                         value={newSubject}
                                         onChange={(e) => setNewSubject(e.target.value)}
                                         placeholder="Talebinizin konusu"
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 transition-colors"
+                                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-200 placeholder:text-gray-500 outline-none focus:border-emerald-500 transition-colors"
                                     />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500 mb-1.5 font-medium">Mesaj *</p>
+                                    <p className="text-xs text-gray-400 mb-1.5 font-medium">Mesaj *</p>
                                     <textarea
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
                                         placeholder="Sorununuzu veya talebinizi detaylı açıklayın..."
                                         rows={4}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 transition-colors resize-none"
+                                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-200 placeholder:text-gray-500 outline-none focus:border-emerald-500 transition-colors resize-none"
                                     />
                                 </div>
                             </div>
@@ -321,7 +321,7 @@ export default function InboxPage() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowNewTicket(false)}
-                                    className="px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-colors"
+                                    className="px-4 py-2.5 text-sm font-medium bg-gray-800 text-gray-400 rounded-xl hover:bg-gray-700 transition-colors"
                                 >
                                     İptal
                                 </button>
@@ -330,7 +330,7 @@ export default function InboxPage() {
                                     onClick={submitTicket}
                                     className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl transition-all ${newSubject.trim() && newMessage.trim() && !submitting
                                         ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg'
-                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-gray-800 text-gray-500 cursor-not-allowed'
                                         }`}
                                 >
                                     {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
@@ -341,7 +341,7 @@ export default function InboxPage() {
                     )}
 
                     {/* Tickets List */}
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
                         {ticketLoading ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 className="animate-spin text-gray-400" size={24} />
@@ -357,25 +357,25 @@ export default function InboxPage() {
                                 const cat = CATEGORY_CONFIG[t.category] || CATEGORY_CONFIG.general;
                                 const st = STATUS_CONFIG[t.status] || STATUS_CONFIG.open;
                                 return (
-                                    <div key={t.id} className={`px-5 py-4 group hover:bg-gray-50 transition-colors ${idx > 0 ? 'border-t border-gray-100' : ''}`}>
+                                    <div key={t.id} className={`px-5 py-4 group hover:bg-gray-800 transition-colors ${idx > 0 ? 'border-t border-gray-800' : ''}`}>
                                         <div className="flex items-start justify-between mb-2">
                                             <div className="flex items-center gap-2">
                                                 <span className={cat.color}>{cat.icon}</span>
-                                                <h4 className="text-sm font-semibold text-gray-900">{t.subject}</h4>
+                                                <h4 className="text-sm font-semibold text-white">{t.subject}</h4>
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${st.bg} ${st.text}`}>{st.label}</span>
                                             </div>
                                             <button
                                                 onClick={() => deleteTicket(t.id)}
-                                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
                                             >
                                                 <Trash2 size={14} />
                                             </button>
                                         </div>
-                                        <p className="text-sm text-gray-600 mb-2">{t.message}</p>
+                                        <p className="text-sm text-gray-400 mb-2">{t.message}</p>
                                         {t.reply && (
-                                            <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 mb-2">
-                                                <p className="text-xs font-semibold text-emerald-700 mb-1">📩 Destek Yanıtı</p>
-                                                <p className="text-sm text-emerald-800">{t.reply}</p>
+                                            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3 mb-2">
+                                                <p className="text-xs font-semibold text-emerald-400 mb-1">📩 Destek Yanıtı</p>
+                                                <p className="text-sm text-emerald-300">{t.reply}</p>
                                             </div>
                                         )}
                                         <div className="flex items-center gap-3 text-xs text-gray-400">
