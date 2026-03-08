@@ -52,6 +52,11 @@ export default function MenuClient({
 }: MenuClientProps) {
     const [activeCategory, setActiveCategory] = useState("");
     const [currentSlide, setCurrentSlide] = useState(0);
+    // Auto-slide every 4 seconds
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentSlide(prev => prev === 0 ? 1 : 0), 4000);
+        return () => clearInterval(timer);
+    }, []);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [showScrollTop, setShowScrollTop] = useState(false);
@@ -191,8 +196,8 @@ export default function MenuClient({
             const heading = section.querySelector("h2");
             const target = heading || section;
             const rect = target.getBoundingClientRect();
-            const stickyHeight = 100;
-            const gap = 15;
+            const stickyHeight = 110;
+            const gap = 30;
             const scrollPosition = rect.top + window.scrollY - stickyHeight - gap;
             smoothScrollTo(scrollPosition, () => {
                 // Re-enable observer after scroll completes
@@ -1421,37 +1426,15 @@ export default function MenuClient({
                         const handleClick = (product: any) => { setSelectedProduct(product); trackProductView(product.id); };
 
                         return (
-                            <div key={cat.id} id={cat.id} className="rounded-xl" style={{ backgroundColor: (T as any).categorySectionBg || 'transparent', padding: (T as any).categorySectionBg && (T as any).categorySectionBg !== 'transparent' ? '8px' : '0', marginBottom: '4px' }}>
+                            <div key={cat.id} id={cat.id} className="rounded-xl px-4" style={{ backgroundColor: (T as any).categorySectionBg || 'transparent', marginBottom: '4px' }}>
                                 {/* Category Header */}
-                                <div className="px-4 pt-6 pb-3 flex items-center justify-between">
+                                <div className="pt-6 pb-3">
                                     <h2 className="text-lg" style={{ color: T.categoryTitleColor, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
-                                    <div className="flex items-center gap-1">
-                                        <button
-                                            onClick={() => setCategoryLayoutOverrides(prev => ({ ...prev, [cat.id]: defaultLayout }))}
-                                            className="p-1.5 rounded-lg transition-all"
-                                            style={{
-                                                backgroundColor: layout === defaultLayout ? `${T.accentColor}20` : 'transparent',
-                                                color: layout === defaultLayout ? T.accentColor : (T.productDescColor || '#888'),
-                                            }}
-                                        >
-                                            <LayoutGrid size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => setCategoryLayoutOverrides(prev => ({ ...prev, [cat.id]: 'list' }))}
-                                            className="p-1.5 rounded-lg transition-all"
-                                            style={{
-                                                backgroundColor: layout === 'list' && defaultLayout !== 'list' ? `${T.accentColor}20` : (defaultLayout === 'list' && layout === 'list' ? `${T.accentColor}20` : 'transparent'),
-                                                color: layout === 'list' ? T.accentColor : (T.productDescColor || '#888'),
-                                            }}
-                                        >
-                                            <LayoutList size={16} />
-                                        </button>
-                                    </div>
                                 </div>
 
                                 {/* ── LAYOUT: list (default) ── */}
                                 {layout === 'list' && (
-                                    <div className="px-4 space-y-2.5">
+                                    <div className="space-y-2.5">
                                         {products.map((product) => (
                                             <div key={product.id} onClick={() => handleClick(product)} className="p-2 flex gap-3 min-h-[88px] active:scale-[0.98] transition-transform cursor-pointer overflow-hidden" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
                                                 {renderImage(product, 'w-20 h-[72px] shrink-0')}
@@ -1471,7 +1454,7 @@ export default function MenuClient({
 
                                 {/* ── LAYOUT: grid-2 ── */}
                                 {layout === 'grid-2' && (
-                                    <div className="px-4 grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-2 gap-3">
                                         {products.map((product) => (
                                             <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
                                                 {renderImage(product, 'w-full h-28', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
@@ -1487,7 +1470,7 @@ export default function MenuClient({
 
                                 {/* ── LAYOUT: grid-3 ── */}
                                 {layout === 'grid-3' && (
-                                    <div className="px-4 grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-3 gap-2">
                                         {products.map((product) => (
                                             <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
                                                 {renderImage(product, 'w-full h-20', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
@@ -1506,7 +1489,7 @@ export default function MenuClient({
                                     const totalPages = Math.ceil(products.length / itemsPerPage);
                                     return (
                                         <div>
-                                            <div className="px-4 overflow-x-auto no-scrollbar snap-x snap-mandatory">
+                                            <div className="overflow-x-auto no-scrollbar snap-x snap-mandatory">
                                                 <div className="flex gap-3" style={{ width: 'max-content' }}>
                                                     {products.map((product) => (
                                                         <div key={product.id} onClick={() => handleClick(product)} className="w-[140px] overflow-hidden active:scale-[0.98] transition-transform cursor-pointer shrink-0 snap-start" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
@@ -1533,7 +1516,7 @@ export default function MenuClient({
 
                                 {/* ── LAYOUT: magazine ── */}
                                 {layout === 'magazine' && (
-                                    <div className="px-4 space-y-3">
+                                    <div className="space-y-3">
                                         {/* First product large */}
                                         {products[0] && (
                                             <div onClick={() => handleClick(products[0])} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
@@ -1578,7 +1561,7 @@ export default function MenuClient({
 
                                 {/* ── LAYOUT: full-card ── */}
                                 {layout === 'full-card' && (
-                                    <div className="px-4 space-y-4">
+                                    <div className="space-y-4">
                                         {products.map((product) => (
                                             <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
                                                 {renderImage(product, 'w-full h-48', `${T.cardRadius}px ${T.cardRadius}px 0 0`)}
