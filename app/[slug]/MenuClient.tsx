@@ -327,7 +327,7 @@ export default function MenuClient({
     }, [anyOverlayOpen]);
     const [selectedLang, setSelectedLang] = useState("tr");
     const [isTranslating, setIsTranslating] = useState(false);
-    const [translatedCategories, setTranslatedCategories] = useState<{ id: string; name: string }[]>(initialCategories);
+    const [translatedCategories, setTranslatedCategories] = useState<{ id: string; name: string; image?: string }[]>(initialCategories);
     const [translatedProducts, setTranslatedProducts] = useState<Product[]>(initialProducts);
 
     // Static UI strings dictionary
