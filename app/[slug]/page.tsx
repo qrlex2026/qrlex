@@ -39,8 +39,8 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     const toProxy = (url: string | null) => url ? url.replace(R2_PUBLIC, "/media") : "";
 
     const categories = [
-        { id: "populer", name: "Popüler" },
-        ...restaurant.categories.map((c) => ({ id: c.id, name: c.name })),
+        { id: "populer", name: "Popüler", image: "" },
+        ...restaurant.categories.map((c) => ({ id: c.id, name: c.name, image: toProxy(c.image) })),
     ];
 
     const products = restaurant.products.map((p) => ({

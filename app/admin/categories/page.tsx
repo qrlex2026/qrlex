@@ -5,6 +5,7 @@ import { Plus, Trash2, Pencil, ToggleLeft, ToggleRight, X, GripVertical } from "
 interface Category {
     id: string;
     name: string;
+    image?: string | null;
     sortOrder: number;
     isActive: boolean;
     _count: { products: number };
@@ -16,6 +17,7 @@ export default function CategoriesManagement() {
     const [showModal, setShowModal] = useState(false);
     const [editCategory, setEditCategory] = useState<Category | null>(null);
     const [name, setName] = useState("");
+    const [image, setImage] = useState("");
     const [saving, setSaving] = useState(false);
 
     const fetchCategories = () => {
@@ -50,12 +52,14 @@ export default function CategoriesManagement() {
     const openAddModal = () => {
         setEditCategory(null);
         setName("");
+        setImage("");
         setShowModal(true);
     };
 
     const openEditModal = (cat: Category) => {
         setEditCategory(cat);
         setName(cat.name);
+        setImage(cat.image || "");
         setShowModal(true);
     };
 
@@ -65,13 +69,13 @@ export default function CategoriesManagement() {
             await fetch(`/api/admin/categories/${editCategory.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name }),
+                body: JSON.stringify({ name, image: image || null }),
             });
         } else {
             await fetch("/api/admin/categories", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name }),
+                body: JSON.stringify({ name, image: image || null }),
             });
         }
         setShowModal(false);
@@ -137,6 +141,11 @@ export default function CategoriesManagement() {
                             <div>
                                 <label className="text-xs text-gray-400 mb-1 block">Kategori Adı</label>
                                 <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-violet-500" placeholder="Örn: Burgerler" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-400 mb-1 block">Arkaplan Resmi (isteğe bağlı)</label>
+                                <input value={image} onChange={(e) => setImage(e.target.value)} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-violet-500" placeholder="https://... resim URL'si" />
+                                {image && <img src={image} alt="" className="mt-2 w-full h-24 object-cover rounded-lg border border-gray-700" />}
                             </div>
                             <button
                                 onClick={handleSave}

@@ -56,6 +56,7 @@ model Category {
   id           String     @id @default(uuid())
   restaurantId String     @map("restaurant_id")
   name         String
+  image        String?
   sortOrder    Int        @default(0) @map("sort_order")
   isActive     Boolean    @default(true) @map("is_active")
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)

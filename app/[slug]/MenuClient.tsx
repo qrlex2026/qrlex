@@ -24,7 +24,7 @@ type Product = {
 
 
 type MenuClientProps = {
-    initialCategories: { id: string; name: string }[];
+    initialCategories: { id: string; name: string; image?: string }[];
     initialProducts: Product[];
     initialBusinessInfo: {
         name: string; description: string; image: string; address: string; phone: string;
@@ -1428,9 +1428,17 @@ export default function MenuClient({
                         return (
                             <div key={cat.id} id={cat.id} className="rounded-xl px-4" style={{ backgroundColor: (T as any).categorySectionBg || 'transparent', marginBottom: '4px' }}>
                                 {/* Category Header */}
-                                <div className="pt-6 pb-3">
-                                    <h2 className="text-lg" style={{ color: T.categoryTitleColor, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
-                                </div>
+                                {cat.image ? (
+                                    <div className="relative w-full h-[200px] overflow-hidden rounded-xl mb-3" style={{ marginTop: '24px' }}>
+                                        <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                                        <h2 className="absolute bottom-4 left-4 text-xl font-bold text-white drop-shadow-lg" style={{ fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
+                                    </div>
+                                ) : (
+                                    <div className="pt-6 pb-3">
+                                        <h2 className="text-lg" style={{ color: T.categoryTitleColor, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
+                                    </div>
+                                )}
 
                                 {/* ── LAYOUT: list (default) ── */}
                                 {layout === 'list' && (
