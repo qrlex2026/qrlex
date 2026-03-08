@@ -320,139 +320,6 @@ export default function PanelDesign() {
                         {saved && <div className="flex items-center gap-1.5 text-xs text-emerald-400"><Check size={12} /> Kaydedildi</div>}
                     </div>
 
-                    {/* === TEMPORARILY HIDDEN SECTIONS === */}
-                    {false && (<>
-                        {/* Layout Position */}
-                        <Section title="Pozisyon (Ürün Düzeni)" icon={<LayoutGrid size={18} />} defaultOpen={false}>
-                            <p className="text-[10px] text-gray-500 mb-2">Ürünlerin menüde nasıl gösterileceğini seçin</p>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                {([
-                                    { id: 'list', name: 'Klasik Liste', desc: 'Resim sol, bilgi sağ', icon: <LayoutList size={14} /> },
-                                    { id: 'grid-2', name: '2\'li Grid', desc: '2 sütun, resim üstte', icon: <Grid2X2 size={14} /> },
-                                    { id: 'grid-3', name: '3\'lü Grid', desc: 'Kompakt 3 sütun', icon: <Grid3X3 size={14} /> },
-                                    { id: 'horizontal', name: 'Yatay Kaydırma', desc: 'Sola-sağa scroll', icon: <GalleryHorizontal size={14} /> },
-                                    { id: 'magazine', name: 'Dergi', desc: 'İlk büyük, kalanlar grid', icon: <Newspaper size={14} /> },
-                                    { id: 'compact', name: 'Kompakt Liste', desc: 'Dar satırlar', icon: <AlignJustify size={14} /> },
-                                    { id: 'full-card', name: 'Tam Kart', desc: 'Büyük resim üstte', icon: <RectangleHorizontal size={14} /> },
-
-                                    { id: 'text-only', name: 'Sadece Metin', desc: 'Resim yok, minimalist', icon: <FileText size={14} /> },
-                                ] as { id: string; name: string; desc: string; icon: React.ReactNode }[]).map((v) => {
-                                    const isActive = theme.layoutVariant === v.id;
-                                    return (
-                                        <button
-                                            key={v.id}
-                                            onClick={() => updateTheme('layoutVariant', v.id)}
-                                            className={`group rounded-2xl border overflow-hidden transition-all ${isActive
-                                                ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                                                : 'border-gray-700 bg-gray-800/40 hover:border-gray-600 hover:bg-gray-800'
-                                                }`}
-                                        >
-                                            {/* Mini wireframe */}
-                                            <div className="mx-2 mt-2 rounded-xl overflow-hidden border border-gray-700/50 bg-gray-900 p-2 h-[72px] flex flex-col">
-                                                {v.id === 'list' && (
-                                                    <div className="space-y-1.5 flex-1">
-                                                        {[0, 1].map(i => (
-                                                            <div key={i} className="flex gap-1.5 items-center">
-                                                                <div className="w-5 h-5 rounded bg-gray-700 shrink-0" />
-                                                                <div className="flex-1 space-y-0.5">
-                                                                    <div className="h-1 w-8 rounded-full bg-gray-600" />
-                                                                    <div className="h-1 w-12 rounded-full bg-gray-700" />
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                {v.id === 'grid-2' && (
-                                                    <div className="grid grid-cols-2 gap-1 flex-1">
-                                                        {[0, 1, 2, 3].map(i => (
-                                                            <div key={i} className="rounded bg-gray-800 border border-gray-700 p-0.5">
-                                                                <div className="h-4 rounded bg-gray-700 mb-0.5" />
-                                                                <div className="h-1 w-6 rounded-full bg-gray-600" />
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                {v.id === 'grid-3' && (
-                                                    <div className="grid grid-cols-3 gap-0.5 flex-1">
-                                                        {[0, 1, 2, 3, 4, 5].map(i => (
-                                                            <div key={i} className="rounded bg-gray-800 border border-gray-700 p-0.5">
-                                                                <div className="h-3 rounded bg-gray-700 mb-0.5" />
-                                                                <div className="h-0.5 rounded-full bg-gray-600" />
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                {v.id === 'horizontal' && (
-                                                    <div className="flex gap-1 overflow-hidden flex-1 items-center">
-                                                        {[0, 1, 2, 3].map(i => (
-                                                            <div key={i} className="min-w-[22px] rounded bg-gray-800 border border-gray-700 p-0.5">
-                                                                <div className="h-6 rounded bg-gray-700 mb-0.5" />
-                                                                <div className="h-1 w-4 rounded-full bg-gray-600" />
-                                                            </div>
-                                                        ))}
-                                                        <div className="text-[7px] text-gray-600">→</div>
-                                                    </div>
-                                                )}
-                                                {v.id === 'magazine' && (
-                                                    <div className="flex flex-col gap-1 flex-1">
-                                                        <div className="h-6 rounded bg-gray-700 border border-gray-700" />
-                                                        <div className="grid grid-cols-2 gap-0.5 flex-1">
-                                                            {[0, 1].map(i => (
-                                                                <div key={i} className="rounded bg-gray-800 border border-gray-700 p-0.5">
-                                                                    <div className="h-3 rounded bg-gray-700" />
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {v.id === 'compact' && (
-                                                    <div className="space-y-1 flex-1">
-                                                        {[0, 1, 2, 3].map(i => (
-                                                            <div key={i} className="flex items-center gap-1">
-                                                                <div className="w-3 h-3 rounded bg-gray-700 shrink-0" />
-                                                                <div className="h-1 flex-1 rounded-full bg-gray-600" />
-                                                                <div className="h-1 w-4 rounded-full bg-gray-600" />
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                {v.id === 'full-card' && (
-                                                    <div className="space-y-1 flex-1">
-                                                        <div className="h-8 rounded bg-gray-700 border border-gray-700" />
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="h-1 w-10 rounded-full bg-gray-600" />
-                                                            <div className="h-1 w-4 rounded-full bg-gray-500" />
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {v.id === 'text-only' && (
-                                                    <div className="space-y-1.5 flex-1">
-                                                        {[0, 1, 2, 3].map(i => (
-                                                            <div key={i} className="flex items-center justify-between border-b border-gray-800 pb-1">
-                                                                <div className="h-1 w-14 rounded-full bg-gray-600" />
-                                                                <div className="h-1 w-5 rounded-full bg-gray-500" />
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {/* Label */}
-                                            <div className="px-2 py-2 text-center">
-                                                <div className="flex items-center justify-center gap-1 mb-0.5">
-                                                    <span className={isActive ? 'text-emerald-400' : 'text-gray-500'}>{v.icon}</span>
-                                                    <p className={`text-[11px] font-semibold ${isActive ? 'text-emerald-300' : 'text-gray-200 group-hover:text-emerald-300'} transition-colors`}>{v.name}</p>
-                                                </div>
-                                                <p className="text-[9px] text-gray-500">{v.desc}</p>
-                                                {isActive && <div className="mx-auto mt-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </Section>
-                    </>)}
-                    {/* === END HIDDEN === */}
 
                     {/* Section Buttons */}
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -488,8 +355,8 @@ export default function PanelDesign() {
 
                         {/* Başlık Düzenleri Card — EN ÜSTTE */}
                         <div className="bg-[#0c0c0c] border border-white/[0.06] rounded-2xl p-5 mb-3">
-                            <span className="text-[11px] text-gray-600 uppercase tracking-widest mb-3 block">Başlık Düzenleri</span>
-                            <div className="grid grid-cols-4 gap-2">
+                            <span className="text-[11px] text-gray-600 uppercase tracking-widest mb-4 block">Başlık Düzenleri</span>
+                            <div className="grid grid-cols-3 gap-3">
                                 {([
                                     { id: 'classic', name: 'Klasik' },
                                     { id: 'tall', name: 'Yüksek' },
@@ -502,11 +369,178 @@ export default function PanelDesign() {
                                     { id: 'split', name: 'Split' },
                                     { id: 'accent-bar', name: 'Çizgi' },
                                     { id: 'glass', name: 'Cam' },
+                                    { id: 'overlay', name: 'Saydam' },
+                                    { id: 'gradient', name: 'Gradient' },
+                                    { id: 'neon', name: 'Neon' },
+                                    { id: 'boxed', name: 'Çerçeve' },
                                 ] as { id: string; name: string }[]).map((v) => {
                                     const isActive = theme.headerVariant === v.id;
                                     const hBg = theme.menuHeaderBg;
                                     const hText = theme.menuHeaderTextColor;
                                     const hIcon = theme.menuHeaderIconColor;
+
+                                    /* ── Per-variant unique preview ── */
+                                    const renderPreview = () => {
+                                        const menuIcon = (
+                                            <div className="flex flex-col gap-[2.5px]">
+                                                <div className="w-3.5 h-[2px] rounded-full" style={{ backgroundColor: hIcon }} />
+                                                <div className="w-3.5 h-[2px] rounded-full" style={{ backgroundColor: hIcon }} />
+                                                <div className="w-3.5 h-[2px] rounded-full" style={{ backgroundColor: hIcon }} />
+                                            </div>
+                                        );
+                                        const searchIcon = <Search size={10} strokeWidth={2.5} style={{ color: hIcon }} />;
+                                        const titleBar = <div className="h-2 w-10 rounded-full" style={{ backgroundColor: hText, opacity: 0.6 }} />;
+                                        const logoCircle = <div className="w-5 h-5 rounded-full border-2" style={{ borderColor: hIcon, backgroundColor: hBg }} />;
+
+                                        switch (v.id) {
+                                            case 'classic':
+                                                return (
+                                                    <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: hBg }}>
+                                                        {menuIcon}
+                                                        {titleBar}
+                                                        {searchIcon}
+                                                    </div>
+                                                );
+                                            case 'tall':
+                                                return (
+                                                    <div className="rounded-lg px-3 pt-3 pb-4 flex flex-col gap-2" style={{ backgroundColor: hBg }}>
+                                                        <div className="flex items-center justify-between">
+                                                            {menuIcon}
+                                                            {searchIcon}
+                                                        </div>
+                                                        <div className="flex items-center justify-center">{titleBar}</div>
+                                                    </div>
+                                                );
+                                            case 'center-logo':
+                                                return (
+                                                    <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: hBg }}>
+                                                        {menuIcon}
+                                                        {logoCircle}
+                                                        {searchIcon}
+                                                    </div>
+                                                );
+                                            case 'left-logo':
+                                                return (
+                                                    <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: hBg }}>
+                                                        <div className="flex items-center gap-2">
+                                                            {logoCircle}
+                                                            {titleBar}
+                                                        </div>
+                                                        {menuIcon}
+                                                    </div>
+                                                );
+                                            case 'lang':
+                                                return (
+                                                    <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: hBg }}>
+                                                        {menuIcon}
+                                                        {titleBar}
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className="px-1.5 py-0.5 rounded text-[7px] font-bold" style={{ color: hText, border: `1px solid ${hIcon}` }}>TR</div>
+                                                            {searchIcon}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            case 'banner':
+                                                return (
+                                                    <div className="rounded-lg overflow-hidden" style={{ backgroundColor: hBg }}>
+                                                        <div className="px-3 py-1.5 flex items-center justify-between">
+                                                            {menuIcon}
+                                                            {titleBar}
+                                                            {searchIcon}
+                                                        </div>
+                                                        <div className="h-6 mx-2 mb-1.5 rounded-md" style={{ background: `linear-gradient(135deg, ${hIcon}30, ${hIcon}10)` }} />
+                                                    </div>
+                                                );
+                                            case 'minimal':
+                                                return (
+                                                    <div className="rounded-lg px-3 py-1.5 flex items-center justify-between" style={{ backgroundColor: hBg, borderBottom: `1.5px solid ${hIcon}20` }}>
+                                                        {menuIcon}
+                                                        <div className="h-1.5 w-8 rounded-full" style={{ backgroundColor: hText, opacity: 0.4 }} />
+                                                        {searchIcon}
+                                                    </div>
+                                                );
+                                            case 'rounded':
+                                                return (
+                                                    <div className="mx-1 mt-1 rounded-full px-4 py-2 flex items-center justify-between" style={{ backgroundColor: hBg, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+                                                        {menuIcon}
+                                                        {titleBar}
+                                                        {searchIcon}
+                                                    </div>
+                                                );
+                                            case 'split':
+                                                return (
+                                                    <div className="rounded-lg overflow-hidden flex" style={{ backgroundColor: hBg }}>
+                                                        <div className="flex-1 px-2 py-2.5 flex items-center gap-2">
+                                                            {menuIcon}
+                                                            {titleBar}
+                                                        </div>
+                                                        <div className="px-2 py-2.5 flex items-center" style={{ backgroundColor: `${hIcon}15` }}>
+                                                            {searchIcon}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            case 'accent-bar':
+                                                return (
+                                                    <div className="rounded-lg overflow-hidden" style={{ backgroundColor: hBg }}>
+                                                        <div className="h-[3px]" style={{ backgroundColor: hIcon }} />
+                                                        <div className="px-3 py-2 flex items-center justify-between">
+                                                            {menuIcon}
+                                                            {titleBar}
+                                                            {searchIcon}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            case 'glass':
+                                                return (
+                                                    <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: `${hBg}cc`, backdropFilter: 'blur(8px)', border: `1px solid ${hIcon}20` }}>
+                                                        {menuIcon}
+                                                        {titleBar}
+                                                        {searchIcon}
+                                                    </div>
+                                                );
+                                            case 'overlay':
+                                                return (
+                                                    <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: 'transparent', border: `1px dashed ${hIcon}40` }}>
+                                                        {menuIcon}
+                                                        <div className="h-2 w-10 rounded-full" style={{ backgroundColor: hText, opacity: 0.3 }} />
+                                                        {searchIcon}
+                                                    </div>
+                                                );
+                                            case 'gradient':
+                                                return (
+                                                    <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ background: `linear-gradient(135deg, ${hBg}, ${hIcon}30)` }}>
+                                                        {menuIcon}
+                                                        {titleBar}
+                                                        {searchIcon}
+                                                    </div>
+                                                );
+                                            case 'neon':
+                                                return (
+                                                    <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: hBg, border: `1.5px solid ${hIcon}`, boxShadow: `0 0 8px ${hIcon}40, inset 0 0 8px ${hIcon}10` }}>
+                                                        {menuIcon}
+                                                        {titleBar}
+                                                        {searchIcon}
+                                                    </div>
+                                                );
+                                            case 'boxed':
+                                                return (
+                                                    <div className="mx-1 mt-1 rounded-lg px-3 py-2 flex items-center justify-between" style={{ backgroundColor: hBg, border: `2px solid ${hIcon}`, boxShadow: `0 2px 0 ${hIcon}40` }}>
+                                                        {menuIcon}
+                                                        {titleBar}
+                                                        {searchIcon}
+                                                    </div>
+                                                );
+                                            default:
+                                                return (
+                                                    <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: hBg }}>
+                                                        {menuIcon}
+                                                        {titleBar}
+                                                        {searchIcon}
+                                                    </div>
+                                                );
+                                        }
+                                    };
+
                                     return (
                                         <button
                                             key={v.id}
@@ -516,22 +550,11 @@ export default function PanelDesign() {
                                                 : 'border-white/[0.04] bg-[#111] hover:border-white/[0.08] hover:bg-[#161616]'
                                                 }`}
                                         >
-                                            <div className="px-2 pt-2">
-                                                <div className="h-7 rounded-lg flex items-center justify-between px-2" style={{ backgroundColor: hBg }}>
-                                                    {/* Hamburger menu icon - 3 lines */}
-                                                    <div className="flex flex-col gap-[2px]">
-                                                        <div className="w-2.5 h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} />
-                                                        <div className="w-2.5 h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} />
-                                                        <div className="w-2.5 h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} />
-                                                    </div>
-                                                    {/* Center text placeholder */}
-                                                    <div className="h-1.5 w-6 rounded-full" style={{ backgroundColor: hText, opacity: 0.5 }} />
-                                                    {/* Search icon */}
-                                                    <Search size={6} strokeWidth={2.5} style={{ color: hIcon }} />
-                                                </div>
+                                            <div className="p-2.5">
+                                                {renderPreview()}
                                             </div>
-                                            <div className="py-1.5">
-                                                <p className={`text-[10px] font-medium ${isActive ? 'text-orange-300' : 'text-gray-500'} transition-colors`}>{v.name}</p>
+                                            <div className="pb-2 pt-0.5">
+                                                <p className={`text-[11px] font-semibold ${isActive ? 'text-orange-300' : 'text-gray-400'} transition-colors`}>{v.name}</p>
                                             </div>
                                         </button>
                                     );
@@ -539,20 +562,24 @@ export default function PanelDesign() {
                             </div>
                         </div>
 
-                        {/* Temalar & Renkler Card — unified */}
+                        {/* Temalar & Renkler Card */}
                         <div className="bg-[#0c0c0c] border border-white/[0.06] rounded-2xl p-5 mb-3">
-                            {/* Tema presets */}
                             <span className="text-[11px] text-gray-600 uppercase tracking-widest mb-3 block">Temalar</span>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                            <div className="grid grid-cols-4 gap-2">
                                 {([
-                                    { name: 'Klasik Beyaz', bg: '#ffffff', text: '#111827', icon: '#374151', shadow: 'sm', searchBg: '#f3f4f6' },
-                                    { name: 'Koyu Zarif', bg: '#1a1a2e', text: '#e0e0e0', icon: '#a0a0b8', shadow: 'none', searchBg: '#2a2a3e' },
-                                    { name: 'Krem Naturel', bg: '#faf7f2', text: '#5c4a3a', icon: '#8b7355', shadow: 'sm', searchBg: '#f0ebe3' },
-                                    { name: 'Cam Efekti', bg: '#ffffffcc', text: '#1f2937', icon: '#4b5563', shadow: 'md', searchBg: '#f9fafb80' },
-                                    { name: 'Lacivert', bg: '#0f1b33', text: '#c8d6e5', icon: '#54a0ff', shadow: 'md', searchBg: '#1a2d4d' },
-                                    { name: 'Ye\u015fil Do\u011fa', bg: '#f0f9f4', text: '#1a4731', icon: '#2d8659', shadow: 'sm', searchBg: '#e0f2e9' },
-                                    { name: 'Alt\u0131n Premium', bg: '#1c1917', text: '#f5e6cc', icon: '#d4a853', shadow: 'lg', searchBg: '#2c2520' },
-                                ] as { name: string; bg: string; text: string; icon: string; shadow: string; searchBg: string }[]).map((preset) => {
+                                    { name: 'Klasik Beyaz', bg: '#ffffff', text: '#111827', icon: '#374151', searchBg: '#f3f4f6' },
+                                    { name: 'Koyu Zarif', bg: '#1a1a2e', text: '#e0e0e0', icon: '#a0a0b8', searchBg: '#2a2a3e' },
+                                    { name: 'Krem Naturel', bg: '#faf7f2', text: '#5c4a3a', icon: '#8b7355', searchBg: '#f0ebe3' },
+                                    { name: 'Cam Efekti', bg: '#ffffffcc', text: '#1f2937', icon: '#4b5563', searchBg: '#f9fafb80' },
+                                    { name: 'Lacivert', bg: '#0f1b33', text: '#c8d6e5', icon: '#54a0ff', searchBg: '#1a2d4d' },
+                                    { name: 'Ye\u015Fil Do\u011Fa', bg: '#f0f9f4', text: '#1a4731', icon: '#2d8659', searchBg: '#e0f2e9' },
+                                    { name: 'Alt\u0131n Premium', bg: '#1c1917', text: '#f5e6cc', icon: '#d4a853', searchBg: '#2c2520' },
+                                    { name: 'G\u00FCl Kurusu', bg: '#fdf2f8', text: '#831843', icon: '#be185d', searchBg: '#fce7f3' },
+                                    { name: 'Okyanus', bg: '#ecfeff', text: '#164e63', icon: '#0891b2', searchBg: '#cffafe' },
+                                    { name: 'Gece Mavisi', bg: '#0f172a', text: '#94a3b8', icon: '#3b82f6', searchBg: '#1e293b' },
+                                    { name: 'Turuncu Enerji', bg: '#fff7ed', text: '#7c2d12', icon: '#ea580c', searchBg: '#ffedd5' },
+                                    { name: 'Mor R\u00FCya', bg: '#faf5ff', text: '#581c87', icon: '#9333ea', searchBg: '#f3e8ff' },
+                                ] as { name: string; bg: string; text: string; icon: string; searchBg: string }[]).map((preset) => {
                                     const isActive = theme.menuHeaderBg === preset.bg && theme.menuHeaderTextColor === preset.text;
                                     return (
                                         <button
@@ -561,31 +588,27 @@ export default function PanelDesign() {
                                                 updateTheme('menuHeaderBg', preset.bg);
                                                 updateTheme('menuHeaderTextColor', preset.text);
                                                 updateTheme('menuHeaderIconColor', preset.icon);
-                                                updateTheme('menuHeaderShadow', preset.shadow);
                                                 updateTheme('menuHeaderSearchBtnBg', preset.searchBg);
                                             }}
-                                            className={`group flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive
+                                            className={`group flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all ${isActive
                                                 ? 'border-orange-500/40 bg-orange-500/5 ring-1 ring-orange-500/20'
                                                 : 'border-white/[0.04] bg-[#111] hover:border-white/[0.08] hover:bg-[#161616]'
                                                 }`}
                                         >
-                                            <div className="flex flex-col gap-1">
-                                                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.bg, border: '1px solid rgba(255,255,255,0.1)' }} />
-                                                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.text }} />
+                                            <div className="flex items-center gap-1">
+                                                <div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: preset.bg, border: '1px solid rgba(255,255,255,0.15)' }} />
+                                                <div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: preset.text }} />
+                                                <div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: preset.icon }} />
                                             </div>
-                                            <div className="text-left">
-                                                <p className={`text-[12px] font-medium ${isActive ? 'text-orange-300' : 'text-gray-300'} transition-colors`}>{preset.name}</p>
-                                            </div>
-                                            {isActive && <div className="ml-auto w-2 h-2 rounded-full bg-orange-500" />}
+                                            <p className={`text-[10px] font-medium leading-tight ${isActive ? 'text-orange-300' : 'text-gray-400'} transition-colors`}>{preset.name}</p>
+                                            {isActive && <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />}
                                         </button>
                                     );
                                 })}
                             </div>
 
-                            {/* Divider */}
                             <div className="my-4 h-px bg-white/[0.06]" />
 
-                            {/* Renk ayarları */}
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="flex items-center gap-1.5">
                                     <div className="w-4 h-4 rounded-full ring-2 ring-white/10" style={{ backgroundColor: theme.menuHeaderBg }} />
@@ -595,26 +618,11 @@ export default function PanelDesign() {
                                 </div>
                                 <span className="text-[11px] text-gray-600 uppercase tracking-widest">Renkler</span>
                             </div>
-                            <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
                                 <ColorPicker label="Arkaplan" value={theme.menuHeaderBg} onChange={(v) => updateTheme("menuHeaderBg", v)} />
-                                <ColorPicker label="Yazı" value={theme.menuHeaderTextColor} onChange={(v) => updateTheme("menuHeaderTextColor", v)} />
-                                <ColorPicker label="Menü" value={theme.menuHeaderIconColor} onChange={(v) => updateTheme("menuHeaderIconColor", v)} />
+                                <ColorPicker label="Yaz\u0131" value={theme.menuHeaderTextColor} onChange={(v) => updateTheme("menuHeaderTextColor", v)} />
+                                <ColorPicker label="Men\u00FC" value={theme.menuHeaderIconColor} onChange={(v) => updateTheme("menuHeaderIconColor", v)} />
                                 <ColorPicker label="Arama" value={theme.menuHeaderSearchIconColor} onChange={(v) => updateTheme("menuHeaderSearchIconColor", v)} />
-                            </div>
-                        </div>
-
-                        {/* G\u00f6lge Card */}
-                        <div className="bg-[#0c0c0c] border border-white/[0.06] rounded-2xl p-5 mb-3">
-                            <span className="text-[11px] text-gray-600 uppercase tracking-widest mb-3 block">G\u00f6lge</span>
-                            <div className="grid grid-cols-4 gap-2">
-                                {[
-                                    { value: "none", label: "Yok" },
-                                    { value: "sm", label: "Hafif" },
-                                    { value: "md", label: "Orta" },
-                                    { value: "lg", label: "G\u00fc\u00e7l\u00fc" },
-                                ].map((s) => (
-                                    <button key={s.value} onClick={() => updateTheme("menuHeaderShadow", s.value)} className={`py-2.5 rounded-xl text-[12px] font-medium transition-all ${theme.menuHeaderShadow === s.value ? "bg-orange-500/15 text-orange-400 ring-1 ring-orange-500/30" : "bg-[#161616] text-gray-500 hover:bg-[#1e1e1e] hover:text-gray-300"}`}>{s.label}</button>
-                                ))}
                             </div>
                         </div>
 
@@ -991,6 +999,135 @@ export default function PanelDesign() {
 
                     {/* ─── POSITION TAB ─── */}
                     {activeTab === 'position' && (<>
+                        {/* Layout Position */}
+                        <Section title="Pozisyon (Ürün Düzeni)" icon={<LayoutGrid size={18} />} defaultOpen={false}>
+                            <p className="text-[10px] text-gray-500 mb-2">Ürünlerin menüde nasıl gösterileceğini seçin</p>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {([
+                                    { id: 'list', name: 'Klasik Liste', desc: 'Resim sol, bilgi sağ', icon: <LayoutList size={14} /> },
+                                    { id: 'grid-2', name: '2\'li Grid', desc: '2 sütun, resim üstte', icon: <Grid2X2 size={14} /> },
+                                    { id: 'grid-3', name: '3\'lü Grid', desc: 'Kompakt 3 sütun', icon: <Grid3X3 size={14} /> },
+                                    { id: 'horizontal', name: 'Yatay Kaydırma', desc: 'Sola-sağa scroll', icon: <GalleryHorizontal size={14} /> },
+                                    { id: 'magazine', name: 'Dergi', desc: 'İlk büyük, kalanlar grid', icon: <Newspaper size={14} /> },
+                                    { id: 'compact', name: 'Kompakt Liste', desc: 'Dar satırlar', icon: <AlignJustify size={14} /> },
+                                    { id: 'full-card', name: 'Tam Kart', desc: 'Büyük resim üstte', icon: <RectangleHorizontal size={14} /> },
+
+                                    { id: 'text-only', name: 'Sadece Metin', desc: 'Resim yok, minimalist', icon: <FileText size={14} /> },
+                                ] as { id: string; name: string; desc: string; icon: React.ReactNode }[]).map((v) => {
+                                    const isActive = theme.layoutVariant === v.id;
+                                    return (
+                                        <button
+                                            key={v.id}
+                                            onClick={() => updateTheme('layoutVariant', v.id)}
+                                            className={`group rounded-2xl border overflow-hidden transition-all ${isActive
+                                                ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                                                : 'border-gray-700 bg-gray-800/40 hover:border-gray-600 hover:bg-gray-800'
+                                                }`}
+                                        >
+                                            {/* Mini wireframe */}
+                                            <div className="mx-2 mt-2 rounded-xl overflow-hidden border border-gray-700/50 bg-gray-900 p-2 h-[72px] flex flex-col">
+                                                {v.id === 'list' && (
+                                                    <div className="space-y-1.5 flex-1">
+                                                        {[0, 1].map(i => (
+                                                            <div key={i} className="flex gap-1.5 items-center">
+                                                                <div className="w-5 h-5 rounded bg-gray-700 shrink-0" />
+                                                                <div className="flex-1 space-y-0.5">
+                                                                    <div className="h-1 w-8 rounded-full bg-gray-600" />
+                                                                    <div className="h-1 w-12 rounded-full bg-gray-700" />
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {v.id === 'grid-2' && (
+                                                    <div className="grid grid-cols-2 gap-1 flex-1">
+                                                        {[0, 1, 2, 3].map(i => (
+                                                            <div key={i} className="rounded bg-gray-800 border border-gray-700 p-0.5">
+                                                                <div className="h-4 rounded bg-gray-700 mb-0.5" />
+                                                                <div className="h-1 w-6 rounded-full bg-gray-600" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {v.id === 'grid-3' && (
+                                                    <div className="grid grid-cols-3 gap-0.5 flex-1">
+                                                        {[0, 1, 2, 3, 4, 5].map(i => (
+                                                            <div key={i} className="rounded bg-gray-800 border border-gray-700 p-0.5">
+                                                                <div className="h-3 rounded bg-gray-700 mb-0.5" />
+                                                                <div className="h-0.5 rounded-full bg-gray-600" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {v.id === 'horizontal' && (
+                                                    <div className="flex gap-1 overflow-hidden flex-1 items-center">
+                                                        {[0, 1, 2, 3].map(i => (
+                                                            <div key={i} className="min-w-[22px] rounded bg-gray-800 border border-gray-700 p-0.5">
+                                                                <div className="h-6 rounded bg-gray-700 mb-0.5" />
+                                                                <div className="h-1 w-4 rounded-full bg-gray-600" />
+                                                            </div>
+                                                        ))}
+                                                        <div className="text-[7px] text-gray-600">→</div>
+                                                    </div>
+                                                )}
+                                                {v.id === 'magazine' && (
+                                                    <div className="flex flex-col gap-1 flex-1">
+                                                        <div className="h-6 rounded bg-gray-700 border border-gray-700" />
+                                                        <div className="grid grid-cols-2 gap-0.5 flex-1">
+                                                            {[0, 1].map(i => (
+                                                                <div key={i} className="rounded bg-gray-800 border border-gray-700 p-0.5">
+                                                                    <div className="h-3 rounded bg-gray-700" />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {v.id === 'compact' && (
+                                                    <div className="space-y-1 flex-1">
+                                                        {[0, 1, 2, 3].map(i => (
+                                                            <div key={i} className="flex items-center gap-1">
+                                                                <div className="w-3 h-3 rounded bg-gray-700 shrink-0" />
+                                                                <div className="h-1 flex-1 rounded-full bg-gray-600" />
+                                                                <div className="h-1 w-4 rounded-full bg-gray-600" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {v.id === 'full-card' && (
+                                                    <div className="space-y-1 flex-1">
+                                                        <div className="h-8 rounded bg-gray-700 border border-gray-700" />
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="h-1 w-10 rounded-full bg-gray-600" />
+                                                            <div className="h-1 w-4 rounded-full bg-gray-500" />
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {v.id === 'text-only' && (
+                                                    <div className="space-y-1.5 flex-1">
+                                                        {[0, 1, 2, 3].map(i => (
+                                                            <div key={i} className="flex items-center justify-between border-b border-gray-800 pb-1">
+                                                                <div className="h-1 w-14 rounded-full bg-gray-600" />
+                                                                <div className="h-1 w-5 rounded-full bg-gray-500" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {/* Label */}
+                                            <div className="px-2 py-2 text-center">
+                                                <div className="flex items-center justify-center gap-1 mb-0.5">
+                                                    <span className={isActive ? 'text-emerald-400' : 'text-gray-500'}>{v.icon}</span>
+                                                    <p className={`text-[11px] font-semibold ${isActive ? 'text-emerald-300' : 'text-gray-200 group-hover:text-emerald-300'} transition-colors`}>{v.name}</p>
+                                                </div>
+                                                <p className="text-[9px] text-gray-500">{v.desc}</p>
+                                                {isActive && <div className="mx-auto mt-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </Section>
                         {/* Header */}
                         <Section title="Başlık / Slider" icon={<Monitor size={18} />} defaultOpen={true}>
                             {/* Hero Slider Toggle */}

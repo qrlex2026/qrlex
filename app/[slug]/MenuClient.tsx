@@ -1132,43 +1132,6 @@ export default function MenuClient({
             )}
 
             <div className="min-h-screen pb-20" style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}>
-                {/* Hero Slider (JS Based) — toggle from design panel */}
-                {T.showHeroSlider !== 'false' && (
-                    <div className="w-full h-[300px] relative overflow-hidden bg-gray-100">
-                        <div
-                            className="flex h-full w-full transition-transform duration-700 ease-in-out"
-                            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                        >
-                            {/* Slide 1 */}
-                            <div className="min-w-full h-full relative flex-shrink-0">
-                                <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
-                                    <h3 className="text-xl font-medium mb-2 opacity-80">{t('specialRecipes')}</h3>
-                                    <h1 className="text-4xl font-bold leading-tight">{t('flavorFeast')}</h1>
-                                </div>
-                            </div>
-                            {/* Slide 2 */}
-                            <div className="min-w-full h-full relative flex-shrink-0">
-                                <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
-                                    <h3 className="text-xl font-medium mb-2 opacity-80">{t('freshNatural')}</h3>
-                                    <h1 className="text-4xl font-bold leading-tight">{t('bestOfSeason')}</h1>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Slider Dots */}
-                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                            <button
-                                onClick={() => setCurrentSlide(0)}
-                                className={`w-2 h-2 rounded-full transition-all ${currentSlide === 0 ? 'bg-black w-6' : 'bg-gray-400'}`}
-                            />
-                            <button
-                                onClick={() => setCurrentSlide(1)}
-                                className={`w-2 h-2 rounded-full transition-all ${currentSlide === 1 ? 'bg-black w-6' : 'bg-gray-400'}`}
-                            />
-                        </div>
-                    </div>
-                )}
-
                 {/* Sticky Header + Category Nav */}
                 <div className="sticky top-0 z-10">
                     {/* Custom Header — variant-aware */}
@@ -1316,6 +1279,42 @@ export default function MenuClient({
                             </div>
                         );
 
+                        // === OVERLAY (transparent, dashed border) ===
+                        if (hVariant === 'overlay') return (
+                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: 'transparent', borderBottom: `1px dashed ${hIcon}40` }}>
+                                {hamburger}
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText, opacity: 0.8 }}>{bName}</span>
+                                {searchBtn}
+                            </div>
+                        );
+
+                        // === GRADIENT (background gradient) ===
+                        if (hVariant === 'gradient') return (
+                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ background: `linear-gradient(135deg, ${hBg}, ${hIcon}30)`, boxShadow: hShadow }}>
+                                {hamburger}
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                {searchBtn}
+                            </div>
+                        );
+
+                        // === NEON (glowing border) ===
+                        if (hVariant === 'neon') return (
+                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, border: `1.5px solid ${hIcon}`, boxShadow: `0 0 12px ${hIcon}40, inset 0 0 12px ${hIcon}10` }}>
+                                {hamburger}
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                {searchBtn}
+                            </div>
+                        );
+
+                        // === BOXED (thick bordered frame) ===
+                        if (hVariant === 'boxed') return (
+                            <div className="mx-3 mt-2 rounded-xl h-[56px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, border: `2px solid ${hIcon}`, boxShadow: `0 3px 0 ${hIcon}40` }}>
+                                {hamburger}
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                {searchBtn}
+                            </div>
+                        );
+
                         // Fallback = classic
                         return (
                             <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
@@ -1351,6 +1350,43 @@ export default function MenuClient({
                         })}
                     </div>
                 </div>
+
+                {/* Hero Slider (JS Based) — below category nav */}
+                {T.showHeroSlider !== 'false' && (
+                    <div className="w-full h-[300px] relative overflow-hidden bg-gray-100">
+                        <div
+                            className="flex h-full w-full transition-transform duration-700 ease-in-out"
+                            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                        >
+                            {/* Slide 1 */}
+                            <div className="min-w-full h-full relative flex-shrink-0">
+                                <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
+                                    <h3 className="text-xl font-medium mb-2 opacity-80">{t('specialRecipes')}</h3>
+                                    <h1 className="text-4xl font-bold leading-tight">{t('flavorFeast')}</h1>
+                                </div>
+                            </div>
+                            {/* Slide 2 */}
+                            <div className="min-w-full h-full relative flex-shrink-0">
+                                <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
+                                    <h3 className="text-xl font-medium mb-2 opacity-80">{t('freshNatural')}</h3>
+                                    <h1 className="text-4xl font-bold leading-tight">{t('bestOfSeason')}</h1>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Slider Dots */}
+                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                            <button
+                                onClick={() => setCurrentSlide(0)}
+                                className={`w-2 h-2 rounded-full transition-all ${currentSlide === 0 ? 'bg-black w-6' : 'bg-gray-400'}`}
+                            />
+                            <button
+                                onClick={() => setCurrentSlide(1)}
+                                className={`w-2 h-2 rounded-full transition-all ${currentSlide === 1 ? 'bg-black w-6' : 'bg-gray-400'}`}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Product List (Grouped by Category) */}
                 <div className="pb-20">
