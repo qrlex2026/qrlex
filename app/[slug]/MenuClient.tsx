@@ -1136,7 +1136,7 @@ export default function MenuClient({
                 </div>
             )}
 
-            <div className="min-h-screen pb-20" style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}>
+            <div className="min-h-screen pb-4" style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}>
                 {/* Sticky Header + Category Nav */}
                 <div className="sticky top-0 z-10">
                     {/* Custom Header — variant-aware */}
@@ -1394,7 +1394,7 @@ export default function MenuClient({
                 )}
 
                 {/* Product List (Grouped by Category) */}
-                <div className="pb-20">
+                <div className="pb-4">
                     {DISPLAY_CATEGORIES.map((cat) => {
                         const products =
                             cat.id === "populer"
