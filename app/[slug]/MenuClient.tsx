@@ -1424,7 +1424,7 @@ export default function MenuClient({
                             <div key={cat.id} id={cat.id} className="rounded-xl" style={{ backgroundColor: (T as any).categorySectionBg || 'transparent', padding: (T as any).categorySectionBg && (T as any).categorySectionBg !== 'transparent' ? '8px' : '0', marginBottom: '4px' }}>
                                 {/* Category Header */}
                                 <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-                                    <h2 className="text-base" style={{ color: T.categoryTitleColor, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
+                                    <h2 className="text-lg" style={{ color: T.categoryTitleColor, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
                                     <div className="flex items-center gap-1">
                                         <button
                                             onClick={() => setCategoryLayoutOverrides(prev => ({ ...prev, [cat.id]: defaultLayout }))}
