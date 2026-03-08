@@ -1424,7 +1424,7 @@ export default function MenuClient({
                             <div key={cat.id} id={cat.id} className="rounded-xl" style={{ backgroundColor: (T as any).categorySectionBg || 'transparent', padding: (T as any).categorySectionBg && (T as any).categorySectionBg !== 'transparent' ? '8px' : '0', marginBottom: '4px' }}>
                                 {/* Category Header */}
                                 <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-                                    <h2 className="text-2xl" style={{ color: T.categoryTitleColor, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
+                                    <h2 className="text-base" style={{ color: T.categoryTitleColor, fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
                                     <div className="flex items-center gap-1">
                                         <button
                                             onClick={() => setCategoryLayoutOverrides(prev => ({ ...prev, [cat.id]: defaultLayout }))}
@@ -2116,27 +2116,13 @@ export default function MenuClient({
                         categoryNavRef.current?.scrollTo({ left: 0, behavior: "smooth" });
                     }}
                     className="fixed z-30 w-[50px] h-[50px] rounded-full bg-black text-white flex items-center justify-center shadow-lg hover:bg-gray-800 transition-all"
-                    style={{ bottom: 74, right: 10 }}
+                    style={{ bottom: 20, right: 10 }}
                 >
                     <ChevronUp size={24} />
                 </button>
             )}
 
-            {/* Bottom Action Bar — full width */}
-            <div className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around py-2.5 shadow-[0_-2px_10px_rgba(0,0,0,0.08)]" style={{ backgroundColor: T.bottomNavBg || '#ffffff', borderTop: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
-                <button onClick={() => { setShowLangSplash(true); setShowLangPicker(true); }} className="flex flex-col items-center gap-1 py-1 px-3 transition-colors" style={{ color: T.bottomNavInactive || '#9ca3af' }}>
-                    <Languages size={20} />
-                    <span className="text-[10px] font-medium">{selectedLang === 'tr' ? 'Dil' : 'Lang'}</span>
-                </button>
-                <button onClick={() => setIsSearchOpen(true)} className="flex flex-col items-center gap-1 py-1 px-3 transition-colors" style={{ color: T.bottomNavInactive || '#9ca3af' }}>
-                    <Filter size={20} />
-                    <span className="text-[10px] font-medium">{selectedLang === 'tr' ? 'Filtrele' : 'Filter'}</span>
-                </button>
-                <button onClick={() => { /* Garson çağır - notification */ }} className="flex flex-col items-center gap-1 py-1 px-3 transition-colors" style={{ color: T.bottomNavInactive || '#9ca3af' }}>
-                    <BellRing size={20} />
-                    <span className="text-[10px] font-medium">{selectedLang === 'tr' ? 'Garson' : 'Waiter'}</span>
-                </button>
-            </div>
+            {/* Bottom Action Bar removed */}
 
             {/* Success Toast Alert */}
 
