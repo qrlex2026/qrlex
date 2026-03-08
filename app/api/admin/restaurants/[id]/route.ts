@@ -11,7 +11,7 @@ export async function GET(
         where: { id },
         include: {
             _count: {
-                select: { products: true, categories: true, reviews: true },
+                select: { products: true, categories: true },
             },
         },
     });

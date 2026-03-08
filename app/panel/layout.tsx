@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
     UtensilsCrossed, Settings,
-    Star, ArrowRight, Menu, X, QrCode, Paintbrush, ChartNoAxesColumn,
-    UserCircle, CalendarDays, Inbox, Bell, Brain, Search, Gift, Sun, Moon,
+    ArrowRight, Menu, X, QrCode, Paintbrush, ChartNoAxesColumn,
+    UserCircle, Inbox, Bell, Brain, Search, Gift, Sun, Moon,
     Rocket, Command, Info, LogOut, ChevronRight, Palette, Globe, Check,
 } from "lucide-react";
 
@@ -30,16 +30,12 @@ const PRIMARY_NAV = [
 ];
 
 const SECONDARY_NAV = [
-    { href: "/panel/reviews", label: "Yorumlar", icon: Star },
-    { href: "/panel/reservations", label: "Rezerve", icon: CalendarDays },
     { href: "/panel/settings", label: "Ayarlar", icon: Settings },
 ];
 
 
 
 const NOTIF_ICONS: Record<string, string> = {
-    review: '⭐',
-    reservation: '📅',
     payment: '💳',
     system: '🔔',
 };
@@ -69,8 +65,70 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
     const [showGiftDropdown, setShowGiftDropdown] = useState(false);
     const giftRef = useRef<HTMLDivElement>(null);
 
-    // Dark/Light mode toggle (visual only)
+    // Dark/Light mode toggle — persisted in localStorage
     const [isDarkMode, setIsDarkMode] = useState(true);
+    const [themeLoaded, setThemeLoaded] = useState(false);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('panelTheme');
+        if (saved === 'light') setIsDarkMode(false);
+        setThemeLoaded(true);
+    }, []);
+
+    useEffect(() => {
+        if (themeLoaded) {
+            localStorage.setItem('panelTheme', isDarkMode ? 'dark' : 'light');
+        }
+    }, [isDarkMode, themeLoaded]);
+
+    // Theme CSS variables
+    const themeVars: Record<string, string> = isDarkMode ? {
+        '--p-bg': '#050505',
+        '--p-surface': '#0c0c0c',
+        '--p-surface2': '#1e1e1e',
+        '--p-surface3': '#1a1a1a',
+        '--p-sidebar': '#080808',
+        '--p-border': '#141414',
+        '--p-border2': 'rgba(255,255,255,0.08)',
+        '--p-text': '#ffffff',
+        '--p-text2': '#e0e0e0',
+        '--p-text3': '#9ca3af',
+        '--p-text4': '#6b7280',
+        '--p-hover': '#252525',
+        '--p-shadow': 'rgba(0,0,0,0.6)',
+        '--p-icon': '#ffffff',
+        '--p-icon-inactive': '#9ca3af',
+        '--p-toggle-active': '#050505',
+        '--p-nav-inactive-bg': '#1a1a1a',
+        '--p-nav-inactive-text': '#9ca3af',
+        '--p-nav-hover-bg': '#252525',
+        '--p-nav-hover-text': '#e5e5e5',
+        '--p-overlay-bg': 'rgba(0,0,0,0.6)',
+        '--p-mobile-sidebar': '#000000',
+    } : {
+        '--p-bg': '#f5f5f5',
+        '--p-surface': '#ffffff',
+        '--p-surface2': '#f0f0f0',
+        '--p-surface3': '#e8e8e8',
+        '--p-sidebar': '#ffffff',
+        '--p-border': '#e5e5e5',
+        '--p-border2': 'rgba(0,0,0,0.08)',
+        '--p-text': '#111111',
+        '--p-text2': '#333333',
+        '--p-text3': '#6b7280',
+        '--p-text4': '#9ca3af',
+        '--p-hover': '#e0e0e0',
+        '--p-shadow': 'rgba(0,0,0,0.12)',
+        '--p-icon': '#374151',
+        '--p-icon-inactive': '#6b7280',
+        '--p-toggle-active': '#e0e0e0',
+        '--p-nav-inactive-bg': '#f0f0f0',
+        '--p-nav-inactive-text': '#6b7280',
+        '--p-nav-hover-bg': '#e0e0e0',
+        '--p-nav-hover-text': '#111111',
+        '--p-overlay-bg': 'rgba(0,0,0,0.3)',
+        '--p-mobile-sidebar': '#ffffff',
+    };
 
     // Language selector state
     const [showLangDropdown, setShowLangDropdown] = useState(false);
@@ -159,10 +217,8 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
 
     // Fake notification data
     const fakeNotifications = [
-        { id: '1', icon: 'star', title: 'Yeni Yorum', desc: 'Mehmet B. restoranınıza 5 yıldız verdi', time: '2 dk önce', unread: true },
-        { id: '2', icon: 'calendar', title: 'Rezervasyon', desc: 'Ayşe K. 4 kişilik rezervasyon yaptı', time: '15 dk önce', unread: true },
-        { id: '3', icon: 'settings', title: 'Ödeme Alındı', desc: 'Pro plan ödemesi başarıyla alındı', time: '1 saat önce', unread: false },
-        { id: '4', icon: 'bell', title: 'Sistem', desc: 'Menünüz başarıyla güncellendi', time: '3 saat önce', unread: false },
+        { id: '1', icon: 'settings', title: 'Ödeme Alındı', desc: 'Pro plan ödemesi başarıyla alındı', time: '1 saat önce', unread: true },
+        { id: '2', icon: 'bell', title: 'Sistem', desc: 'Menünüz başarıyla güncellendi', time: '3 saat önce', unread: false },
     ];
 
     // Fake inbox data
@@ -204,7 +260,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
     // ─── Sidebar Content ─────────────────────────────────────────
     const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => {
         return (
-            <div className="flex flex-col h-full bg-[#080808]">
+            <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--p-sidebar)' }}>
 
                 {/* Primary Navigation - Icon + Label below */}
                 <nav className="flex flex-col items-center gap-3 px-2 mt-2">
@@ -221,14 +277,16 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                 <div className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all
                                     ${isActive
                                         ? "bg-orange-500"
-                                        : "bg-[#1a1a1a] group-hover:bg-[#252525]"
+                                        : ""
                                     }`}
+                                    style={!isActive ? { backgroundColor: 'var(--p-nav-inactive-bg)' } : {}}
                                 >
-                                    <item.icon size={20} className="text-white" />
+                                    <item.icon size={20} style={{ color: isActive ? '#ffffff' : 'var(--p-icon)' }} />
                                 </div>
                                 <span className={`text-[11px] font-medium transition-colors
-                                    ${isActive ? "text-orange-400" : "text-gray-300 group-hover:text-gray-100"
+                                    ${isActive ? "text-orange-400" : ""
                                     }`}
+                                    style={!isActive ? { color: 'var(--p-nav-inactive-text)' } : {}}
                                 >
                                     {item.label}
                                 </span>
@@ -255,14 +313,16 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                 <div className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all
                                     ${isActive
                                         ? "bg-orange-500"
-                                        : "bg-[#1a1a1a] group-hover:bg-[#252525]"
+                                        : ""
                                     }`}
+                                    style={!isActive ? { backgroundColor: 'var(--p-nav-inactive-bg)' } : {}}
                                 >
-                                    <item.icon size={20} className="text-white" />
+                                    <item.icon size={20} style={{ color: isActive ? '#ffffff' : 'var(--p-icon)' }} />
                                 </div>
                                 <span className={`text-[11px] font-medium transition-colors
-                                    ${isActive ? "text-orange-400" : "text-gray-300 group-hover:text-gray-100"
+                                    ${isActive ? "text-orange-400" : ""
                                     }`}
+                                    style={!isActive ? { color: 'var(--p-nav-inactive-text)' } : {}}
                                 >
                                     {item.label}
                                 </span>
@@ -275,56 +335,118 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         className="flex flex-col items-center gap-1 group"
                         title="Çıkış Yap"
                     >
-                        <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-[#1a1a1a] group-hover:bg-red-500/20 transition-all">
-                            <ArrowRight size={20} className="text-gray-400 group-hover:text-red-400 transition-colors" />
+                        <div className="w-12 h-12 flex items-center justify-center rounded-xl group-hover:bg-red-500/20 transition-all" style={{ backgroundColor: 'var(--p-nav-inactive-bg)' }}>
+                            <ArrowRight size={20} className="group-hover:text-red-400 transition-colors" style={{ color: 'var(--p-icon-inactive)' }} />
                         </div>
-                        <span className="text-[11px] font-medium text-gray-300 group-hover:text-red-400 transition-colors">Çıkış</span>
+                        <span className="text-[11px] font-medium group-hover:text-red-400 transition-colors" style={{ color: 'var(--p-nav-inactive-text)' }}>Çıkış</span>
                     </button>
                 </nav>
             </div>
         );
     };
 
+    // Light theme CSS overrides — using dangerouslySetInnerHTML to avoid JS escaping issues
+    const S = '[data-panel-theme="light"]';
+    const lightThemeCSS = !isDarkMode ? [
+        `${S} .bg-gray-900{background-color:#fff!important}`,
+        `${S} .bg-gray-950{background-color:#f5f5f5!important}`,
+        `${S} .bg-gray-800{background-color:#f0f0f0!important}`,
+        `${S} .bg-gray-700{background-color:#e5e5e5!important}`,
+        `${S} .bg-gray-800\\/60{background-color:rgba(0,0,0,.04)!important}`,
+        `${S} .bg-gray-800\\/40{background-color:rgba(0,0,0,.03)!important}`,
+        `${S} .bg-gray-900\\/80{background-color:rgba(255,255,255,.9)!important}`,
+        `${S} .border-gray-800{border-color:#e5e5e5!important}`,
+        `${S} .border-gray-700{border-color:#d1d5db!important}`,
+        `${S} .border-gray-900{border-color:#e5e5e5!important}`,
+        `${S} .border-gray-800\\/50{border-color:rgba(0,0,0,.08)!important}`,
+        `${S} .border-gray-800\\/30{border-color:rgba(0,0,0,.06)!important}`,
+        `${S} .text-white{color:#111!important}`,
+        `${S} .text-gray-100{color:#1f2937!important}`,
+        `${S} .text-gray-200{color:#374151!important}`,
+        `${S} .text-gray-300{color:#4b5563!important}`,
+        `${S} .text-gray-400{color:#6b7280!important}`,
+        `${S} .text-gray-500{color:#9ca3af!important}`,
+        `${S} .text-gray-600{color:#9ca3af!important}`,
+        `${S} .text-emerald-400{color:#059669!important}`,
+        `${S} .text-emerald-500{color:#059669!important}`,
+        `${S} .divide-gray-800>:not(:first-child){border-color:#e5e5e5!important}`,
+        `${S} .ring-gray-800{--tw-ring-color:#e5e5e5!important}`,
+        `${S} .shadow-2xl{box-shadow:0 25px 50px -12px rgba(0,0,0,.1)!important}`,
+        `${S} .from-gray-900{--tw-gradient-from:#fff!important}`,
+        `${S} .to-gray-800{--tw-gradient-to:#f0f0f0!important}`,
+    ].join('\n') : '';
+
+    // Hex-based class overrides need proper CSS escaping — built programmatically
+    const hexOverrides = !isDarkMode ? [
+        ['bg', '1e1e1e', 'background-color', '#f0f0f0'],
+        ['bg', '0c0c0c', 'background-color', '#fff'],
+        ['bg', '050505', 'background-color', '#f5f5f5'],
+        ['bg', '141414', 'background-color', '#f9f9f9'],
+        ['bg', '161616', 'background-color', '#f5f5f5'],
+        ['bg', '1a1a1a', 'background-color', '#f0f0f0'],
+        ['bg', '111', 'background-color', '#f5f5f5'],
+        ['bg', '2a2a2a', 'background-color', '#e8e8e8'],
+        ['bg', '0f0f0f', 'background-color', '#fafafa'],
+        ['border', '2a2a2a', 'border-color', '#e0e0e0'],
+        ['border', '333', 'border-color', '#d1d5db'],
+        ['border', '141414', 'border-color', '#e5e5e5'],
+    ].map(([prop, hex, cssProp, val]) =>
+        `${S} .${prop}-\\[\\#${hex}\\]{${cssProp}:${val}!important}`
+    ).join('\n') : '';
+
+    const pseudoOverrides = !isDarkMode ? [
+        `${S} .placeholder-gray-500::placeholder{color:#9ca3af!important}`,
+        `${S} .hover\\:bg-gray-700:hover{background-color:#e5e5e5!important}`,
+        `${S} .hover\\:bg-gray-800:hover{background-color:#e5e5e5!important}`,
+        `${S} .hover\\:bg-gray-800\\/60:hover{background-color:rgba(0,0,0,.04)!important}`,
+        `${S} .hover\\:bg-\\[\\#1a1a1a\\]:hover{background-color:#eaeaea!important}`,
+        `${S} .hover\\:bg-\\[\\#252525\\]:hover{background-color:#e0e0e0!important}`,
+        `${S} .hover\\:bg-white\\/\\[0\\.06\\]:hover{background-color:rgba(0,0,0,.06)!important}`,
+        `${S} .hover\\:text-white:hover{color:#111!important}`,
+        `${S} .hover\\:text-gray-200:hover{color:#1f2937!important}`,
+        `${S} .focus\\:border-gray-500:focus{border-color:#9ca3af!important}`,
+        `${S} .bg-white\\/\\[0\\.06\\]{background-color:rgba(0,0,0,.04)!important}`,
+        `${S} .bg-white\\/\\[0\\.08\\]{background-color:rgba(0,0,0,.06)!important}`,
+        `${S} .border-white\\/\\[0\\.08\\]{border-color:rgba(0,0,0,.08)!important}`,
+        `${S} .border-white\\/\\[0\\.06\\]{border-color:rgba(0,0,0,.06)!important}`,
+        `${S} .bg-emerald-500\\/10{background-color:rgba(16,185,129,.08)!important}`,
+        `${S} .bg-orange-500\\/10{background-color:rgba(249,115,22,.08)!important}`,
+    ].join('\n') : '';
+
+    const fullLightCSS = [lightThemeCSS, hexOverrides, pseudoOverrides].filter(Boolean).join('\n');
+
     return (
-        <div className="min-h-dvh bg-gray-950 flex">
+        <div className="min-h-dvh flex transition-colors duration-300" style={{ ...themeVars, backgroundColor: 'var(--p-bg)' } as React.CSSProperties}>
+            {/* Theme overrides for child pages using Tailwind classes */}
+            {!isDarkMode && (
+                <style dangerouslySetInnerHTML={{ __html: fullLightCSS }} />
+            )}
+
             {/* Desktop Sidebar */}
-            <aside className={`hidden lg:flex ${sidebarWidth} bg-[#080808] border-r border-[#141414] flex-col fixed inset-y-0 left-0 z-30`}>
+            <aside className={`hidden lg:flex ${sidebarWidth} flex-col fixed inset-y-0 left-0 z-30 transition-colors duration-300`} style={{ backgroundColor: 'var(--p-sidebar)', borderRight: '1px solid var(--p-border)' }}>
                 <SidebarContent />
             </aside>
 
             {/* Mobile Sidebar */}
             {isSidebarOpen && (
                 <div className="fixed inset-0 z-40 lg:hidden">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
-                    <aside className="relative w-[280px] h-full bg-black border-r border-gray-800/50 flex flex-col shadow-2xl">
-                        <button onClick={() => setIsSidebarOpen(false)} className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors z-50"><X size={18} /></button>
+                    <div className="absolute inset-0 backdrop-blur-sm" style={{ backgroundColor: 'var(--p-overlay-bg)' }} onClick={() => setIsSidebarOpen(false)} />
+                    <aside className="relative w-[280px] h-full flex flex-col shadow-2xl transition-colors duration-300" style={{ backgroundColor: 'var(--p-mobile-sidebar)', borderRight: '1px solid var(--p-border)' }}>
+                        <button onClick={() => setIsSidebarOpen(false)} className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center transition-colors z-50" style={{ backgroundColor: 'var(--p-surface2)', color: 'var(--p-text3)' }}><X size={18} /></button>
                         <SidebarContent mobile />
                     </aside>
                 </div>
             )}
 
             {/* Main Content */}
-            <div className={`flex-1 ${sidebarMargin} flex flex-col min-h-dvh transition-all duration-300`}>
-                <header className="h-20 bg-[#050505] flex items-center justify-between px-4 lg:px-6 sticky top-0 z-20 border-b border-[#141414]">
+            <div className={`flex-1 ${sidebarMargin} flex flex-col min-h-dvh transition-all duration-300`} data-panel-theme={isDarkMode ? 'dark' : 'light'}>
+                <header className="h-20 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-20 transition-colors duration-300" style={{ backgroundColor: 'var(--p-bg)', borderBottom: '1px solid var(--p-border)' }}>
                     {/* Left: Hamburger (mobile) + Page Title */}
                     <div className="flex items-center gap-3">
-                        <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center text-gray-200 hover:bg-gray-700 transition-colors"><Menu size={18} /></button>
-                        <h1 className="text-lg font-semibold text-white">
+                        <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden w-9 h-9 rounded-full flex items-center justify-center transition-colors" style={{ backgroundColor: 'var(--p-surface2)', color: 'var(--p-text2)' }}><Menu size={18} /></button>
+                        <h1 className="text-lg font-semibold" style={{ color: 'var(--p-text)' }}>
                             {[...PRIMARY_NAV, ...SECONDARY_NAV].find(item => pathname.startsWith(item.href))?.label || ''}
                         </h1>
-                    </div>
-
-                    {/* Center: Search Input */}
-                    <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
-                        <div className="relative w-full">
-                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                            <input
-                                type="text"
-                                placeholder="Ara..."
-                                className="w-full h-9 pl-9 pr-16 bg-[#1e1e1e] border border-gray-700 rounded-[10px] text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-gray-500 transition-colors"
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 font-medium bg-gray-800 px-1.5 py-0.5 rounded">⌘ F</span>
-                        </div>
                     </div>
 
                     {/* Right: Gift + Theme Toggle + Bildirim + Inbox + Profile */}
@@ -333,12 +455,13 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         <div className="relative" ref={giftRef}>
                             <button
                                 onClick={() => { setShowGiftDropdown(!showGiftDropdown); setShowNotifDropdown(false); setShowInboxDropdown(false); setShowProfileDropdown(false); }}
-                                className="w-[52px] h-[52px] rounded-full bg-[#1e1e1e] text-white hover:bg-[#252525] transition-colors flex items-center justify-center"
+                                className="w-[52px] h-[52px] rounded-full transition-colors flex items-center justify-center"
+                                style={{ backgroundColor: 'var(--p-surface2)', color: 'var(--p-text)' }}
                             >
                                 <Gift size={20} />
                             </button>
                             {showGiftDropdown && (
-                                <div className="absolute right-0 top-[60px] w-[280px] bg-[#0c0c0c] border border-white/[0.08] rounded-2xl shadow-2xl shadow-black/60 z-50 p-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                                <div className="absolute right-0 top-[60px] w-[280px] rounded-2xl shadow-2xl z-50 p-4 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center">
                                             <Gift size={16} className="text-orange-400" />
@@ -362,16 +485,18 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         </div>
 
                         {/* Dark/Light Toggle */}
-                        <div className="flex items-center bg-[#1e1e1e] rounded-full p-1">
+                        <div className="flex items-center rounded-full p-1 transition-colors duration-300" style={{ backgroundColor: 'var(--p-surface2)' }}>
                             <button
                                 onClick={() => setIsDarkMode(true)}
-                                className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-all ${isDarkMode ? 'bg-[#050505] text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                                className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-all`}
+                                style={isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}
                             >
                                 <Moon size={18} />
                             </button>
                             <button
                                 onClick={() => setIsDarkMode(false)}
-                                className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-all ${!isDarkMode ? 'bg-[#050505] text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                                className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-all`}
+                                style={!isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}
                             >
                                 <Sun size={18} />
                             </button>
@@ -381,14 +506,15 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         <div className="relative" ref={notifRef}>
                             <button
                                 onClick={() => { setShowNotifDropdown(!showNotifDropdown); setShowInboxDropdown(false); setShowProfileDropdown(false); setShowGiftDropdown(false); }}
-                                className="relative w-[52px] h-[52px] rounded-full bg-[#1e1e1e] text-white hover:bg-[#252525] transition-colors flex items-center justify-center"
+                                className="relative w-[52px] h-[52px] rounded-full transition-colors flex items-center justify-center"
+                                style={{ backgroundColor: 'var(--p-surface2)', color: 'var(--p-text)' }}
                             >
                                 <Bell size={20} />
                             </button>
 
                             {/* Notification Dropdown */}
                             {showNotifDropdown && (
-                                <div className="absolute right-0 top-[60px] w-[320px] bg-[#0c0c0c] border border-white/[0.08] rounded-2xl shadow-2xl shadow-black/60 z-50" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                                <div className="absolute right-0 top-[60px] w-[320px] rounded-2xl shadow-2xl z-50 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
                                     <div className="flex items-center justify-between px-4 py-3">
                                         <h3 className="text-[13px] font-semibold text-gray-100">Bildirimler</h3>
                                         <button className="text-[11px] text-orange-400 hover:text-orange-300 font-medium transition-colors">Tümünü Okundu Yap</button>
@@ -398,8 +524,6 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                         {fakeNotifications.map((n) => (
                                             <div key={n.id} className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer">
                                                 <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
-                                                    {n.icon === 'star' && <Star size={14} strokeWidth={1.5} className="text-gray-400" />}
-                                                    {n.icon === 'calendar' && <CalendarDays size={14} strokeWidth={1.5} className="text-gray-400" />}
                                                     {n.icon === 'settings' && <Settings size={14} strokeWidth={1.5} className="text-gray-400" />}
                                                     {n.icon === 'bell' && <Bell size={14} strokeWidth={1.5} className="text-gray-400" />}
                                                 </div>
@@ -430,14 +554,15 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         <div className="relative" ref={inboxRef}>
                             <button
                                 onClick={() => { setShowInboxDropdown(!showInboxDropdown); setShowNotifDropdown(false); setShowProfileDropdown(false); setShowGiftDropdown(false); }}
-                                className="relative w-[52px] h-[52px] rounded-full bg-[#1e1e1e] text-white hover:bg-[#252525] transition-colors flex items-center justify-center"
+                                className="relative w-[52px] h-[52px] rounded-full transition-colors flex items-center justify-center"
+                                style={{ backgroundColor: 'var(--p-surface2)', color: 'var(--p-text)' }}
                             >
                                 <Inbox size={20} />
                             </button>
 
                             {/* Inbox Dropdown */}
                             {showInboxDropdown && (
-                                <div className="absolute right-0 top-[60px] w-[320px] bg-[#0c0c0c] border border-white/[0.08] rounded-2xl shadow-2xl shadow-black/60 z-50" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                                <div className="absolute right-0 top-[60px] w-[320px] rounded-2xl shadow-2xl z-50 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
                                     <div className="flex items-center justify-between px-4 py-3">
                                         <h3 className="text-[13px] font-semibold text-gray-100">Gelen Kutusu</h3>
                                         <span className="text-[11px] text-gray-500">2 okunmamış</span>
@@ -478,15 +603,16 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         <div className="relative" ref={langRef}>
                             <button
                                 onClick={() => { setShowLangDropdown(!showLangDropdown); setShowNotifDropdown(false); setShowInboxDropdown(false); setShowProfileDropdown(false); setShowGiftDropdown(false); }}
-                                className="flex items-center gap-2 h-[52px] pl-2 pr-3.5 rounded-full bg-[#1e1e1e] hover:bg-[#252525] transition-colors"
+                                className="flex items-center gap-2 h-[52px] pl-2 pr-3.5 rounded-full transition-colors"
+                                style={{ backgroundColor: 'var(--p-surface2)' }}
                             >
-                                <div className="w-8 h-8 rounded-full bg-[#2a2a2a] flex items-center justify-center shrink-0">
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--p-surface3)' }}>
                                     <span className="text-[15px] leading-none">{selectedLang.flag}</span>
                                 </div>
-                                <span className="text-[13px] font-medium text-gray-300 hidden sm:inline">{selectedLang.name}</span>
+                                <span className="text-[13px] font-medium hidden sm:inline" style={{ color: 'var(--p-text2)' }}>{selectedLang.name}</span>
                             </button>
                             {showLangDropdown && (
-                                <div className="absolute right-0 top-[60px] w-[240px] bg-[#0c0c0c] border border-white/[0.08] rounded-2xl shadow-2xl shadow-black/60 z-50 py-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                                <div className="absolute right-0 top-[60px] w-[240px] rounded-2xl shadow-2xl z-50 py-2 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
                                     <div className="px-4 py-2">
                                         <div className="flex items-center gap-2">
                                             <Globe size={14} className="text-gray-500" />
@@ -521,15 +647,16 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         <div className="relative" ref={profileRef}>
                             <button
                                 onClick={() => { setShowProfileDropdown(!showProfileDropdown); setShowNotifDropdown(false); setShowInboxDropdown(false); setShowGiftDropdown(false); setShowLangDropdown(false); }}
-                                className="flex items-center gap-2 h-[52px] pl-2 pr-3.5 rounded-full bg-[#1e1e1e] hover:bg-[#252525] transition-colors"
+                                className="flex items-center gap-2 h-[52px] pl-2 pr-3.5 rounded-full transition-colors"
+                                style={{ backgroundColor: 'var(--p-surface2)' }}
                             >
                                 <div className="w-8 h-8 rounded-full bg-gray-600 shrink-0" />
-                                <span className="text-sm font-medium text-gray-200 hidden sm:inline">Yavuz Türkoğlu</span>
+                                <span className="text-sm font-medium hidden sm:inline" style={{ color: 'var(--p-text2)' }}>Yavuz Türkoğlu</span>
                             </button>
 
                             {/* Profile Dropdown */}
                             {showProfileDropdown && (
-                                <div className="absolute right-0 top-14 w-[220px] bg-[#0c0c0c] border border-white/[0.08] rounded-2xl shadow-2xl shadow-black/60 z-50 py-1.5" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                                <div className="absolute right-0 top-14 w-[220px] rounded-2xl shadow-2xl z-50 py-1.5 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
                                     {/* Üst grup */}
                                     <div className="px-1.5 py-1">
                                         <Link
@@ -583,7 +710,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         </div>
                     </div>
                 </header>
-                <main className="flex-1 p-4 lg:p-6 bg-[#050505]">{children}</main>
+                <main className="flex-1 p-4 lg:p-6 transition-colors duration-300" style={{ backgroundColor: 'var(--p-bg)' }}>{children}</main>
             </div>
         </div>
     );

@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { UtensilsCrossed, LayoutGrid, Star, MessageCircle, Eye, QrCode } from "lucide-react";
+import { UtensilsCrossed, LayoutGrid, Star, Eye, QrCode } from "lucide-react";
 import Link from "next/link";
 
 interface Stats {
     productCount: number;
     categoryCount: number;
-    reviewCount: number;
     avgRating: string;
 }
 
@@ -32,13 +31,11 @@ export default function RestaurantDashboard({ params }: { params: Promise<{ id: 
         { label: "Toplam Ürün", value: stats?.productCount ?? "...", icon: UtensilsCrossed, color: "violet" },
         { label: "Kategoriler", value: stats?.categoryCount ?? "...", icon: LayoutGrid, color: "blue" },
         { label: "Ortalama Puan", value: stats?.avgRating ?? "...", icon: Star, color: "amber" },
-        { label: "Yorumlar", value: stats?.reviewCount ?? "...", icon: MessageCircle, color: "emerald" },
     ];
 
     const QUICK_ACTIONS = [
         { label: "Menüyü Düzenle", href: `${basePath}/menu`, icon: UtensilsCrossed },
         { label: "Kategorileri Yönet", href: `${basePath}/categories`, icon: LayoutGrid },
-        { label: "Yorumları Gör", href: `${basePath}/reviews`, icon: Star },
         { label: "Ayarları Düzenle", href: `${basePath}/settings`, icon: Eye },
     ];
 

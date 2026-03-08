@@ -22,7 +22,6 @@ type Product = {
     allergens: string[];
 };
 
-type ReviewItem = { id: string; name: string; date: string; rating: number; comment: string; helpful: number };
 
 type MenuClientProps = {
     initialCategories: { id: string; name: string }[];
@@ -33,11 +32,6 @@ type MenuClientProps = {
         workingHours: { day: string; hours: string }[];
         cuisines: string[]; features: string[];
         wifiName: string; wifiPassword: string;
-    };
-    initialReviews: {
-        average: number; totalCount: number;
-        distribution: { stars: number; count: number }[];
-        items: ReviewItem[];
     };
     initialTheme: Record<string, string>;
     slug: string;
@@ -52,7 +46,6 @@ export default function MenuClient({
     initialCategories,
     initialProducts,
     initialBusinessInfo,
-    initialReviews,
     initialTheme,
     slug,
     restaurantId,
@@ -122,27 +115,6 @@ export default function MenuClient({
     };
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isSidebarDrawerOpen, setIsSidebarDrawerOpen] = useState(false);
-    const [isReviewsOpen, setIsReviewsOpen] = useState(false);
-    const [isWriteReviewOpen, setIsWriteReviewOpen] = useState(false);
-    const [reviewName, setReviewName] = useState("");
-    const [reviewPhone, setReviewPhone] = useState("");
-    const [reviewComment, setReviewComment] = useState("");
-    const [categoryRatings, setCategoryRatings] = useState({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
-    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-    const [reviewSubmitted, setReviewSubmitted] = useState(false);
-    // Reservation states
-    const [isReservationOpen, setIsReservationOpen] = useState(false);
-    const [reserveStep, setReserveStep] = useState(0);
-    const [reserveDate, setReserveDate] = useState<Date | null>(null);
-    const [reserveTime, setReserveTime] = useState("");
-    const [reserveGuests, setReserveGuests] = useState(2);
-    const [reserveName, setReserveName] = useState("");
-    const [reservePhone, setReservePhone] = useState("");
-    const [reserveNote, setReserveNote] = useState("");
-    const [isSubmittingReserve, setIsSubmittingReserve] = useState(false);
-    const [reserveSubmitted, setReserveSubmitted] = useState(false);
-    const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
-    const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
     const categoryNavRef = useRef<HTMLDivElement>(null);
     const isScrollingRef = useRef(false);
 
@@ -150,11 +122,8 @@ export default function MenuClient({
     const CATEGORIES = initialCategories;
     const PRODUCTS = initialProducts;
     const BUSINESS_INFO = initialBusinessInfo;
-    const REVIEWS = initialReviews;
     const [liveTheme, setLiveTheme] = useState<Record<string, string>>(initialTheme);
     const T = liveTheme;
-    const [userReviews, setUserReviews] = useState<ReviewItem[]>([]);
-
 
     // Search Logic
     const searchResults = searchQuery
@@ -319,7 +288,7 @@ export default function MenuClient({
     const [showLangPicker, setShowLangPicker] = useState(false);
 
     // Lock body scroll when welcome screen or ANY overlay is visible
-    const anyOverlayOpen = showLangSplash || isProfileOpen || isReviewsOpen || isWriteReviewOpen || !!selectedProduct || isSearchOpen || isReservationOpen;
+    const anyOverlayOpen = showLangSplash || isProfileOpen || !!selectedProduct || isSearchOpen;
     const scrollYRef = useRef(0);
     useEffect(() => {
         if (anyOverlayOpen) {
@@ -366,24 +335,6 @@ export default function MenuClient({
         phone: { tr: "Telefon", en: "Phone", de: "Telefon", fr: "Téléphone", it: "Telefono", es: "Teléfono", pt: "Telefone", ro: "Telefon", sq: "Telefon", el: "Τηλέφωνο", ka: "ტელეფონი", ru: "Телефон", uk: "Телефон", az: "Telefon", hi: "फ़ोन", ar: "الهاتف", fa: "تلفن", zh: "电话", ko: "전화", ja: "電話", id: "Telepon" },
         email: { tr: "E-posta", en: "Email", de: "E-Mail", fr: "E-mail", it: "E-mail", es: "Correo", pt: "E-mail", ro: "Email", sq: "Email", el: "Email", ka: "ელ.ფოსტა", ru: "Эл. почта", uk: "Ел. пошта", az: "E-poçt", hi: "ईमेल", ar: "البريد الإلكتروني", fa: "ایمیل", zh: "邮箱", ko: "이메일", ja: "メール", id: "Email" },
         web: { tr: "Web", en: "Web", de: "Web", fr: "Web", it: "Web", es: "Web", pt: "Web", ro: "Web", sq: "Web", el: "Web", ka: "ვებ", ru: "Веб", uk: "Веб", az: "Veb", hi: "वेब", ar: "الموقع", fa: "وب", zh: "网站", ko: "웹", ja: "ウェブ", id: "Web" },
-        reviews: { tr: "Yorumlar", en: "Reviews", de: "Bewertungen", fr: "Avis", it: "Recensioni", es: "Reseñas", pt: "Avaliações", ro: "Recenzii", sq: "Komentet", el: "Κριτικές", ka: "მიმოხილვები", ru: "Отзывы", uk: "Відгуки", az: "Rəylər", hi: "समीक्षाएं", ar: "التقييمات", fa: "نظرات", zh: "评价", ko: "리뷰", ja: "レビュー", id: "Ulasan" },
-        reviewCount: { tr: "değerlendirme", en: "reviews", de: "Bewertungen", fr: "avis", it: "recensioni", es: "reseñas", pt: "avaliações", ro: "recenzii", sq: "vlerësime", el: "κριτικές", ka: "მიმოხილვა", ru: "отзывов", uk: "відгуків", az: "rəy", hi: "समीक्षाएं", ar: "تقييم", fa: "نظر", zh: "条评价", ko: "개 리뷰", ja: "件のレビュー", id: "ulasan" },
-        reviewsLabel: { tr: "yorum", en: "reviews", de: "Bewertungen", fr: "avis", it: "recensioni", es: "reseñas", pt: "avaliações", ro: "recenzii", sq: "komente", el: "κριτικές", ka: "კომენტარი", ru: "отзывов", uk: "відгуків", az: "rəy", hi: "समीक्षाएं", ar: "تعليق", fa: "نظر", zh: "条评论", ko: "개 댓글", ja: "件のコメント", id: "ulasan" },
-        writeReview: { tr: "Yorum Yaz", en: "Write Review", de: "Bewertung schreiben", fr: "Écrire un avis", it: "Scrivi recensione", es: "Escribir reseña", pt: "Escrever avaliação", ro: "Scrie recenzie", sq: "Shkruaj koment", el: "Γράψε κριτική", ka: "მიმოხილვის წერა", ru: "Написать отзыв", uk: "Написати відгук", az: "Rəy yaz", hi: "समीक्षा लिखें", ar: "اكتب تقييم", fa: "نوشتن نظر", zh: "写评价", ko: "리뷰 작성", ja: "レビューを書く", id: "Tulis ulasan" },
-        rateUs: { tr: "Bizi Değerlendirin", en: "Rate Us", de: "Bewerten Sie uns", fr: "Évaluez-nous", it: "Valutaci", es: "Califícanos", pt: "Avalie-nos", ro: "Evaluează-ne", sq: "Na vlerëso", el: "Αξιολογήστε μας", ka: "შეგვაფასეთ", ru: "Оцените нас", uk: "Оцініть нас", az: "Bizi qiymətləndirin", hi: "हमें रेट करें", ar: "قيّمنا", fa: "به ما امتیاز دهید", zh: "给我们评分", ko: "평가하기", ja: "評価する", id: "Beri nilai" },
-        rateCategoryDesc: { tr: "Her kategoriyi ayrı puanlayın", en: "Rate each category separately", de: "Bewerten Sie jede Kategorie einzeln", fr: "Notez chaque catégorie séparément", it: "Valuta ogni categoria separatamente", es: "Califique cada categoría por separado", pt: "Avalie cada categoria separadamente", ro: "Evaluați fiecare categorie separat", sq: "Vlerësoni çdo kategori veçmas", el: "Βαθμολογήστε κάθε κατηγορία ξεχωριστά", ka: "შეაფასეთ ყოველი კატეგორია ცალკე", ru: "Оцените каждую категорию отдельно", uk: "Оцініть кожну категорію окремо", az: "Hər kateqoriyanı ayrı qiymətləndirin", hi: "प्रत्येक श्रेणी को अलग से रेट करें", ar: "قيّم كل فئة على حدة", fa: "هر دسته را جداگانه امتیاز دهید", zh: "请分别为每个类别评分", ko: "각 카테고리를 별도로 평가하세요", ja: "各カテゴリーを個別に評価してください", id: "Beri nilai setiap kategori secara terpisah" },
-        foodQuality: { tr: "Yemek Kalitesi", en: "Food Quality", de: "Essensqualität", fr: "Qualité de la nourriture", it: "Qualità del cibo", es: "Calidad de la comida", pt: "Qualidade da comida", ro: "Calitatea mâncării", sq: "Cilësia e ushqimit", el: "Ποιότητα φαγητού", ka: "საკვების ხარისხი", ru: "Качество еды", uk: "Якість їжі", az: "Yemək keyfiyyəti", hi: "खाने की गुणवत्ता", ar: "جودة الطعام", fa: "کیفیت غذا", zh: "食物质量", ko: "음식 품질", ja: "料理の品質", id: "Kualitas makanan" },
-        service: { tr: "Hizmet", en: "Service", de: "Service", fr: "Service", it: "Servizio", es: "Servicio", pt: "Serviço", ro: "Serviciu", sq: "Shërbimi", el: "Εξυπηρέτηση", ka: "სერვისი", ru: "Обслуживание", uk: "Обслуговування", az: "Xidmət", hi: "सेवा", ar: "الخدمة", fa: "خدمات", zh: "服务", ko: "서비스", ja: "サービス", id: "Layanan" },
-        ambiance: { tr: "Ambiyans", en: "Ambiance", de: "Ambiente", fr: "Ambiance", it: "Atmosfera", es: "Ambiente", pt: "Ambiente", ro: "Ambient", sq: "Ambienti", el: "Ατμόσφαιρα", ka: "ატმოსფერო", ru: "Атмосфера", uk: "Атмосфера", az: "Mühit", hi: "माहौल", ar: "الأجواء", fa: "فضا", zh: "氛围", ko: "분위기", ja: "雰囲気", id: "Suasana" },
-        pricePerformance: { tr: "Fiyat / Performans", en: "Value for Money", de: "Preis-Leistung", fr: "Rapport qualité-prix", it: "Rapporto qualità-prezzo", es: "Relación calidad-precio", pt: "Custo-benefício", ro: "Raport calitate-preț", sq: "Çmimi / Cilësia", el: "Σχέση ποιότητας-τιμής", ka: "ფასი / ხარისხი", ru: "Цена / Качество", uk: "Ціна / Якість", az: "Qiymət / Keyfiyyət", hi: "पैसा वसूल", ar: "السعر مقابل الجودة", fa: "ارزش در برابر قیمت", zh: "性价比", ko: "가성비", ja: "コストパフォーマンス", id: "Harga / Kualitas" },
-        fullName: { tr: "Ad Soyad", en: "Full Name", de: "Vollständiger Name", fr: "Nom complet", it: "Nome completo", es: "Nombre completo", pt: "Nome completo", ro: "Nume complet", sq: "Emri i plotë", el: "Ονοματεπώνυμο", ka: "სახელი გვარი", ru: "Полное имя", uk: "Повне ім'я", az: "Ad Soyad", hi: "पूरा नाम", ar: "الاسم الكامل", fa: "نام کامل", zh: "全名", ko: "성명", ja: "氏名", id: "Nama Lengkap" },
-        fullNamePlaceholder: { tr: "Adınızı ve soyadınızı girin...", en: "Enter your full name...", de: "Geben Sie Ihren vollständigen Namen ein...", fr: "Entrez votre nom complet...", it: "Inserisci il tuo nome completo...", es: "Ingrese su nombre completo...", pt: "Digite seu nome completo...", ro: "Introduceți numele complet...", sq: "Shkruani emrin e plotë...", el: "Εισάγετε το πλήρες όνομά σας...", ka: "შეიყვანეთ სახელი და გვარი...", ru: "Введите полное имя...", uk: "Введіть повне ім'я...", az: "Adınızı və soyadınızı daxil edin...", hi: "अपना पूरा नाम दर्ज करें...", ar: "...أدخل اسمك الكامل", fa: "...نام کامل خود را وارد کنید", zh: "请输入您的全名...", ko: "성명을 입력하세요...", ja: "氏名を入力してください...", id: "Masukkan nama lengkap..." },
-        phonePlaceholder: { tr: "0 (5__) ___ __ __", en: "Phone number...", de: "Telefonnummer...", fr: "Numéro de téléphone...", it: "Numero di telefono...", es: "Número de teléfono...", pt: "Número de telefone...", ro: "Număr de telefon...", sq: "Numri i telefonit...", el: "Αριθμός τηλεφώνου...", ka: "ტელეფონის ნომერი...", ru: "Номер телефона...", uk: "Номер телефону...", az: "Telefon nömrəsi...", hi: "फ़ोन नंबर...", ar: "...رقم الهاتف", fa: "...شماره تلفن", zh: "电话号码...", ko: "전화번호...", ja: "電話番号...", id: "Nomor telepon..." },
-        message: { tr: "Mesaj", en: "Message", de: "Nachricht", fr: "Message", it: "Messaggio", es: "Mensaje", pt: "Mensagem", ro: "Mesaj", sq: "Mesazhi", el: "Μήνυμα", ka: "შეტყობინება", ru: "Сообщение", uk: "Повідомлення", az: "Mesaj", hi: "संदेश", ar: "الرسالة", fa: "پیام", zh: "消息", ko: "메시지", ja: "メッセージ", id: "Pesan" },
-        messagePlaceholder: { tr: "Deneyiminizi paylaşın...", en: "Share your experience...", de: "Teilen Sie Ihre Erfahrung...", fr: "Partagez votre expérience...", it: "Condividi la tua esperienza...", es: "Comparte tu experiencia...", pt: "Compartilhe sua experiência...", ro: "Împărtășiți experiența...", sq: "Ndani përvojën tuaj...", el: "Μοιραστείτε την εμπειρία σας...", ka: "გაგვიზიარეთ თქვენი გამოცდილება...", ru: "Поделитесь впечатлениями...", uk: "Поділіться враженнями...", az: "Təcrübənizi paylaşın...", hi: "अपना अनुभव साझा करें...", ar: "...شاركنا تجربتك", fa: "...تجربه خود را به اشتراک بگذارید", zh: "分享您的体验...", ko: "경험을 공유하세요...", ja: "体験を共有してください...", id: "Bagikan pengalaman Anda..." },
-        submitReview: { tr: "Değerlendirmeyi Gönder", en: "Submit Review", de: "Bewertung senden", fr: "Envoyer l'avis", it: "Invia recensione", es: "Enviar reseña", pt: "Enviar avaliação", ro: "Trimite recenzia", sq: "Dërgo vlerësimin", el: "Υποβολή κριτικής", ka: "მიმოხილვის გაგზავნა", ru: "Отправить отзыв", uk: "Надіслати відгук", az: "Rəyi göndər", hi: "समीक्षा भेजें", ar: "إرسال التقييم", fa: "ارسال نظر", zh: "提交评价", ko: "리뷰 제출", ja: "レビューを送信", id: "Kirim ulasan" },
-        helpful: { tr: "kişi faydalı buldu", en: "people found this helpful", de: "Personen fanden dies hilfreich", fr: "personnes ont trouvé cela utile", it: "persone hanno trovato utile", es: "personas encontraron esto útil", pt: "pessoas acharam útil", ro: "persoane au găsit util", sq: "persona e gjetën të dobishme", el: "άτομα βρήκαν χρήσιμο", ka: "ადამიანმა მიიჩნია სასარგებლოდ", ru: "человек сочли полезным", uk: "осіб вважають корисним", az: "nəfər faydalı hesab etdi", hi: "लोगों को उपयोगी लगा", ar: "أشخاص وجدوا هذا مفيدًا", fa: "نفر این را مفید دانستند", zh: "人觉得有用", ko: "명이 도움이 됐다고 함", ja: "人が役に立ったと評価", id: "orang menganggap ini bermanfaat" },
-        justNow: { tr: "Az önce", en: "Just now", de: "Gerade eben", fr: "À l'instant", it: "Proprio ora", es: "Ahora mismo", pt: "Agora mesmo", ro: "Chiar acum", sq: "Pikërisht tani", el: "Μόλις τώρα", ka: "ახლახანს", ru: "Только что", uk: "Щойно", az: "İndicə", hi: "अभी", ar: "الآن", fa: "همین الان", zh: "刚刚", ko: "방금", ja: "たった今", id: "Baru saja" },
         loading: { tr: "Menü çevriliyor...", en: "Translating menu...", de: "Menü wird übersetzt...", fr: "Traduction du menu...", it: "Traduzione del menu...", es: "Traduciendo el menú...", pt: "Traduzindo o menu...", ro: "Se traduce meniul...", sq: "Duke përkthyer menunë...", el: "Μετάφραση μενού...", ka: "მენიუ ითარგმნება...", ru: "Перевод меню...", uk: "Перекладаємо меню...", az: "Menyu tərcümə olunur...", hi: "मेनू का अनुवाद हो रहा है...", ar: "...جارٍ ترجمة القائمة", fa: "...در حال ترجمه منو", zh: "正在翻译菜单...", ko: "메뉴 번역 중...", ja: "メニューを翻訳中...", id: "Menerjemahkan menu..." },
         specialRecipes: { tr: "Özel Tarifler", en: "Special Recipes", de: "Spezialrezepte", fr: "Recettes spéciales", it: "Ricette speciali", es: "Recetas especiales", pt: "Receitas especiais", ro: "Rețete speciale", sq: "Receta speciale", el: "Ειδικές συνταγές", ka: "სპეციალური რეცეპტები", ru: "Особые рецепты", uk: "Особливі рецепти", az: "Xüsusi reseptlər", hi: "विशेष व्यंजन", ar: "وصفات خاصة", fa: "دستورهای ویژه", zh: "特色菜谱", ko: "특별 레시피", ja: "特別レシピ", id: "Resep spesial" },
         flavorFeast: { tr: "Lezzet Şöleni Başlıyor", en: "Flavor Feast Begins", de: "Geschmacksfest beginnt", fr: "La fête des saveurs commence", it: "La festa del sapore inizia", es: "La fiesta de sabores comienza", pt: "A festa de sabores começa", ro: "Festivalul gustului începe", sq: "Festa e shijes fillon", el: "Γιορτή γεύσεων αρχίζει", ka: "გემოს ზეიმი იწყება", ru: "Праздник вкусов начинается", uk: "Свято смаків починається", az: "Dad bayramı başlayır", hi: "स्वाद का उत्सव शुरू", ar: "مهرجان النكهات يبدأ", fa: "جشن طعم آغاز می‌شود", zh: "美味盛宴开始", ko: "맛의 향연이 시작됩니다", ja: "味の饗宴が始まる", id: "Pesta rasa dimulai" },
@@ -562,7 +513,6 @@ export default function MenuClient({
                 // Shared actions
                 const menuAction = goToMenu;
                 const langAction = () => setShowLangPicker(true);
-                const resAction = () => { setShowLangSplash(false); setIsReservationOpen(true); };
 
                 // Button style variant
                 const wBtnStyle = (T as any).welcomeBtnStyle || 'classic';
@@ -570,15 +520,12 @@ export default function MenuClient({
                 // SVG Icons
                 const iconMenu = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></svg>;
                 const iconLang = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" /></svg>;
-                const iconRes = <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>;
                 const iconMenuLg = <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></svg>;
                 const iconLangLg = <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" /></svg>;
-                const iconResLg = <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>;
 
                 const btnItems = [
                     { label: t('btnMenu') || 'MENÜ', sub: t('welcome'), icon: iconMenu, iconLg: iconMenuLg, action: menuAction, primary: true },
                     { label: t('btnLanguage'), sub: languages.find(l => l.code === selectedLang)?.name || 'Dil', icon: iconLang, iconLg: iconLangLg, action: langAction, primary: false },
-                    { label: 'REZERVE', sub: 'Masa Ayırt', icon: iconRes, iconLg: iconResLg, action: resAction, primary: false },
                 ];
 
                 // Render buttons based on style
@@ -1749,472 +1696,8 @@ export default function MenuClient({
                 </div>
             )}
 
-            {/* Review Form Overlay — direct form with 6 category ratings */}
-            {isReviewsOpen && (
-                <div className="fixed inset-0 z-50 overflow-y-auto overscroll-none" style={{ width: '100vw', height: '100dvh', backgroundColor: T.pageBg || '#ffffff' }}>
-                    {/* Fixed Back Button */}
-                    <button
-                        onClick={() => {
-                            setIsReviewsOpen(false);
-                            setCategoryRatings({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
-                            setReviewName("");
-                            setReviewComment("");
-                        }}
-                        className="fixed top-4 left-4 w-10 h-10 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/40 transition-colors z-[60]"
-                    >
-                        <ChevronLeft size={22} />
-                    </button>
 
-                    {/* Orange header with category ratings */}
-                    <div className="relative w-full bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 px-5 pb-10 pt-16">
-                        <div className="flex flex-col items-center mb-5">
-                            <h2 className="text-2xl font-bold text-white drop-shadow-md">{t('rateUs')}</h2>
-                            <p className="text-white/80 text-sm mt-1">{t('rateCategoryDesc')}</p>
-                        </div>
 
-                        {/* Category Ratings — inside the orange area */}
-                        <div className="space-y-2.5">
-                            {[
-                                { key: 'yemek' as const, label: t('foodQuality'), icon: <Utensils size={16} /> },
-                                { key: 'hizmet' as const, label: t('service'), icon: <HandHeart size={16} /> },
-                                { key: 'ambiyans' as const, label: t('ambiance'), icon: <Music size={16} /> },
-                                { key: 'fiyat' as const, label: t('pricePerformance'), icon: <BadgeDollarSign size={16} /> },
-                                { key: 'temizlik' as const, label: selectedLang === 'tr' ? 'Temizlik' : 'Cleanliness', icon: <AlertTriangle size={16} /> },
-                                { key: 'sunum' as const, label: selectedLang === 'tr' ? 'Sunum' : 'Presentation', icon: <Flame size={16} /> },
-                            ].map((cat) => (
-                                <div key={cat.key} className="flex items-center justify-between bg-white/15 backdrop-blur-sm rounded-xl px-4 py-2.5">
-                                    <div className="flex items-center gap-2.5">
-                                        <span className="text-white/80">{cat.icon}</span>
-                                        <span className="text-white text-sm font-medium">{cat.label}</span>
-                                    </div>
-                                    <div className="flex gap-1">
-                                        {[1, 2, 3, 4, 5].map((s) => (
-                                            <button
-                                                key={s}
-                                                onClick={() => setCategoryRatings((prev) => ({ ...prev, [cat.key]: s }))}
-                                                className="transition-all hover:scale-110 active:scale-90"
-                                            >
-                                                <Star
-                                                    size={18}
-                                                    className={s <= categoryRatings[cat.key] ? 'text-white fill-white' : 'text-white/30'}
-                                                />
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Form section — name, phone, comment, submit */}
-                    <div
-                        className="-mt-5 relative"
-                        style={{ borderRadius: '20px 20px 0 0', backgroundColor: T.cardBg || '#ffffff' }}
-                    >
-                        <div className="px-5 pt-6 pb-10">
-                            {/* Ad Soyad */}
-                            <div className="mb-4">
-                                <p className="text-xs text-gray-500 mb-2 font-medium">{t('fullName')}</p>
-                                <input
-                                    type="text"
-                                    placeholder={t('fullNamePlaceholder')}
-                                    value={reviewName}
-                                    onChange={(e) => setReviewName(e.target.value)}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 focus:bg-white transition-colors"
-                                />
-                            </div>
-
-                            {/* Telefon */}
-                            <div className="mb-4">
-                                <p className="text-xs text-gray-500 mb-2 font-medium">{t('phone')}</p>
-                                <input
-                                    type="tel"
-                                    placeholder={t('phonePlaceholder')}
-                                    value={reviewPhone}
-                                    onChange={(e) => setReviewPhone(e.target.value)}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 focus:bg-white transition-colors"
-                                />
-                            </div>
-
-                            {/* Mesaj */}
-                            <div className="mb-6">
-                                <p className="text-xs text-gray-500 mb-2 font-medium">{t('message')}</p>
-                                <textarea
-                                    placeholder={t('messagePlaceholder')}
-                                    value={reviewComment}
-                                    onChange={(e) => setReviewComment(e.target.value)}
-                                    rows={3}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 focus:bg-white transition-colors resize-none"
-                                />
-                            </div>
-
-                            {/* Submit Button */}
-                            <button
-                                onClick={async () => {
-                                    if (isSubmittingReview || reviewSubmitted) return;
-                                    const avgRating = Math.round(
-                                        (categoryRatings.yemek + categoryRatings.hizmet + categoryRatings.ambiyans + categoryRatings.fiyat + categoryRatings.temizlik + categoryRatings.sunum) / 6
-                                    );
-                                    if (avgRating > 0 && reviewName.trim() && reviewComment.trim()) {
-                                        setIsSubmittingReview(true);
-                                        try {
-                                            await fetch('/api/reviews', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({
-                                                    restaurantId,
-                                                    authorName: reviewName.trim(),
-                                                    rating: avgRating,
-                                                    comment: reviewComment.trim(),
-                                                }),
-                                            });
-                                            // Close overlay immediately and show toast on menu
-                                            setIsSubmittingReview(false);
-                                            setIsReviewsOpen(false);
-                                            setReviewName("");
-                                            setReviewPhone("");
-                                            setReviewComment("");
-                                            setCategoryRatings({ yemek: 0, hizmet: 0, ambiyans: 0, fiyat: 0, temizlik: 0, sunum: 0 });
-                                            setReviewSubmitted(true);
-                                            setTimeout(() => setReviewSubmitted(false), 2500);
-                                        } catch (err) {
-                                            console.error('Review submit error:', err);
-                                            setIsSubmittingReview(false);
-                                        }
-                                    }
-                                }}
-                                disabled={isSubmittingReview || Object.values(categoryRatings).some((v) => v === 0) || !reviewName.trim() || !reviewComment.trim()}
-                                className={`w-full py-4 rounded-xl text-base font-semibold transition-all flex items-center justify-center gap-2 ${Object.values(categoryRatings).every((v) => v > 0) && reviewName.trim() && reviewComment.trim() && !isSubmittingReview
-                                    ? 'bg-black text-white hover:bg-gray-800 shadow-lg'
-                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    }`}
-                            >
-                                {isSubmittingReview ? (
-                                    <><Loader2 size={18} className="animate-spin" /> {selectedLang === 'tr' ? 'Gönderiliyor...' : 'Sending...'}</>
-                                ) : (
-                                    <>{selectedLang === 'tr' ? 'Gönder' : 'Submit'} <ArrowRight size={18} /></>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Reservation Bottom Sheet — 40% height popup */}
-            {isReservationOpen && (() => {
-                const resetReservation = () => {
-                    setIsReservationOpen(false);
-                    setReserveStep(0);
-                    setReserveDate(null);
-                    setReserveTime("");
-                    setReserveGuests(2);
-                    setReserveName("");
-                    setReservePhone("");
-                    setReserveNote("");
-                };
-
-                const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
-                const firstDayOfWeek = new Date(calendarYear, calendarMonth, 1).getDay();
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const dayNames = selectedLang === 'tr' ? ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct'] : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-                const monthNames = selectedLang === 'tr'
-                    ? ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
-                    : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-                const timeSlots = ['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00'];
-
-                return (
-                    <>
-                        {/* Backdrop */}
-                        <div
-                            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
-                            onClick={resetReservation}
-                            style={{ animation: 'fadeIn 0.2s ease-out' }}
-                        />
-
-                        {/* Bottom Sheet */}
-                        <div
-                            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl flex flex-col"
-                            style={{ height: '60dvh', animation: 'slideUp 0.3s ease-out' }}
-                        >
-                            {/* Handle bar */}
-                            <div className="flex justify-center pt-3 pb-2">
-                                <div className="w-10 h-1 bg-gray-300 rounded-full" />
-                            </div>
-
-                            {/* Step indicator */}
-                            <div className="flex items-center gap-2 px-5 pb-3">
-                                {[0, 1, 2].map((s) => (
-                                    <div key={s} className={`h-1 flex-1 rounded-full transition-all ${s <= reserveStep ? 'bg-amber-500' : 'bg-gray-200'}`} />
-                                ))}
-                            </div>
-
-                            {/* Content */}
-                            <div className="flex-1 overflow-y-auto px-5 pb-5">
-                                {/* Step 0: Date Selection */}
-                                {reserveStep === 0 && (
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-900 mb-1">
-                                            <CalendarDays size={18} className="inline mr-2 text-amber-500" />
-                                            {selectedLang === 'tr' ? 'Tarih Seçin' : 'Select Date'}
-                                        </h3>
-
-                                        {/* Month Navigation */}
-                                        <div className="flex items-center justify-between mb-3 mt-2">
-                                            <button onClick={() => {
-                                                if (calendarMonth === 0) { setCalendarMonth(11); setCalendarYear(calendarYear - 1); }
-                                                else setCalendarMonth(calendarMonth - 1);
-                                            }} className="p-1.5 rounded-full hover:bg-gray-100"><ChevronLeft size={18} /></button>
-                                            <span className="text-sm font-semibold text-gray-800">{monthNames[calendarMonth]} {calendarYear}</span>
-                                            <button onClick={() => {
-                                                if (calendarMonth === 11) { setCalendarMonth(0); setCalendarYear(calendarYear + 1); }
-                                                else setCalendarMonth(calendarMonth + 1);
-                                            }} className="p-1.5 rounded-full hover:bg-gray-100"><ChevronRight size={18} /></button>
-                                        </div>
-
-                                        {/* Day Names */}
-                                        <div className="grid grid-cols-7 gap-1 mb-1">
-                                            {dayNames.map((d) => (
-                                                <div key={d} className="text-center text-xs text-gray-400 font-medium py-1">{d}</div>
-                                            ))}
-                                        </div>
-
-                                        {/* Calendar Grid */}
-                                        <div className="grid grid-cols-7 gap-1">
-                                            {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-                                                <div key={`empty-${i}`} />
-                                            ))}
-                                            {Array.from({ length: daysInMonth }).map((_, i) => {
-                                                const day = i + 1;
-                                                const thisDate = new Date(calendarYear, calendarMonth, day);
-                                                const isPast = thisDate < today;
-                                                const isSelected = reserveDate && reserveDate.getTime() === thisDate.getTime();
-                                                const isToday = thisDate.getTime() === today.getTime();
-                                                return (
-                                                    <button
-                                                        key={day}
-                                                        disabled={isPast}
-                                                        onClick={() => setReserveDate(thisDate)}
-                                                        className={`w-[30px] h-[30px] mx-auto rounded-full text-xs font-medium flex items-center justify-center transition-all ${isPast
-                                                            ? 'text-gray-300 cursor-not-allowed'
-                                                            : isSelected
-                                                                ? 'bg-amber-500 text-white shadow-md'
-                                                                : isToday
-                                                                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                                                                    : 'text-gray-700 hover:bg-gray-100'
-                                                            }`}
-                                                    >
-                                                        {day}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {/* Next Button */}
-                                        <button
-                                            disabled={!reserveDate}
-                                            onClick={() => setReserveStep(1)}
-                                            className={`w-full mt-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${reserveDate
-                                                ? 'bg-black text-white hover:bg-gray-800 shadow-lg'
-                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                }`}
-                                        >
-                                            {selectedLang === 'tr' ? 'İleri' : 'Next'} <ArrowRight size={16} />
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Step 1: Time & Guest Count */}
-                                {reserveStep === 1 && (
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-900 mb-3">
-                                            <Clock size={18} className="inline mr-2 text-amber-500" />
-                                            {selectedLang === 'tr' ? 'Saat & Kişi Sayısı' : 'Time & Guests'}
-                                        </h3>
-
-                                        {/* Time Slots */}
-                                        <p className="text-xs text-gray-500 mb-2 font-medium">{selectedLang === 'tr' ? 'Saat Seçin' : 'Select Time'}</p>
-                                        <div className="grid grid-cols-4 gap-2 mb-4">
-                                            {timeSlots.map((t_slot) => (
-                                                <button
-                                                    key={t_slot}
-                                                    onClick={() => setReserveTime(t_slot)}
-                                                    className={`py-2 rounded-lg text-xs font-medium transition-all ${reserveTime === t_slot
-                                                        ? 'bg-amber-500 text-white shadow-md'
-                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                        }`}
-                                                >
-                                                    {t_slot}
-                                                </button>
-                                            ))}
-                                        </div>
-
-                                        {/* Guest Count */}
-                                        <p className="text-xs text-gray-500 mb-2 font-medium">
-                                            <Users size={14} className="inline mr-1" />
-                                            {selectedLang === 'tr' ? 'Kişi Sayısı' : 'Guests'}
-                                        </p>
-                                        <div className="flex gap-2 flex-wrap mb-4">
-                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                                                <button
-                                                    key={n}
-                                                    onClick={() => setReserveGuests(n)}
-                                                    className={`w-10 h-10 rounded-full text-sm font-semibold transition-all ${reserveGuests === n
-                                                        ? 'bg-amber-500 text-white shadow-md'
-                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                        }`}
-                                                >
-                                                    {n}
-                                                </button>
-                                            ))}
-                                        </div>
-
-                                        {/* Navigation */}
-                                        <div className="flex gap-3">
-                                            <button onClick={() => setReserveStep(0)} className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all">
-                                                <ChevronLeft size={16} className="inline mr-1" />{selectedLang === 'tr' ? 'Geri' : 'Back'}
-                                            </button>
-                                            <button
-                                                disabled={!reserveTime}
-                                                onClick={() => setReserveStep(2)}
-                                                className={`flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${reserveTime
-                                                    ? 'bg-black text-white hover:bg-gray-800 shadow-lg'
-                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                    }`}
-                                            >
-                                                {selectedLang === 'tr' ? 'İleri' : 'Next'} <ArrowRight size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Step 2: Contact Info */}
-                                {reserveStep === 2 && (
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-900 mb-3">
-                                            <Users size={18} className="inline mr-2 text-amber-500" />
-                                            {selectedLang === 'tr' ? 'Bilgileriniz' : 'Your Info'}
-                                        </h3>
-
-                                        {/* Summary */}
-                                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-sm text-amber-800">
-                                            <div className="flex items-center gap-2">
-                                                <CalendarDays size={14} />
-                                                <span>{reserveDate?.toLocaleDateString(selectedLang === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                                                <span className="mx-1">•</span>
-                                                <Clock size={14} />
-                                                <span>{reserveTime}</span>
-                                                <span className="mx-1">•</span>
-                                                <Users size={14} />
-                                                <span>{reserveGuests} {selectedLang === 'tr' ? 'kişi' : 'guests'}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-3 mb-4">
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1.5 font-medium">{selectedLang === 'tr' ? 'Ad Soyad' : 'Full Name'} *</p>
-                                                <input
-                                                    type="text"
-                                                    value={reserveName}
-                                                    onChange={(e) => setReserveName(e.target.value)}
-                                                    placeholder={selectedLang === 'tr' ? 'Adınız Soyadınız' : 'Your full name'}
-                                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-amber-400 transition-colors"
-                                                />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1.5 font-medium">{selectedLang === 'tr' ? 'Telefon' : 'Phone'} *</p>
-                                                <input
-                                                    type="tel"
-                                                    value={reservePhone}
-                                                    onChange={(e) => setReservePhone(e.target.value)}
-                                                    placeholder={selectedLang === 'tr' ? '05XX XXX XX XX' : 'Phone number'}
-                                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-amber-400 transition-colors"
-                                                />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1.5 font-medium">{selectedLang === 'tr' ? 'Not (opsiyonel)' : 'Note (optional)'}</p>
-                                                <textarea
-                                                    value={reserveNote}
-                                                    onChange={(e) => setReserveNote(e.target.value)}
-                                                    placeholder={selectedLang === 'tr' ? 'Özel istekleriniz...' : 'Special requests...'}
-                                                    rows={2}
-                                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-amber-400 transition-colors resize-none"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Navigation */}
-                                        <div className="flex gap-3">
-                                            <button onClick={() => setReserveStep(1)} className="w-12 py-3 rounded-xl text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all flex items-center justify-center">
-                                                <ChevronLeft size={18} />
-                                            </button>
-                                            <button
-                                                disabled={!reserveName.trim() || !reservePhone.trim() || isSubmittingReserve}
-                                                onClick={async () => {
-                                                    setIsSubmittingReserve(true);
-                                                    try {
-                                                        await fetch('/api/reservations', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({
-                                                                restaurantId,
-                                                                name: reserveName.trim(),
-                                                                phone: reservePhone.trim(),
-                                                                date: reserveDate?.toISOString(),
-                                                                time: reserveTime,
-                                                                guestCount: reserveGuests,
-                                                                note: reserveNote.trim() || null,
-                                                            }),
-                                                        });
-                                                        setIsSubmittingReserve(false);
-                                                        setIsReservationOpen(false);
-                                                        setReserveStep(0);
-                                                        setReserveDate(null);
-                                                        setReserveTime("");
-                                                        setReserveGuests(2);
-                                                        setReserveName("");
-                                                        setReservePhone("");
-                                                        setReserveNote("");
-                                                        setReserveSubmitted(true);
-                                                        setTimeout(() => setReserveSubmitted(false), 2500);
-                                                    } catch (err) {
-                                                        console.error('Reservation error:', err);
-                                                        setIsSubmittingReserve(false);
-                                                    }
-                                                }}
-                                                className={`flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${reserveName.trim() && reservePhone.trim() && !isSubmittingReserve
-                                                    ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-lg'
-                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                    }`}
-                                            >
-                                                {isSubmittingReserve ? (
-                                                    <><Loader2 size={16} className="animate-spin" /> {selectedLang === 'tr' ? 'Gönderiliyor...' : 'Sending...'}</>
-                                                ) : (
-                                                    <>{selectedLang === 'tr' ? 'Rezervasyon Yap' : 'Book Now'} <ArrowRight size={16} /></>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </>
-                );
-            })()}
-
-            {/* Reservation Success Toast */}
-            {reserveSubmitted && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-                    <div className="pointer-events-auto bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center gap-3 border border-gray-100" style={{ animation: 'scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)', minWidth: '260px' }}>
-                        <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
-                            <Check size={28} className="text-emerald-500" />
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-900">{selectedLang === 'tr' ? 'Rezervasyon Alındı!' : 'Reservation Received!'}</h3>
-                        <p className="text-sm text-gray-500 text-center">{selectedLang === 'tr' ? 'Rezervasyonunuz başarıyla gönderildi. Teşekkürler!' : 'Your reservation has been sent. Thank you!'}</p>
-                    </div>
-                </div>
-            )}
 
             {/* Sidebar Drawer */}
             {isSidebarDrawerOpen && (() => {
@@ -2270,7 +1753,7 @@ export default function MenuClient({
                                 {BUSINESS_INFO.description && <p className="text-xs mt-1 leading-relaxed break-words pr-8" style={{ color: T.sidebarDescColor || '#9ca3af' }}>{BUSINESS_INFO.description}</p>}
                             </div>
 
-                            {/* ── Navigation: MENÜ / DİL / REZERVE ── */}
+                            {/* ── Navigation: MENÜ / DİL ── */}
                             <div className="px-5 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
                                 <button
                                     onClick={() => { setIsSidebarDrawerOpen(false); }}
@@ -2285,13 +1768,6 @@ export default function MenuClient({
                                     style={{ color: T.sidebarItemColor || '#374151' }}
                                 >
                                     {t('btnLanguage')}
-                                </button>
-                                <button
-                                    onClick={() => { setIsSidebarDrawerOpen(false); setIsReservationOpen(true); }}
-                                    className="w-full text-left py-2.5 text-sm font-semibold tracking-wide transition-colors"
-                                    style={{ color: T.sidebarItemColor || '#374151' }}
-                                >
-                                    REZERVE
                                 </button>
                             </div>
 
@@ -2620,10 +2096,6 @@ export default function MenuClient({
                     <Filter size={20} />
                     <span className="text-[10px] font-medium">{selectedLang === 'tr' ? 'Filtrele' : 'Filter'}</span>
                 </button>
-                <button onClick={() => setIsReviewsOpen(true)} className="flex flex-col items-center gap-1 py-1 px-3 transition-colors" style={{ color: T.bottomNavInactive || '#9ca3af' }}>
-                    <Star size={20} />
-                    <span className="text-[10px] font-medium">{selectedLang === 'tr' ? 'Yorum' : 'Review'}</span>
-                </button>
                 <button onClick={() => { /* Garson çağır - notification */ }} className="flex flex-col items-center gap-1 py-1 px-3 transition-colors" style={{ color: T.bottomNavInactive || '#9ca3af' }}>
                     <BellRing size={20} />
                     <span className="text-[10px] font-medium">{selectedLang === 'tr' ? 'Garson' : 'Waiter'}</span>
@@ -2631,17 +2103,6 @@ export default function MenuClient({
             </div>
 
             {/* Success Toast Alert */}
-            {reviewSubmitted && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-                    <div className="pointer-events-auto bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center gap-3 border border-gray-100" style={{ animation: 'scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)', minWidth: '260px' }}>
-                        <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
-                            <Check size={28} className="text-emerald-500" />
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-900">{selectedLang === 'tr' ? 'Gönderildi!' : 'Sent!'}</h3>
-                        <p className="text-sm text-gray-500 text-center">{selectedLang === 'tr' ? 'Değerlendirmeniz başarıyla gönderildi. Teşekkürler!' : 'Your review has been sent. Thank you!'}</p>
-                    </div>
-                </div>
-            )}
 
             <style jsx>{`
                 @keyframes fadeIn {

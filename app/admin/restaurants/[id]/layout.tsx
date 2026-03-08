@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-    LayoutDashboard, UtensilsCrossed, LayoutGrid, Settings, Star,
+    LayoutDashboard, UtensilsCrossed, LayoutGrid, Settings,
     LogOut, Menu, X, QrCode, ChevronRight, ArrowLeft,
 } from "lucide-react";
 
@@ -37,7 +37,6 @@ export default function RestaurantLayout({
         { href: `${basePath}/menu`, label: "Menü Yönetimi", icon: UtensilsCrossed },
         { href: `${basePath}/categories`, label: "Kategoriler", icon: LayoutGrid },
         { href: `${basePath}/qr-code`, label: "QR Kod", icon: QrCode },
-        { href: `${basePath}/reviews`, label: "Yorumlar", icon: Star },
         { href: `${basePath}/settings`, label: "Ayarlar", icon: Settings },
     ];
 

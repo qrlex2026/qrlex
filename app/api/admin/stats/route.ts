@@ -12,19 +12,10 @@ const getRestaurantId = async (req: NextRequest) => {
 export async function GET(req: NextRequest) {
     const restaurantId = await getRestaurantId(req);
 
-    const [productCount, categoryCount, reviewCount, reviews] = await Promise.all([
+    const [productCount, categoryCount] = await Promise.all([
         prisma.product.count({ where: { restaurantId } }),
         prisma.category.count({ where: { restaurantId } }),
-        prisma.review.count({ where: { restaurantId } }),
-        prisma.review.findMany({
-            where: { restaurantId },
-            select: { rating: true },
-        }),
     ]);
 
-    const avgRating = reviews.length
-        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-        : "0";
-
-    return NextResponse.json({ productCount, categoryCount, reviewCount, avgRating });
+    return NextResponse.json({ productCount, categoryCount, avgRating: "0" });
 }

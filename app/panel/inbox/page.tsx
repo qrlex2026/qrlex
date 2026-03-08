@@ -24,7 +24,7 @@ interface SupportTicket {
     updatedAt: string;
 }
 
-const NOTIF_ICONS: Record<string, string> = { review: '⭐', reservation: '📅', payment: '💳', system: '🔔' };
+const NOTIF_ICONS: Record<string, string> = { payment: '💳', system: '🔔' };
 const CATEGORY_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
     general: { label: 'Genel', icon: <InboxIcon size={14} />, color: 'text-blue-500' },
     technical: { label: 'Teknik Destek', icon: <Settings size={14} />, color: 'text-violet-500' },
@@ -175,8 +175,6 @@ export default function InboxPage() {
                             {[
                                 { key: 'all', label: 'Tümü' },
                                 { key: 'unread', label: `Okunmamış (${unreadCount})` },
-                                { key: 'review', label: '⭐ Yorum' },
-                                { key: 'reservation', label: '📅 Rezervasyon' },
                                 { key: 'payment', label: '💳 Ödeme' },
                             ].map((f) => (
                                 <button

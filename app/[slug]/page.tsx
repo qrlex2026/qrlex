@@ -28,7 +28,6 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
         include: {
             categories: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
             products: { where: { isActive: true }, orderBy: { sortOrder: "asc" }, include: { category: true } },
-            reviews: { orderBy: { createdAt: "desc" } },
         },
     });
 
@@ -81,25 +80,6 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
         wifiPassword: restaurant.wifiPassword || '',
     };
 
-    const now = new Date();
-    const reviewItems = restaurant.reviews.map((r) => {
-        const d = new Date(r.createdAt);
-        const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
-        const dateStr = diffDays === 0 ? "Bugün" : diffDays === 1 ? "Dün" : diffDays < 7 ? `${diffDays} gün önce` : diffDays < 30 ? `${Math.floor(diffDays / 7)} hafta önce` : `${Math.floor(diffDays / 30)} ay önce`;
-        return { id: r.id, name: r.authorName, date: dateStr, rating: r.rating, comment: r.comment || "", helpful: r.helpfulCount };
-    });
-
-    const totalCount = reviewItems.length;
-    const avgRating = totalCount ? reviewItems.reduce((s, r) => s + r.rating, 0) / totalCount : 0;
-    const dist = [5, 4, 3, 2, 1].map((s) => ({ stars: s, count: reviewItems.filter((r) => r.rating === s).length }));
-
-    const reviews = {
-        average: parseFloat(avgRating.toFixed(1)),
-        totalCount,
-        distribution: dist,
-        items: reviewItems,
-    };
-
     const theme = { ...defaultTheme, ...(restaurant.theme as Record<string, string> || {}) };
 
     // Build Google Fonts URL for server-side injection
@@ -120,7 +100,6 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
                 initialCategories={categories}
                 initialProducts={products}
                 initialBusinessInfo={businessInfo}
-                initialReviews={reviews}
                 initialTheme={theme}
                 slug={slug}
                 restaurantId={restaurant.id}

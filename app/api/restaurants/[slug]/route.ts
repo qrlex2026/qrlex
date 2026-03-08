@@ -20,9 +20,6 @@ export async function GET(
                 orderBy: { sortOrder: "asc" },
                 include: { category: true },
             },
-            reviews: {
-                orderBy: { createdAt: "desc" },
-            },
         },
     });
 

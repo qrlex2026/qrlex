@@ -9,7 +9,6 @@ export async function GET() {
                 select: {
                     products: true,
                     categories: true,
-                    reviews: true,
                 },
             },
         },

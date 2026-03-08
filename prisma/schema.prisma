@@ -43,8 +43,6 @@ model Restaurant {
   theme        Json?      @map("theme")
   categories   Category[]
   products     Product[]
-  reviews      Review[]
-  reservations     Reservation[]
   notifications    Notification[]
   supportTickets   SupportTicket[]
   users            User[]
@@ -89,18 +87,6 @@ model Product {
   @@map("products")
 }
 
-model Review {
-  id           String     @id @default(uuid())
-  restaurantId String     @map("restaurant_id")
-  authorName   String     @map("author_name")
-  rating       Int
-  comment      String?
-  helpfulCount Int        @default(0) @map("helpful_count")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-
-  @@map("reviews")
-}
 
 model PageView {
   id           String     @id @default(uuid())
@@ -127,21 +113,6 @@ model ProductView {
   @@map("product_views")
 }
 
-model Reservation {
-  id           String     @id @default(uuid())
-  restaurantId String     @map("restaurant_id")
-  name         String
-  phone        String
-  date         DateTime
-  time         String
-  guestCount   Int        @default(2) @map("guest_count")
-  note         String?
-  status       String     @default("pending")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-
-  @@map("reservations")
-}
 
 model Notification {
   id           String     @id @default(uuid())

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-    Store, Plus, Search, MoreVertical, UtensilsCrossed, LayoutGrid, Star,
+    Store, Plus, Search, MoreVertical, UtensilsCrossed, LayoutGrid,
     Trash2, Edit3, ExternalLink, QrCode, X
 } from "lucide-react";
 
@@ -19,7 +19,6 @@ interface Restaurant {
     _count: {
         products: number;
         categories: number;
-        reviews: number;
     };
 }
 
@@ -221,12 +220,6 @@ export default function AdminDashboard() {
                                         <LayoutGrid size={13} className="text-gray-500" />
                                         <span className="text-xs text-gray-400">
                                             {restaurant._count.categories} kategori
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <Star size={13} className="text-gray-500" />
-                                        <span className="text-xs text-gray-400">
-                                            {restaurant._count.reviews} yorum
                                         </span>
                                     </div>
                                 </div>

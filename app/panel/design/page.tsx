@@ -97,6 +97,7 @@ const DEFAULT_THEME = {
     menuHeaderBg: "#ffffff",
     menuHeaderTextColor: "#111827",
     menuHeaderIconColor: "#374151",
+    menuHeaderSearchIconColor: "#374151",
     menuHeaderShadow: "sm",
     menuHeaderSearchBtnBg: "#f3f4f6",
     headerVariant: "classic",
@@ -457,14 +458,14 @@ export default function PanelDesign() {
                     <div className="flex flex-wrap gap-2 mb-4">
                         {[
                             { key: 'menu', label: 'Men\u00fc', active: true },
-                            { key: 'position', label: 'Pozisyon' },
-                            { key: 'general', label: 'Genel' },
-                            { key: 'font', label: 'Yaz\u0131 Tipi' },
+                            { key: 'position', label: 'Pozisyon', active: true },
+                            { key: 'general', label: 'Genel', active: true },
+                            { key: 'font', label: 'Yaz\u0131 Tipi', active: true },
                             { key: 'welcome', label: 'Ho\u015fgeldiniz', active: true },
-                            { key: 'bottomnav', label: 'Alt Navigasyon' },
-                            { key: 'detail', label: '\u00dcr\u00fcn Detay' },
-                            { key: 'search', label: 'Arama' },
-                            { key: 'drawer', label: 'Sol Men\u00fc' },
+                            { key: 'bottomnav', label: 'Alt Navigasyon', active: true },
+                            { key: 'detail', label: '\u00dcr\u00fcn Detay', active: true },
+                            { key: 'search', label: 'Arama', active: true },
+                            { key: 'drawer', label: 'Sol Men\u00fc', active: true },
                         ].map((btn) => (
                             <button
                                 key={btn.key}
@@ -484,83 +485,57 @@ export default function PanelDesign() {
 
                     {/* ─── MENU TAB CONTENT ─── */}
                     {activeTab === 'menu' && (<>
-                        {/* Full Theme Previews */}
+
+                        {/* Başlık Düzenleri Card — EN ÜSTTE */}
                         <div className="bg-[#0c0c0c] border border-white/[0.06] rounded-2xl p-5 mb-3">
-                            <span className="text-[11px] text-gray-600 uppercase tracking-widest mb-3 block">Temalar</span>
-                            <div className="max-h-[420px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#333 transparent' }}>
-                                <div className="grid grid-cols-4 gap-2.5">
-                                    {([
-                                        { id: 't1', name: 'Minimalist', headerBg: '#ffffff', headerText: '#111', pageBg: '#f5f5f5', cardBg: '#fff', cardText: '#333', accent: '#000', catBg: '#eee', catText: '#555' },
-                                        { id: 't2', name: 'Koyu Elegan', headerBg: '#0a0a0a', headerText: '#fff', pageBg: '#111', cardBg: '#1a1a1a', cardText: '#eee', accent: '#d4a853', catBg: '#222', catText: '#ccc' },
-                                        { id: 't3', name: 'Okyanus', headerBg: '#0f1b33', headerText: '#c8d6e5', pageBg: '#0a1628', cardBg: '#1a2d4d', cardText: '#c8d6e5', accent: '#54a0ff', catBg: '#162040', catText: '#7eb8ff' },
-                                        { id: 't4', name: 'Krem', headerBg: '#faf7f2', headerText: '#5c4a3a', pageBg: '#f5f0e8', cardBg: '#fff', cardText: '#5c4a3a', accent: '#8b7355', catBg: '#ece5d8', catText: '#8b7355' },
-                                        { id: 't5', name: 'Orman', headerBg: '#1a2e1a', headerText: '#c8e6c8', pageBg: '#0f1f0f', cardBg: '#1a2e1a', cardText: '#b8d8b8', accent: '#4caf50', catBg: '#152815', catText: '#6abf6a' },
-                                        { id: 't6', name: 'G\u00fcl Kurusu', headerBg: '#2d1a1a', headerText: '#f0c8c8', pageBg: '#1a0f0f', cardBg: '#2d1a1a', cardText: '#e8b4b4', accent: '#e57373', catBg: '#281515', catText: '#d49a9a' },
-                                        { id: 't7', name: 'Lavanta', headerBg: '#1e1a2e', headerText: '#d0c8e6', pageBg: '#13101f', cardBg: '#231e35', cardText: '#c4bae0', accent: '#b39ddb', catBg: '#1d1830', catText: '#a08fd0' },
-                                        { id: 't8', name: 'Sunset', headerBg: '#1f1005', headerText: '#ffd9a0', pageBg: '#140d03', cardBg: '#2a1a08', cardText: '#f0c070', accent: '#ff9800', catBg: '#231507', catText: '#e0a050' },
-                                        { id: 't9', name: 'Arctic', headerBg: '#f0f8ff', headerText: '#2c4a6e', pageBg: '#e8f2fc', cardBg: '#fff', cardText: '#3a5a7e', accent: '#2196f3', catBg: '#daeaf8', catText: '#4a7ab0' },
-                                        { id: 't10', name: 'Neon', headerBg: '#0a0a0a', headerText: '#0ff', pageBg: '#050505', cardBg: '#111', cardText: '#0ff', accent: '#0ff', catBg: '#0a1515', catText: '#0cc' },
-                                        { id: 't11', name: 'Retro', headerBg: '#f5e6c8', headerText: '#5a3e28', pageBg: '#eddcc0', cardBg: '#f8f0e0', cardText: '#5a3e28', accent: '#c68642', catBg: '#e8d4b0', catText: '#7a5a3a' },
-                                        { id: 't12', name: 'Cherry', headerBg: '#1a0000', headerText: '#ff6b6b', pageBg: '#100000', cardBg: '#200808', cardText: '#ff8080', accent: '#ff4444', catBg: '#180505', catText: '#ff5555' },
-                                        { id: 't13', name: 'Mint', headerBg: '#f0faf5', headerText: '#2d6b4e', pageBg: '#e5f5ed', cardBg: '#fff', cardText: '#2d6b4e', accent: '#26a69a', catBg: '#d8f0e5', catText: '#3d8b6e' },
-                                        { id: 't14', name: 'Slate', headerBg: '#1e2530', headerText: '#94a3b8', pageBg: '#151b25', cardBg: '#1e2530', cardText: '#94a3b8', accent: '#64748b', catBg: '#1a2030', catText: '#7a8a9b' },
-                                        { id: 't15', name: 'Royal', headerBg: '#1a0a30', headerText: '#d4a0ff', pageBg: '#0f0520', cardBg: '#1f0f35', cardText: '#c090f0', accent: '#9c27b0', catBg: '#180a2a', catText: '#b080d0' },
-                                        { id: 't16', name: 'Sand', headerBg: '#f5efe6', headerText: '#6b5b4a', pageBg: '#ede5d8', cardBg: '#faf5ee', cardText: '#6b5b4a', accent: '#a08060', catBg: '#e8dfd0', catText: '#8a7560' },
-                                    ] as { id: string; name: string; headerBg: string; headerText: string; pageBg: string; cardBg: string; cardText: string; accent: string; catBg: string; catText: string }[]).map((t) => {
-                                        const isSelected = false; // no functionality yet
-                                        return (
-                                            <button
-                                                key={t.id}
-                                                className={`group rounded-xl border overflow-hidden transition-all ${isSelected
-                                                    ? 'border-orange-500/50 ring-2 ring-orange-500/20'
-                                                    : 'border-white/[0.04] hover:border-white/[0.1]'
-                                                    }`}
-                                            >
-                                                {/* Mini phone preview */}
-                                                <div className="w-full aspect-[9/16] rounded-lg overflow-hidden relative" style={{ backgroundColor: t.pageBg }}>
-                                                    {/* Header */}
-                                                    <div className="h-[14%] flex items-center justify-between px-2" style={{ backgroundColor: t.headerBg }}>
-                                                        <div className="flex flex-col gap-[1px]">
-                                                            <div className="w-2.5 h-[1px] rounded-full" style={{ backgroundColor: t.headerText, opacity: 0.7 }} />
-                                                            <div className="w-1.5 h-[1px] rounded-full" style={{ backgroundColor: t.headerText, opacity: 0.7 }} />
-                                                        </div>
-                                                        <div className="h-1 w-5 rounded-full" style={{ backgroundColor: t.headerText, opacity: 0.5 }} />
-                                                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.headerText, opacity: 0.4 }} />
+                            <span className="text-[11px] text-gray-600 uppercase tracking-widest mb-3 block">Başlık Düzenleri</span>
+                            <div className="grid grid-cols-4 gap-2">
+                                {([
+                                    { id: 'classic', name: 'Klasik' },
+                                    { id: 'tall', name: 'Yüksek' },
+                                    { id: 'center-logo', name: 'Logo' },
+                                    { id: 'left-logo', name: 'Sol Logo' },
+                                    { id: 'lang', name: 'Dil' },
+                                    { id: 'banner', name: 'Banner' },
+                                    { id: 'minimal', name: 'Minimal' },
+                                    { id: 'rounded', name: 'Yuvarlak' },
+                                    { id: 'split', name: 'Split' },
+                                    { id: 'accent-bar', name: 'Çizgi' },
+                                    { id: 'glass', name: 'Cam' },
+                                ] as { id: string; name: string }[]).map((v) => {
+                                    const isActive = theme.headerVariant === v.id;
+                                    const hBg = theme.menuHeaderBg;
+                                    const hText = theme.menuHeaderTextColor;
+                                    const hIcon = theme.menuHeaderIconColor;
+                                    return (
+                                        <button
+                                            key={v.id}
+                                            onClick={() => updateTheme('headerVariant', v.id)}
+                                            className={`group rounded-xl border overflow-hidden transition-all ${isActive
+                                                ? 'border-orange-500/40 bg-orange-500/5 ring-1 ring-orange-500/20'
+                                                : 'border-white/[0.04] bg-[#111] hover:border-white/[0.08] hover:bg-[#161616]'
+                                                }`}
+                                        >
+                                            <div className="px-2 pt-2">
+                                                <div className="h-7 rounded-lg flex items-center justify-between px-2" style={{ backgroundColor: hBg }}>
+                                                    {/* Hamburger menu icon - 3 lines */}
+                                                    <div className="flex flex-col gap-[2px]">
+                                                        <div className="w-2.5 h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} />
+                                                        <div className="w-2.5 h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} />
+                                                        <div className="w-2.5 h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} />
                                                     </div>
-                                                    {/* Category nav */}
-                                                    <div className="flex gap-1 px-1.5 py-1">
-                                                        <div className="h-2 w-5 rounded-full" style={{ backgroundColor: t.accent, opacity: 0.9 }} />
-                                                        <div className="h-2 w-4 rounded-full" style={{ backgroundColor: t.catBg }} />
-                                                        <div className="h-2 w-6 rounded-full" style={{ backgroundColor: t.catBg }} />
-                                                    </div>
-                                                    {/* Product cards */}
-                                                    <div className="px-1.5 space-y-1">
-                                                        {[1, 2, 3].map((i) => (
-                                                            <div key={i} className="rounded-md p-1 flex gap-1" style={{ backgroundColor: t.cardBg }}>
-                                                                <div className="w-4 h-4 rounded shrink-0" style={{ backgroundColor: t.catBg }} />
-                                                                <div className="flex-1 space-y-0.5">
-                                                                    <div className="h-[2px] w-3/4 rounded-full" style={{ backgroundColor: t.cardText, opacity: 0.7 }} />
-                                                                    <div className="h-[1.5px] w-1/2 rounded-full" style={{ backgroundColor: t.cardText, opacity: 0.3 }} />
-                                                                    <div className="h-[2px] w-4 rounded-full" style={{ backgroundColor: t.accent, opacity: 0.8 }} />
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    {/* Bottom nav */}
-                                                    <div className="absolute bottom-0 left-0 right-0 h-[8%] flex items-center justify-around px-2" style={{ backgroundColor: t.cardBg }}>
-                                                        {[1, 2, 3, 4].map((i) => (
-                                                            <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: i === 1 ? t.accent : t.cardText, opacity: i === 1 ? 0.9 : 0.2 }} />
-                                                        ))}
-                                                    </div>
+                                                    {/* Center text placeholder */}
+                                                    <div className="h-1.5 w-6 rounded-full" style={{ backgroundColor: hText, opacity: 0.5 }} />
+                                                    {/* Search icon */}
+                                                    <Search size={6} strokeWidth={2.5} style={{ color: hIcon }} />
                                                 </div>
-                                                {/* Theme name */}
-                                                <div className="py-1.5 px-1">
-                                                    <p className={`text-[9px] font-medium ${isSelected ? 'text-orange-300' : 'text-gray-500 group-hover:text-gray-300'} transition-colors text-center truncate`}>{t.name}</p>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                                            </div>
+                                            <div className="py-1.5">
+                                                <p className={`text-[10px] font-medium ${isActive ? 'text-orange-300' : 'text-gray-500'} transition-colors`}>{v.name}</p>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -616,13 +591,15 @@ export default function PanelDesign() {
                                     <div className="w-4 h-4 rounded-full ring-2 ring-white/10" style={{ backgroundColor: theme.menuHeaderBg }} />
                                     <div className="w-4 h-4 rounded-full ring-2 ring-white/10" style={{ backgroundColor: theme.menuHeaderTextColor }} />
                                     <div className="w-4 h-4 rounded-full ring-2 ring-white/10" style={{ backgroundColor: theme.menuHeaderIconColor }} />
+                                    <div className="w-4 h-4 rounded-full ring-2 ring-white/10" style={{ backgroundColor: theme.menuHeaderSearchIconColor }} />
                                 </div>
                                 <span className="text-[11px] text-gray-600 uppercase tracking-widest">Renkler</span>
                             </div>
                             <div className="space-y-3">
                                 <ColorPicker label="Arkaplan" value={theme.menuHeaderBg} onChange={(v) => updateTheme("menuHeaderBg", v)} />
-                                <ColorPicker label="Yaz&#x131;" value={theme.menuHeaderTextColor} onChange={(v) => updateTheme("menuHeaderTextColor", v)} />
-                                <ColorPicker label="&#x130;kon" value={theme.menuHeaderIconColor} onChange={(v) => updateTheme("menuHeaderIconColor", v)} />
+                                <ColorPicker label="Yazı" value={theme.menuHeaderTextColor} onChange={(v) => updateTheme("menuHeaderTextColor", v)} />
+                                <ColorPicker label="Menü" value={theme.menuHeaderIconColor} onChange={(v) => updateTheme("menuHeaderIconColor", v)} />
+                                <ColorPicker label="Arama" value={theme.menuHeaderSearchIconColor} onChange={(v) => updateTheme("menuHeaderSearchIconColor", v)} />
                             </div>
                         </div>
 
@@ -641,231 +618,6 @@ export default function PanelDesign() {
                             </div>
                         </div>
 
-
-                        {/* Varyasyonlar Card */}
-                        <div className="bg-[#0c0c0c] border border-white/[0.06] rounded-2xl p-5">
-                            <span className="text-[11px] text-gray-600 uppercase tracking-widest mb-3 block">Header Varyasyonlar\u0131</span>
-                            <div className="grid grid-cols-4 gap-2">
-                                {([
-                                    { id: 'classic', name: 'Klasik' },
-                                    { id: 'tall', name: 'Y\u00fcksek' },
-                                    { id: 'center-logo', name: 'Logo' },
-                                    { id: 'left-logo', name: 'Sol Logo' },
-                                    { id: 'lang', name: 'Dil' },
-                                    { id: 'banner', name: 'Banner' },
-                                    { id: 'minimal', name: 'Minimal' },
-                                    { id: 'rounded', name: 'Yuvarlak' },
-                                    { id: 'split', name: 'Split' },
-                                    { id: 'accent-bar', name: '\u00c7izgi' },
-                                    { id: 'glass', name: 'Cam' },
-                                ] as { id: string; name: string }[]).map((v) => {
-                                    const isActive = theme.headerVariant === v.id;
-                                    const hBg = theme.menuHeaderBg;
-                                    const hText = theme.menuHeaderTextColor;
-                                    const hIcon = theme.menuHeaderIconColor;
-                                    return (
-                                        <button
-                                            key={v.id}
-                                            onClick={() => updateTheme('headerVariant', v.id)}
-                                            className={`group rounded-xl border overflow-hidden transition-all ${isActive
-                                                ? 'border-orange-500/40 bg-orange-500/5 ring-1 ring-orange-500/20'
-                                                : 'border-white/[0.04] bg-[#111] hover:border-white/[0.08] hover:bg-[#161616]'
-                                                }`}
-                                        >
-                                            <div className="px-2 pt-2">
-                                                <div className="h-7 rounded-lg flex items-center justify-between px-2" style={{ backgroundColor: hBg }}>
-                                                    <div className="flex flex-col gap-[1.5px]"><div className="w-3 h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} /><div className="w-2 h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} /></div>
-                                                    <div className="h-1.5 w-6 rounded-full" style={{ backgroundColor: hText, opacity: 0.5 }} />
-                                                    <Search size={5} style={{ color: hIcon }} />
-                                                </div>
-                                            </div>
-                                            <div className="py-1.5">
-                                                <p className={`text-[10px] font-medium ${isActive ? 'text-orange-300' : 'text-gray-500'} transition-colors`}>{v.name}</p>
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-
-                        {/* === TEMPORARILY HIDDEN SECTIONS === */}
-                        {false && (<>
-                            {/* General */}
-                            <Section title="Genel Ayarlar" icon={<Palette size={18} />}>
-                                <ColorPicker label="Sayfa Arkaplanı" value={theme.pageBg} onChange={(v) => updateTheme("pageBg", v)} />
-                                <ColorPicker label="Vurgu Rengi" value={theme.accentColor} onChange={(v) => updateTheme("accentColor", v)} />
-                            </Section>
-
-                            {/* Font */}
-                            <Section title="Yazı Tipi" icon={<Type size={18} />} defaultOpen={false}>
-                                {/* Font search */}
-                                <div className="relative mb-3">
-                                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                                    <input
-                                        value={fontSearch}
-                                        onChange={(e) => {
-                                            const q = e.target.value;
-                                            setFontSearch(q);
-                                            if (q.length >= 2) {
-                                                const fontName = q.replace(/ /g, '+');
-                                                if (!document.querySelector(`link[href*="${fontName}"]`)) {
-                                                    const link = document.createElement('link');
-                                                    link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;600&display=swap`;
-                                                    link.rel = 'stylesheet';
-                                                    document.head.appendChild(link);
-                                                }
-                                                setSearchedFonts([{ name: q, label: q }]);
-                                            } else {
-                                                setSearchedFonts([]);
-                                            }
-                                        }}
-                                        placeholder="Google Fonts'ta ara..."
-                                        className="w-full pl-9 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500"
-                                    />
-                                </div>
-                                {/* Font grid */}
-                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
-                                    {[...searchedFonts, ...FONTS.filter(f => !searchedFonts.some(sf => sf.name === f.name))].map((f) => {
-                                        const fontName = f.name.replace(/ /g, '+');
-                                        if (typeof window !== 'undefined' && !document.querySelector(`link[href*="${fontName}"]`)) {
-                                            const link = document.createElement('link');
-                                            link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;600&display=swap`;
-                                            link.rel = 'stylesheet';
-                                            document.head.appendChild(link);
-                                        }
-                                        const isActive = theme.fontFamily === f.name;
-                                        return (
-                                            <button
-                                                key={f.name}
-                                                onClick={() => updateTheme("fontFamily", f.name)}
-                                                className={`relative px-2 py-2.5 rounded-xl border text-center transition-all ${isActive ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30' : 'border-gray-700 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800'}`}
-                                            >
-                                                <span className="block text-sm font-semibold text-white truncate" style={{ fontFamily: f.name }}>
-                                                    Aa
-                                                </span>
-                                                <span className="block text-[9px] text-gray-500 mt-0.5 truncate">{f.label}</span>
-                                                {isActive && <div className="absolute top-1 right-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </Section>
-
-                            {/* Header */}
-                            <Section title="Başlık / Slider" icon={<Monitor size={18} />} defaultOpen={false}>
-                                {/* Hero Slider Toggle */}
-                                <div className="flex items-center justify-between mb-4">
-                                    <div>
-                                        <p className="text-sm font-medium text-white">Hero Slider</p>
-                                        <p className="text-[11px] text-gray-500">Menü üstündeki kayan banner alanı</p>
-                                    </div>
-                                    <button
-                                        onClick={() => updateTheme("showHeroSlider", theme.showHeroSlider !== "false" ? "false" : "true")}
-                                        className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${theme.showHeroSlider !== "false" ? 'bg-emerald-500' : 'bg-gray-600'}`}
-                                    >
-                                        <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${theme.showHeroSlider !== "false" ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
-                                    </button>
-                                </div>
-                                <ColorPicker label="Başlık Arkaplanı" value={theme.headerBg} onChange={(v) => updateTheme("headerBg", v)} />
-                                <ColorPicker label="Gradient Başlangıç" value={theme.headerGradientFrom} onChange={(v) => updateTheme("headerGradientFrom", v)} />
-                                <ColorPicker label="Gradient Bitiş" value={theme.headerGradientTo} onChange={(v) => updateTheme("headerGradientTo", v)} />
-                            </Section>
-
-                            {/* Category Buttons */}
-                            <Section title="Kategori Butonları" icon={<LayoutGrid size={18} />} defaultOpen={false}>
-                                <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Buton Bar Arkaplanı</p>
-                                <ColorPicker label="Arkaplan Rengi" value={theme.categoryNavBg} onChange={(v) => updateTheme("categoryNavBg", v)} />
-                                <div className="border-t border-gray-800 my-2" />
-                                <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Buton Renkleri</p>
-                                <ColorPicker label="Aktif Arkaplan" value={theme.categoryActiveBg} onChange={(v) => updateTheme("categoryActiveBg", v)} />
-                                <ColorPicker label="Aktif Yazı Rengi" value={theme.categoryActiveText} onChange={(v) => updateTheme("categoryActiveText", v)} />
-                                <ColorPicker label="Pasif Arkaplan" value={theme.categoryInactiveBg} onChange={(v) => updateTheme("categoryInactiveBg", v)} />
-                                <ColorPicker label="Pasif Yazı Rengi" value={theme.categoryInactiveText} onChange={(v) => updateTheme("categoryInactiveText", v)} />
-                                <div className="border-t border-gray-800 my-2" />
-                                <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Köşe Yuvarlaklığı</p>
-                                <div className="flex items-center justify-between gap-3">
-                                    <div className="flex gap-1.5">{RADIUS_PRESETS.map((r) => (
-                                        <button key={r.value} onClick={() => updateTheme("categoryRadius", r.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.categoryRadius === r.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{r.label}</button>
-                                    ))}</div>
-                                </div>
-                                <div className="flex items-center justify-between gap-3 mt-2">
-                                    <label className="text-xs text-gray-400">Değer</label>
-                                    <div className="flex items-center gap-2">
-                                        <input type="range" min={0} max={9999} value={theme.categoryRadius} onChange={(e) => updateTheme("categoryRadius", e.target.value)} className="w-20 accent-emerald-500" />
-                                        <input type="number" min={0} max={9999} value={theme.categoryRadius} onChange={(e) => updateTheme("categoryRadius", e.target.value)} className="w-16 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-300 text-right" />
-                                        <span className="text-xs text-gray-500">px</span>
-                                    </div>
-                                </div>
-                                <div className="border-t border-gray-800 my-2" />
-                                <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Gölge</p>
-                                <div className="grid grid-cols-4 gap-1.5">
-                                    {[
-                                        { value: "none", label: "Yok" },
-                                        { value: "sm", label: "Hafif" },
-                                        { value: "md", label: "Orta" },
-                                        { value: "lg", label: "Güçlü" },
-                                    ].map((s) => (
-                                        <button key={s.value} onClick={() => { updateTheme("categoryBtnShadow", s.value); updateTheme("categoryBtnCustomShadow", ""); }} className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.categoryBtnShadow === s.value && !theme.categoryBtnCustomShadow ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{s.label}</button>
-                                    ))}
-                                </div>
-                                <div className="mt-2">
-                                    <label className="text-xs text-gray-400 block mb-1">Özel Gölge (CSS)</label>
-                                    <input type="text" value={theme.categoryBtnCustomShadow || ""} onChange={(e) => { updateTheme("categoryBtnCustomShadow", e.target.value); if (e.target.value) updateTheme("categoryBtnShadow", "custom"); }} placeholder="0 2px 8px rgba(0,0,0,0.15)" className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 placeholder-gray-600 focus:border-emerald-500 focus:outline-none" />
-                                    <p className="text-[9px] text-gray-600 mt-1">Örn: 0 2px 8px rgba(0,0,0,0.15)</p>
-                                </div>
-                            </Section>
-
-                            {/* Search */}
-                            <Section title="Arama Çubuğu" icon={<SlidersHorizontal size={18} />} defaultOpen={false}>
-                                <ColorPicker label="Arkaplan" value={theme.searchBg} onChange={(v) => updateTheme("searchBg", v)} />
-                                <ColorPicker label="Kenarlık" value={theme.searchBorder} onChange={(v) => updateTheme("searchBorder", v)} />
-                                <ColorPicker label="Yazı Rengi" value={theme.searchText} onChange={(v) => updateTheme("searchText", v)} />
-                            </Section>
-
-                            {/* Cards */}
-                            <Section title="Ürün Kartları" icon={<Square size={18} />}>
-                                <ColorPicker label="Kategori Bölüm Arkaplanı" value={theme.categorySectionBg} onChange={(v) => updateTheme("categorySectionBg", v)} />
-                                <div className="border-t border-gray-800 my-2" />
-                                <ColorPicker label="Kart Arkaplanı" value={theme.cardBg} onChange={(v) => updateTheme("cardBg", v)} />
-                                <ColorPicker label="Kart Kenarlık" value={theme.cardBorder} onChange={(v) => updateTheme("cardBorder", v)} />
-                                <div className="flex items-center justify-between gap-3">
-                                    <label className="text-xs text-gray-400">Kart Gölgesi</label>
-                                    <div className="flex gap-1.5">{SHADOW_OPTIONS.map((s) => (
-                                        <button key={s.value} onClick={() => updateTheme("cardShadow", s.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.cardShadow === s.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{s.label}</button>
-                                    ))}</div>
-                                </div>
-                                <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Kart Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={24} value={theme.cardRadius} onChange={(e) => updateTheme("cardRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.cardRadius}px</span></div></div>
-                                <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Resim Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={20} value={theme.cardImageRadius} onChange={(e) => updateTheme("cardImageRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.cardImageRadius}px</span></div></div>
-                            </Section>
-
-                            {/* Text */}
-                            <Section title="Yazı Stilleri" icon={<Type size={18} />}>
-                                <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Ürün Adı</p>
-                                <ColorPicker label="Renk" value={theme.productNameColor} onChange={(v) => updateTheme("productNameColor", v)} />
-                                <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Kalınlık</label><div className="flex gap-1.5">{["400", "500", "600", "700", "800"].map((w) => (<button key={w} onClick={() => updateTheme("productNameWeight", w)} className={`px-2 py-1 rounded-md text-[10px] transition-all border ${theme.productNameWeight === w ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400"}`} style={{ fontWeight: parseInt(w) }}>{w}</button>))}</div></div>
-                                <div className="border-t border-gray-800 my-2" />
-                                <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Ürün Açıklaması</p>
-                                <ColorPicker label="Renk" value={theme.productDescColor} onChange={(v) => updateTheme("productDescColor", v)} />
-                                <div className="border-t border-gray-800 my-2" />
-                                <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Kategori Başlığı</p>
-                                <ColorPicker label="Renk" value={theme.categoryTitleColor} onChange={(v) => updateTheme("categoryTitleColor", v)} />
-                            </Section>
-
-                            {/* Pricing */}
-                            <Section title="Fiyat Stilleri" icon={<Layers size={18} />} defaultOpen={false}>
-                                <ColorPicker label="Fiyat Rengi" value={theme.priceColor} onChange={(v) => updateTheme("priceColor", v)} />
-                                <ColorPicker label="İndirimli Fiyat" value={theme.discountColor} onChange={(v) => updateTheme("discountColor", v)} />
-                                <ColorPicker label="Eski Fiyat" value={theme.oldPriceColor} onChange={(v) => updateTheme("oldPriceColor", v)} />
-                            </Section>
-
-                            {/* Popular Badge */}
-                            <Section title="Popüler Etiketi" icon={<Sparkles size={18} />} defaultOpen={false}>
-                                <ColorPicker label="Arkaplan" value={theme.popularBadgeBg} onChange={(v) => updateTheme("popularBadgeBg", v)} />
-                                <ColorPicker label="Yazı Rengi" value={theme.popularBadgeText} onChange={(v) => updateTheme("popularBadgeText", v)} />
-                            </Section>
-                        </>)}
-                        {/* === END HIDDEN SECTION 1 === */}
                     </>)}
                     {/* ─── END MENU TAB ─── */}
 
@@ -1237,15 +989,204 @@ export default function PanelDesign() {
                     </>)}
                     {/* ─── END WELCOME TAB ─── */}
 
-                    {/* === TEMPORARILY HIDDEN SECTIONS 2 === */}
-                    {false && (<>
+                    {/* ─── POSITION TAB ─── */}
+                    {activeTab === 'position' && (<>
+                        {/* Header */}
+                        <Section title="Başlık / Slider" icon={<Monitor size={18} />} defaultOpen={true}>
+                            {/* Hero Slider Toggle */}
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <p className="text-sm font-medium text-white">Hero Slider</p>
+                                    <p className="text-[11px] text-gray-500">Menü üstündeki kayan banner alanı</p>
+                                </div>
+                                <button
+                                    onClick={() => updateTheme("showHeroSlider", theme.showHeroSlider !== "false" ? "false" : "true")}
+                                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${theme.showHeroSlider !== "false" ? 'bg-emerald-500' : 'bg-gray-600'}`}
+                                >
+                                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${theme.showHeroSlider !== "false" ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                                </button>
+                            </div>
+                            <ColorPicker label="Başlık Arkaplanı" value={theme.headerBg} onChange={(v) => updateTheme("headerBg", v)} />
+                            <ColorPicker label="Gradient Başlangıç" value={theme.headerGradientFrom} onChange={(v) => updateTheme("headerGradientFrom", v)} />
+                            <ColorPicker label="Gradient Bitiş" value={theme.headerGradientTo} onChange={(v) => updateTheme("headerGradientTo", v)} />
+                        </Section>
+
+                        {/* Category Buttons */}
+                        <Section title="Kategori Butonları" icon={<LayoutGrid size={18} />} defaultOpen={false}>
+                            <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Buton Bar Arkaplanı</p>
+                            <ColorPicker label="Arkaplan Rengi" value={theme.categoryNavBg} onChange={(v) => updateTheme("categoryNavBg", v)} />
+                            <div className="border-t border-gray-800 my-2" />
+                            <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Buton Renkleri</p>
+                            <ColorPicker label="Aktif Arkaplan" value={theme.categoryActiveBg} onChange={(v) => updateTheme("categoryActiveBg", v)} />
+                            <ColorPicker label="Aktif Yazı Rengi" value={theme.categoryActiveText} onChange={(v) => updateTheme("categoryActiveText", v)} />
+                            <ColorPicker label="Pasif Arkaplan" value={theme.categoryInactiveBg} onChange={(v) => updateTheme("categoryInactiveBg", v)} />
+                            <ColorPicker label="Pasif Yazı Rengi" value={theme.categoryInactiveText} onChange={(v) => updateTheme("categoryInactiveText", v)} />
+                            <div className="border-t border-gray-800 my-2" />
+                            <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Köşe Yuvarlaklığı</p>
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex gap-1.5">{RADIUS_PRESETS.map((r) => (
+                                    <button key={r.value} onClick={() => updateTheme("categoryRadius", r.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.categoryRadius === r.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{r.label}</button>
+                                ))}</div>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 mt-2">
+                                <label className="text-xs text-gray-400">Değer</label>
+                                <div className="flex items-center gap-2">
+                                    <input type="range" min={0} max={9999} value={theme.categoryRadius} onChange={(e) => updateTheme("categoryRadius", e.target.value)} className="w-20 accent-emerald-500" />
+                                    <input type="number" min={0} max={9999} value={theme.categoryRadius} onChange={(e) => updateTheme("categoryRadius", e.target.value)} className="w-16 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-300 text-right" />
+                                    <span className="text-xs text-gray-500">px</span>
+                                </div>
+                            </div>
+                            <div className="border-t border-gray-800 my-2" />
+                            <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Gölge</p>
+                            <div className="grid grid-cols-4 gap-1.5">
+                                {[
+                                    { value: "none", label: "Yok" },
+                                    { value: "sm", label: "Hafif" },
+                                    { value: "md", label: "Orta" },
+                                    { value: "lg", label: "Güçlü" },
+                                ].map((s) => (
+                                    <button key={s.value} onClick={() => { updateTheme("categoryBtnShadow", s.value); updateTheme("categoryBtnCustomShadow", ""); }} className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.categoryBtnShadow === s.value && !theme.categoryBtnCustomShadow ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{s.label}</button>
+                                ))}
+                            </div>
+                            <div className="mt-2">
+                                <label className="text-xs text-gray-400 block mb-1">Özel Gölge (CSS)</label>
+                                <input type="text" value={theme.categoryBtnCustomShadow || ""} onChange={(e) => { updateTheme("categoryBtnCustomShadow", e.target.value); if (e.target.value) updateTheme("categoryBtnShadow", "custom"); }} placeholder="0 2px 8px rgba(0,0,0,0.15)" className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 placeholder-gray-600 focus:border-emerald-500 focus:outline-none" />
+                                <p className="text-[9px] text-gray-600 mt-1">Örn: 0 2px 8px rgba(0,0,0,0.15)</p>
+                            </div>
+                        </Section>
+
+                        {/* Search Bar */}
+                        <Section title="Arama Çubuğu" icon={<SlidersHorizontal size={18} />} defaultOpen={false}>
+                            <ColorPicker label="Arkaplan" value={theme.searchBg} onChange={(v) => updateTheme("searchBg", v)} />
+                            <ColorPicker label="Kenarlık" value={theme.searchBorder} onChange={(v) => updateTheme("searchBorder", v)} />
+                            <ColorPicker label="Yazı Rengi" value={theme.searchText} onChange={(v) => updateTheme("searchText", v)} />
+                        </Section>
+                    </>)}
+                    {/* ─── END POSITION TAB ─── */}
+
+                    {/* ─── GENERAL TAB ─── */}
+                    {activeTab === 'general' && (<>
+                        {/* General */}
+                        <Section title="Genel Ayarlar" icon={<Palette size={18} />}>
+                            <ColorPicker label="Sayfa Arkaplanı" value={theme.pageBg} onChange={(v) => updateTheme("pageBg", v)} />
+                            <ColorPicker label="Vurgu Rengi" value={theme.accentColor} onChange={(v) => updateTheme("accentColor", v)} />
+                        </Section>
+
+                        {/* Cards */}
+                        <Section title="Ürün Kartları" icon={<Square size={18} />}>
+                            <ColorPicker label="Kategori Bölüm Arkaplanı" value={theme.categorySectionBg} onChange={(v) => updateTheme("categorySectionBg", v)} />
+                            <div className="border-t border-gray-800 my-2" />
+                            <ColorPicker label="Kart Arkaplanı" value={theme.cardBg} onChange={(v) => updateTheme("cardBg", v)} />
+                            <ColorPicker label="Kart Kenarlık" value={theme.cardBorder} onChange={(v) => updateTheme("cardBorder", v)} />
+                            <div className="flex items-center justify-between gap-3">
+                                <label className="text-xs text-gray-400">Kart Gölgesi</label>
+                                <div className="flex gap-1.5">{SHADOW_OPTIONS.map((s) => (
+                                    <button key={s.value} onClick={() => updateTheme("cardShadow", s.value)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border ${theme.cardShadow === s.value ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"}`}>{s.label}</button>
+                                ))}</div>
+                            </div>
+                            <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Kart Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={24} value={theme.cardRadius} onChange={(e) => updateTheme("cardRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.cardRadius}px</span></div></div>
+                            <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Resim Köşe</label><div className="flex items-center gap-2"><input type="range" min={0} max={20} value={theme.cardImageRadius} onChange={(e) => updateTheme("cardImageRadius", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.cardImageRadius}px</span></div></div>
+                        </Section>
+
+                        {/* Pricing */}
+                        <Section title="Fiyat Stilleri" icon={<Layers size={18} />} defaultOpen={false}>
+                            <ColorPicker label="Fiyat Rengi" value={theme.priceColor} onChange={(v) => updateTheme("priceColor", v)} />
+                            <ColorPicker label="İndirimli Fiyat" value={theme.discountColor} onChange={(v) => updateTheme("discountColor", v)} />
+                            <ColorPicker label="Eski Fiyat" value={theme.oldPriceColor} onChange={(v) => updateTheme("oldPriceColor", v)} />
+                        </Section>
+
+                        {/* Popular Badge */}
+                        <Section title="Popüler Etiketi" icon={<Sparkles size={18} />} defaultOpen={false}>
+                            <ColorPicker label="Arkaplan" value={theme.popularBadgeBg} onChange={(v) => updateTheme("popularBadgeBg", v)} />
+                            <ColorPicker label="Yazı Rengi" value={theme.popularBadgeText} onChange={(v) => updateTheme("popularBadgeText", v)} />
+                        </Section>
+                    </>)}
+                    {/* ─── END GENERAL TAB ─── */}
+
+                    {/* ─── FONT TAB ─── */}
+                    {activeTab === 'font' && (<>
+                        <Section title="Yazı Tipi" icon={<Type size={18} />} defaultOpen={false}>
+                            {/* Font search */}
+                            <div className="relative mb-3">
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                                <input
+                                    value={fontSearch}
+                                    onChange={(e) => {
+                                        const q = e.target.value;
+                                        setFontSearch(q);
+                                        if (q.length >= 2) {
+                                            const fontName = q.replace(/ /g, '+');
+                                            if (!document.querySelector(`link[href*="${fontName}"]`)) {
+                                                const link = document.createElement('link');
+                                                link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;600&display=swap`;
+                                                link.rel = 'stylesheet';
+                                                document.head.appendChild(link);
+                                            }
+                                            setSearchedFonts([{ name: q, label: q }]);
+                                        } else {
+                                            setSearchedFonts([]);
+                                        }
+                                    }}
+                                    placeholder="Google Fonts'ta ara..."
+                                    className="w-full pl-9 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500"
+                                />
+                            </div>
+                            {/* Font grid */}
+                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+                                {[...searchedFonts, ...FONTS.filter(f => !searchedFonts.some(sf => sf.name === f.name))].map((f) => {
+                                    const fontName = f.name.replace(/ /g, '+');
+                                    if (typeof window !== 'undefined' && !document.querySelector(`link[href*="${fontName}"]`)) {
+                                        const link = document.createElement('link');
+                                        link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;600&display=swap`;
+                                        link.rel = 'stylesheet';
+                                        document.head.appendChild(link);
+                                    }
+                                    const isActive = theme.fontFamily === f.name;
+                                    return (
+                                        <button
+                                            key={f.name}
+                                            onClick={() => updateTheme("fontFamily", f.name)}
+                                            className={`relative px-2 py-2.5 rounded-xl border text-center transition-all ${isActive ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30' : 'border-gray-700 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800'}`}
+                                        >
+                                            <span className="block text-sm font-semibold text-white truncate" style={{ fontFamily: f.name }}>
+                                                Aa
+                                            </span>
+                                            <span className="block text-[9px] text-gray-500 mt-0.5 truncate">{f.label}</span>
+                                            {isActive && <div className="absolute top-1 right-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center"><Check size={8} className="text-white" /></div>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </Section>
+
+                        {/* Text Styles */}
+                        <Section title="Yazı Stilleri" icon={<Type size={18} />}>
+                            <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Ürün Adı</p>
+                            <ColorPicker label="Renk" value={theme.productNameColor} onChange={(v) => updateTheme("productNameColor", v)} />
+                            <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Kalınlık</label><div className="flex gap-1.5">{["400", "500", "600", "700", "800"].map((w) => (<button key={w} onClick={() => updateTheme("productNameWeight", w)} className={`px-2 py-1 rounded-md text-[10px] transition-all border ${theme.productNameWeight === w ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-300" : "bg-gray-800 border-gray-700 text-gray-400"}`} style={{ fontWeight: parseInt(w) }}>{w}</button>))}</div></div>
+                            <div className="border-t border-gray-800 my-2" />
+                            <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Ürün Açıklaması</p>
+                            <ColorPicker label="Renk" value={theme.productDescColor} onChange={(v) => updateTheme("productDescColor", v)} />
+                            <div className="border-t border-gray-800 my-2" />
+                            <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Kategori Başlığı</p>
+                            <ColorPicker label="Renk" value={theme.categoryTitleColor} onChange={(v) => updateTheme("categoryTitleColor", v)} />
+                        </Section>
+                    </>)}
+                    {/* ─── END FONT TAB ─── */}
+
+                    {/* ─── BOTTOMNAV TAB ─── */}
+                    {activeTab === 'bottomnav' && (<>
                         {/* Bottom Nav */}
                         <Section title="Alt Navigasyon" icon={<Monitor size={18} />} defaultOpen={false}>
                             <ColorPicker label="Arkaplan" value={theme.bottomNavBg} onChange={(v) => updateTheme("bottomNavBg", v)} />
                             <ColorPicker label="Aktif İkon" value={theme.bottomNavActive} onChange={(v) => updateTheme("bottomNavActive", v)} />
                             <ColorPicker label="Pasif İkon" value={theme.bottomNavInactive} onChange={(v) => updateTheme("bottomNavInactive", v)} />
                         </Section>
+                    </>)}
+                    {/* ─── END BOTTOMNAV TAB ─── */}
 
+                    {/* ─── DETAIL TAB ─── */}
+                    {activeTab === 'detail' && (<>
                         {/* Product Detail Overlay */}
                         <Section title="Ürün Detay Sayfası" icon={<Eye size={18} />} defaultOpen={false}>
                             <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Arka Plan & Kart</p>
@@ -1268,7 +1209,11 @@ export default function PanelDesign() {
                             <ColorPicker label="Etiket Yazı" value={theme.detailIngredientText} onChange={(v) => updateTheme("detailIngredientText", v)} />
                             <ColorPicker label="Etiket Border" value={theme.detailIngredientBorder} onChange={(v) => updateTheme("detailIngredientBorder", v)} />
                         </Section>
+                    </>)}
+                    {/* ─── END DETAIL TAB ─── */}
 
+                    {/* ─── SEARCH TAB ─── */}
+                    {activeTab === 'search' && (<>
                         {/* Search Overlay */}
                         <Section title="Arama Sayfası" icon={<Search size={18} />} defaultOpen={false}>
                             <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Genel</p>
@@ -1288,7 +1233,11 @@ export default function PanelDesign() {
                             <ColorPicker label="Açıklama" value={theme.searchOverlayResultDescColor} onChange={(v) => updateTheme("searchOverlayResultDescColor", v)} />
                             <ColorPicker label="Fiyat" value={theme.searchOverlayResultPriceColor} onChange={(v) => updateTheme("searchOverlayResultPriceColor", v)} />
                         </Section>
+                    </>)}
+                    {/* ─── END SEARCH TAB ─── */}
 
+                    {/* ─── DRAWER TAB ─── */}
+                    {activeTab === 'drawer' && (<>
                         {/* Sidebar Drawer */}
                         <Section title="Sol Menü (Drawer)" icon={<Menu size={18} />} defaultOpen={false}>
                             <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Genel</p>
@@ -1312,7 +1261,8 @@ export default function PanelDesign() {
                             <ColorPicker label="Aktif Yazı" value={theme.sidebarActiveItemColor} onChange={(v) => updateTheme("sidebarActiveItemColor", v)} />
                         </Section>
                     </>)}
-                    {/* === END HIDDEN SECTION 2 === */}
+                    {/* ─── END DRAWER TAB ─── */}
+
 
                 </div>
 
