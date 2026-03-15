@@ -1183,10 +1183,18 @@ export default function MenuClient({
                         const hText = (T as any).menuHeaderTextColor || '#111827';
                         const hIcon = (T as any).menuHeaderIconColor || '#374151';
                         const hFontSize = (T as any).menuHeaderFontSize || '18';
+                        const hFontWeight = (T as any).menuHeaderFontWeight || '700';
+                        const hTextAlign = (T as any).menuHeaderTextAlign || 'center';
                         const hShadow = (() => { const s = (T as any).menuHeaderShadow || 'sm'; if (s.includes('px')) return s; switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } })();
                         const hLogo = (T as any).headerLogo || '';
                         const bName = BUSINESS_INFO.name || 'Yükleniyor...';
                         const accentColor = (T as any).accentColor || '#000000';
+                        const titleStyle = { color: hText, fontSize: hFontSize + 'px', fontWeight: hFontWeight } as React.CSSProperties;
+                        const titleSpan = (
+                            <div className="flex-1 min-w-0 mx-[5px]" style={{ textAlign: hTextAlign as any }}>
+                                <span className="truncate inline-block max-w-full" style={titleStyle}>{bName}</span>
+                            </div>
+                        );
 
                         // Reusable elements — standard hamburger icon always (18px top + 14px bottom)
                         const hamburger = <button onClick={() => setIsSidebarDrawerOpen(true)} className="flex flex-col items-start justify-center gap-[4px] z-10 p-2" style={{ color: hIcon }}><span className="block w-[18px] h-[2px] bg-current rounded-full" /><span className="block w-[14px] h-[2px] bg-current rounded-full" /></button>;
@@ -1198,7 +1206,7 @@ export default function MenuClient({
                         if (hVariant === 'classic') return (
                             <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                {titleSpan}
                                 {searchBtn}
                             </div>
                         );
@@ -1208,7 +1216,7 @@ export default function MenuClient({
                             <div className="h-[80px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 {hamburger}
                                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center max-w-[60%]">
-                                    <span className="font-bold truncate block" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                    {titleSpan}
                                     {BUSINESS_INFO.description && <span className="text-xs truncate block mt-0.5" style={{ color: hText, opacity: 0.5 }}>{BUSINESS_INFO.description}</span>}
                                 </div>
                                 {searchBtn}
@@ -1221,7 +1229,7 @@ export default function MenuClient({
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2">{hamburger}</div>
                                 <div className="absolute right-4 top-1/2 -translate-y-1/2">{searchBtn}</div>
                                 {logoImg ? <div className="w-12 h-12 rounded-full overflow-hidden border-2 mb-1" style={{ borderColor: hIcon + '33' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center mb-1 text-lg font-bold" style={{ borderColor: hIcon + '33', color: hText, backgroundColor: hBgHex }}>{bName.charAt(0)}</div>}
-                                <span className="font-bold text-sm truncate max-w-[70%]" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                {titleSpan}
                             </div>
                         );
 
@@ -1230,7 +1238,7 @@ export default function MenuClient({
                             <div className="h-[60px] flex items-center justify-between px-4" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                     {logoImg ? <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 border" style={{ borderColor: hIcon + '22' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-lg font-bold" style={{ backgroundColor: hBgHex, color: hText, border: `1px solid ${hIcon}22` }}>{bName.charAt(0)}</div>}
-                                    <span className="font-bold truncate" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                    {titleSpan}
                                 </div>
                                 <div className="flex items-center gap-1 flex-shrink-0">
                                     {searchBtn}
@@ -1245,7 +1253,7 @@ export default function MenuClient({
                                 <div className="flex items-center gap-2 min-w-0 flex-1">
                                     {hamburger}
                                     {logoImg ? <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border" style={{ borderColor: hIcon + '22' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-sm font-bold" style={{ backgroundColor: hBgHex, color: hText, border: `1px solid ${hIcon}22` }}>{bName.charAt(0)}</div>}
-                                    <span className="font-bold truncate" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                    {titleSpan}
                                 </div>
                                 <div className="flex items-center gap-1 flex-shrink-0">
                                     <button className="flex items-center justify-center p-2" style={{ color: hIcon }}><Globe size={18} /></button>
@@ -1263,7 +1271,7 @@ export default function MenuClient({
                                 <div className="relative flex items-end justify-between w-full">
                                     <div className="flex items-center gap-3">
                                         <button onClick={() => setIsSidebarDrawerOpen(true)} className="flex flex-col items-start justify-center gap-[4px] p-2 text-white/90"><span className="block w-[18px] h-[2px] bg-current rounded-full" /><span className="block w-[14px] h-[2px] bg-current rounded-full" /></button>
-                                        <span className="font-bold text-white drop-shadow-lg truncate max-w-[200px]" style={{ fontSize: hFontSize + 'px' }}>{bName}</span>
+                                        <span className="text-white drop-shadow-lg truncate max-w-[200px]" style={{ fontSize: hFontSize + 'px', fontWeight: hFontWeight }}>{bName}</span>
                                     </div>
                                     <button onClick={() => setIsSearchOpen(true)} className="flex items-center justify-center p-2 text-white/90"><Search size={20} /></button>
                                 </div>
@@ -1274,7 +1282,7 @@ export default function MenuClient({
                         if (hVariant === 'minimal') return (
                             <div className="h-[48px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-semibold text-sm tracking-wide uppercase truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-sm tracking-wide uppercase truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px', fontWeight: hFontWeight }}>{bName}</span>
                                 {searchBtn}
                             </div>
                         );
@@ -1283,7 +1291,7 @@ export default function MenuClient({
                         if (hVariant === 'rounded') return (
                             <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow, borderRadius: '0 0 20px 20px' }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                {titleSpan}
                                 {searchBtn}
                             </div>
                         );
@@ -1293,7 +1301,7 @@ export default function MenuClient({
                             <div className="h-[60px] flex items-center justify-between px-4" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                     {hamburger}
-                                    <span className="font-bold truncate" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                    {titleSpan}
                                 </div>
                                 <div className="flex items-center gap-1 flex-shrink-0">
                                     {searchBtn}
@@ -1306,7 +1314,7 @@ export default function MenuClient({
                             <div className="relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 <div className="h-[60px] flex items-center justify-between px-4 relative">
                                     {hamburger}
-                                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                    {titleSpan}
                                     {searchBtn}
                                 </div>
                                 <div className="h-[3px] w-full" style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88, ${accentColor}22)` }} />
@@ -1317,7 +1325,7 @@ export default function MenuClient({
                         if (hVariant === 'glass') return (
                             <div className="h-[60px] flex items-center justify-between px-4 relative backdrop-blur-md" style={{ backgroundColor: hBgHex + 'cc', boxShadow: hShadow, borderBottom: `1px solid ${hIcon}15` }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                {titleSpan}
                                 {searchBtn}
                             </div>
                         );
@@ -1326,7 +1334,7 @@ export default function MenuClient({
                         if (hVariant === 'overlay') return (
                             <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: 'transparent', borderBottom: `1px dashed ${hIcon}40` }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, opacity: 0.8 }}>{bName}</span>
+                                <div className="flex-1 min-w-0 mx-[5px]" style={{ textAlign: hTextAlign as any, opacity: 0.8 }}><span className="truncate inline-block max-w-full" style={titleStyle}>{bName}</span></div>
                                 {searchBtn}
                             </div>
                         );
@@ -1335,7 +1343,7 @@ export default function MenuClient({
                         if (hVariant === 'gradient') return (
                             <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ background: `linear-gradient(135deg, ${hBgHex}, ${hIcon}30)`, boxShadow: hShadow }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                {titleSpan}
                                 {searchBtn}
                             </div>
                         );
@@ -1345,7 +1353,7 @@ export default function MenuClient({
                         return (
                             <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
+                                {titleSpan}
                                 {searchBtn}
                             </div>
                         );
@@ -1453,7 +1461,7 @@ export default function MenuClient({
                                     <div className="relative w-full h-[200px] overflow-hidden rounded-xl mb-3" style={{ marginTop: '24px' }}>
                                         <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                                        <h2 className="absolute bottom-4 left-4 text-xl font-bold text-white drop-shadow-lg" style={{ fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
+                                        <h2 className="absolute bottom-4 left-4 text-xl text-white drop-shadow-lg" style={{ fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
                                     </div>
                                 ) : (
                                     <div className="pt-6 pb-3">
@@ -1654,7 +1662,7 @@ export default function MenuClient({
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                         {/* Business Name on Image */}
                         <div className="absolute bottom-8 left-5 right-5">
-                            <h1 className="text-3xl font-bold text-white drop-shadow-lg">{BUSINESS_INFO.name}</h1>
+                            <h1 className="text-3xl text-white drop-shadow-lg">{BUSINESS_INFO.name}</h1>
                         </div>
                     </div>
 
@@ -1797,7 +1805,7 @@ export default function MenuClient({
                                     </div>
                                 )}
                                 {/* Name + Description below logo */}
-                                <p className="font-bold text-sm leading-tight" style={{ color: T.sidebarNameColor || '#111827' }}>{BUSINESS_INFO.name}</p>
+                                <p className="text-sm leading-tight" style={{ color: T.sidebarNameColor || '#111827' }}>{BUSINESS_INFO.name}</p>
                                 {BUSINESS_INFO.description && <p className="text-xs mt-1 leading-relaxed break-words pr-8" style={{ color: T.sidebarDescColor || '#9ca3af' }}>{BUSINESS_INFO.description}</p>}
                             </div>
 

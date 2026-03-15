@@ -100,6 +100,8 @@ const DEFAULT_THEME = {
     menuHeaderSearchIconColor: "#374151",
     menuHeaderShadow: "sm",
     menuHeaderFontSize: "18",
+    menuHeaderFontWeight: "700",
+    menuHeaderTextAlign: "center",
     menuHeaderSearchBtnBg: "#f3f4f6",
     headerVariant: "classic",
     headerLogo: "",
@@ -1784,7 +1786,30 @@ export default function PanelDesign() {
 
                         {/* Font Size */}
                         <div className="rounded-2xl p-4 mb-3 bg-[#111]">
-                            <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Yazı Boyutu</label><div className="flex items-center gap-2"><input type="range" min={12} max={28} value={theme.menuHeaderFontSize || '18'} onChange={(e) => updateTheme("menuHeaderFontSize", e.target.value)} className="w-24 accent-emerald-500" /><span className="text-xs text-gray-500 w-8 text-right">{theme.menuHeaderFontSize || '18'}px</span></div></div>
+                            <span className="text-[14px] text-gray-500 uppercase font-semibold mb-3 block">Tipografi</span>
+                            <div className="flex items-center justify-between gap-3 mb-3"><label className="text-xs text-gray-400">Yazı Boyutu</label><input type="text" defaultValue={theme.menuHeaderFontSize || '18'} onBlur={(e) => { const v = Math.min(36, Math.max(10, parseInt(e.target.value) || 18)); e.target.value = String(v); updateTheme("menuHeaderFontSize", String(v)); }} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} className="w-12 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-1 text-xs text-gray-300 text-center outline-none focus:border-white/20" /></div>
+                            <div className="flex items-center justify-between gap-3 mb-3 relative"><label className="text-xs text-gray-400">Kalınlık</label>
+                                <select value={theme.menuHeaderFontWeight || '700'} onChange={(e) => updateTheme("menuHeaderFontWeight", e.target.value)} className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-white/20 cursor-pointer appearance-none pr-6" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}>
+                                    <option value="100">Thin</option>
+                                    <option value="300">Light</option>
+                                    <option value="400">Regular</option>
+                                    <option value="500">Medium</option>
+                                    <option value="600">SemiBold</option>
+                                    <option value="700">Bold</option>
+                                    <option value="800">ExtraBold</option>
+                                </select>
+                            </div>
+                            <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Hizalama</label>
+                                <div className="flex gap-1">
+                                    {([
+                                        { value: 'left', icon: <><div className="w-3 h-[1.5px] bg-current rounded-full" /><div className="w-2 h-[1.5px] bg-current rounded-full mt-[2px]" /><div className="w-2.5 h-[1.5px] bg-current rounded-full mt-[2px]" /></> },
+                                        { value: 'center', icon: <><div className="w-3 h-[1.5px] bg-current rounded-full mx-auto" /><div className="w-2 h-[1.5px] bg-current rounded-full mt-[2px] mx-auto" /><div className="w-2.5 h-[1.5px] bg-current rounded-full mt-[2px] mx-auto" /></> },
+                                        { value: 'right', icon: <><div className="w-3 h-[1.5px] bg-current rounded-full ml-auto" /><div className="w-2 h-[1.5px] bg-current rounded-full mt-[2px] ml-auto" /><div className="w-2.5 h-[1.5px] bg-current rounded-full mt-[2px] ml-auto" /></> },
+                                    ] as { value: string; icon: React.ReactNode }[]).map((a) => (
+                                        <button key={a.value} onClick={() => updateTheme("menuHeaderTextAlign" as any, a.value)} className={`w-8 h-7 rounded flex flex-col items-center justify-center transition-colors ${(theme.menuHeaderTextAlign || 'center') === a.value ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}>{a.icon}</button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Shadow */}
