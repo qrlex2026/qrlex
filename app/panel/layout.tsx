@@ -7,7 +7,7 @@ import {
     UtensilsCrossed, Settings,
     ArrowRight, Menu, X, QrCode, Paintbrush, ChartNoAxesColumn,
     UserCircle, Inbox, Bell, Brain, Search, Gift, Sun, Moon,
-    Rocket, Command, Info, LogOut, ChevronRight, Palette, Globe, Check,
+    Rocket, Command, Info, LogOut, Globe, Check,
 } from "lucide-react";
 
 interface Notification {
@@ -262,6 +262,22 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
         return (
             <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--p-sidebar)' }}>
 
+                {/* Brand Logo */}
+                <div className="flex items-center justify-center py-3 px-2">
+                    <div
+                        className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center"
+                        style={{
+                            backgroundColor: '#000000',
+                        }}
+                    >
+                        <span
+                            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '28px', fontWeight: 700, color: '#ffffff' }}
+                        >
+                            Q
+                        </span>
+                    </div>
+                </div>
+
                 {/* Primary Navigation - Icon + Label below */}
                 <nav className="flex flex-col items-center gap-3 px-2 mt-2">
                     {PRIMARY_NAV.map((item) => {
@@ -484,23 +500,6 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                             )}
                         </div>
 
-                        {/* Dark/Light Toggle */}
-                        <div className="flex items-center rounded-full p-1 transition-colors duration-300" style={{ backgroundColor: 'var(--p-surface2)' }}>
-                            <button
-                                onClick={() => setIsDarkMode(true)}
-                                className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-all`}
-                                style={isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}
-                            >
-                                <Moon size={18} />
-                            </button>
-                            <button
-                                onClick={() => setIsDarkMode(false)}
-                                className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-all`}
-                                style={!isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}
-                            >
-                                <Sun size={18} />
-                            </button>
-                        </div>
 
                         {/* Bildirim */}
                         <div className="relative" ref={notifRef}>
@@ -675,11 +674,26 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                             <Settings size={18} strokeWidth={1.5} className="text-gray-400" />
                                             <span>Ayarlar</span>
                                         </Link>
-                                        <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors w-full">
-                                            <Palette size={18} strokeWidth={1.5} className="text-gray-400" />
+                                        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 w-full">
+                                            {isDarkMode ? <Moon size={18} strokeWidth={1.5} className="text-gray-400" /> : <Sun size={18} strokeWidth={1.5} className="text-gray-400" />}
                                             <span className="flex-1 text-left">Tema</span>
-                                            <ChevronRight size={14} className="text-gray-500" />
-                                        </button>
+                                            <div className="flex items-center rounded-full p-0.5 transition-colors duration-300" style={{ backgroundColor: 'var(--p-surface3)' }}>
+                                                <button
+                                                    onClick={() => setIsDarkMode(true)}
+                                                    className="w-7 h-7 rounded-full flex items-center justify-center transition-all"
+                                                    style={isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}
+                                                >
+                                                    <Moon size={13} />
+                                                </button>
+                                                <button
+                                                    onClick={() => setIsDarkMode(false)}
+                                                    className="w-7 h-7 rounded-full flex items-center justify-center transition-all"
+                                                    style={!isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}
+                                                >
+                                                    <Sun size={13} />
+                                                </button>
+                                            </div>
+                                        </div>
                                         <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors w-full">
                                             <Rocket size={18} strokeWidth={1.5} className="text-gray-400" />
                                             <span>Yükselt</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 // Using regular img tags for external URLs
 import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users, Menu, LayoutGrid, LayoutList, Bell, Inbox, User, CigaretteOff, Baby, Car, Wifi, Accessibility, TreePine, Home, PawPrint, Wine, Coffee, Truck, ShoppingBag, Copy, Filter, BellRing, Languages } from "lucide-react";
 import { clsx } from "clsx";
@@ -51,6 +52,9 @@ export default function MenuClient({
     restaurantId,
 }: MenuClientProps) {
     const [activeCategory, setActiveCategory] = useState("");
+    const searchParams = useSearchParams();
+    const [isPreview, setIsPreview] = useState(false);
+    useEffect(() => { try { setIsPreview(window.self !== window.top); } catch { setIsPreview(true); } }, []);
     const [currentSlide, setCurrentSlide] = useState(0);
     // Auto-slide every 4 seconds
     useEffect(() => {
@@ -128,7 +132,25 @@ export default function MenuClient({
     const PRODUCTS = initialProducts;
     const BUSINESS_INFO = initialBusinessInfo;
     const [liveTheme, setLiveTheme] = useState<Record<string, string>>(initialTheme);
-    const T = liveTheme;
+    // Sync globalTheme keys to rendering keys (fallback for data saved before sync was added)
+    const T = (() => {
+        const t = { ...liveTheme };
+        if (t.globalThemeBg && t.globalThemeBg !== '#ffffff') {
+            if (!t.pageBg || t.pageBg === '#f9fafb') t.pageBg = t.globalThemeBg;
+            if (!t.cardBg || t.cardBg === '#ffffff') t.cardBg = t.globalThemeBg;
+        }
+        if (t.globalThemeText && t.globalThemeText !== '#111827') {
+            if (!t.productNameColor || t.productNameColor === '#111827') t.productNameColor = t.globalThemeText;
+            if (!t.categoryTitleColor || t.categoryTitleColor === '#111827') t.categoryTitleColor = t.globalThemeText;
+        }
+        if (t.globalThemeIcon) {
+            if (!t.accentColor || t.accentColor === '#000000') t.accentColor = t.globalThemeIcon;
+        }
+        if (t.globalThemeSearchBg) {
+            if (!t.searchBg || t.searchBg === '#f3f4f6') t.searchBg = t.globalThemeSearchBg;
+        }
+        return t;
+    })();
 
     // Search Logic
     const searchResults = searchQuery
@@ -296,8 +318,11 @@ export default function MenuClient({
     const anyOverlayOpen = showLangSplash || isProfileOpen || !!selectedProduct || isSearchOpen;
     const scrollYRef = useRef(0);
     useEffect(() => {
+        if (isPreview) return; // Skip body scroll lock in iframe preview mode
         if (anyOverlayOpen) {
             scrollYRef.current = window.scrollY;
+            // Calculate scrollbar width before hiding it (cross-browser fix)
+            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
             document.body.style.position = 'fixed';
             document.body.style.top = `-${scrollYRef.current}px`;
             document.body.style.left = '0';
@@ -305,6 +330,10 @@ export default function MenuClient({
             document.body.style.width = '100%';
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
+            // Compensate for scrollbar removal to prevent horizontal shift
+            if (scrollbarWidth > 0) {
+                document.body.style.paddingRight = `${scrollbarWidth}px`;
+            }
         } else {
             document.body.style.position = '';
             document.body.style.top = '';
@@ -313,9 +342,11 @@ export default function MenuClient({
             document.body.style.width = '';
             document.body.style.overflow = '';
             document.documentElement.style.overflow = '';
+            document.body.style.paddingRight = '';
             window.scrollTo(0, scrollYRef.current);
         }
         return () => {
+            if (isPreview) return;
             document.body.style.position = '';
             document.body.style.top = '';
             document.body.style.left = '';
@@ -323,8 +354,9 @@ export default function MenuClient({
             document.body.style.width = '';
             document.body.style.overflow = '';
             document.documentElement.style.overflow = '';
+            document.body.style.paddingRight = '';
         };
-    }, [anyOverlayOpen]);
+    }, [anyOverlayOpen, isPreview]);
     const [selectedLang, setSelectedLang] = useState("tr");
     const [isTranslating, setIsTranslating] = useState(false);
     const [translatedCategories, setTranslatedCategories] = useState<{ id: string; name: string; image?: string }[]>(initialCategories);
@@ -455,13 +487,16 @@ export default function MenuClient({
     ];
 
     return (
-        <>
+        <div style={{ overflowX: 'clip', width: '100%', position: 'relative' }}>
             {/* Welcome Screen — variant-aware */}
             {showLangSplash && (() => {
                 const wVariant = (T as any).welcomeVariant || 'classic';
                 const wVideo = (T as any).welcomeVideo || '';
                 const wImage = (T as any).welcomeImage || '';
                 const wBg = T.welcomeBg || '#000000';
+                const baseHex = (v: string) => { if (v.startsWith('#')) return v; const m = v.match(/#[0-9a-fA-F]{3,8}/); return m ? m[0] : '#000000'; };
+                const wBgHex = baseHex(wBg);
+                const bgStyle = (v: string) => (v.includes('gradient') || v.startsWith('url(')) ? { background: v } : { backgroundColor: v };
                 const wText = T.welcomeTextColor || '#ffffff';
                 const wSub = T.welcomeSubtextColor || '#ffffff80';
                 const wBtnBg = T.welcomeBtnBg || '#ffffff';
@@ -482,7 +517,7 @@ export default function MenuClient({
 
                 // Background layer (shared by all variants)
                 const bgLayer = (
-                    <div className="absolute inset-0 overflow-hidden" style={{ backgroundColor: wBg }}>
+                    <div className="absolute inset-0 overflow-hidden" style={bgStyle(wBg)}>
                         {wVideo ? (
                             <video src={wVideo} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" style={{ opacity: overlayOpacity }} />
                         ) : wImage ? (
@@ -783,7 +818,7 @@ export default function MenuClient({
                         <div className="relative flex-1 flex flex-col items-center justify-center z-10 px-5">
                             {/* Main glass card */}
                             <div className="w-full max-w-[340px] rounded-[28px] overflow-hidden" style={{
-                                background: `linear-gradient(145deg, ${wBg}cc, ${wBg}99)`,
+                                background: `linear-gradient(145deg, ${wBgHex}cc, ${wBgHex}99)`,
                                 backdropFilter: 'blur(20px)',
                                 WebkitBackdropFilter: 'blur(20px)',
                                 border: `1px solid ${wLogoBorder}`,
@@ -828,7 +863,7 @@ export default function MenuClient({
                             <div className="text-center" style={{ animation: 'fadeInUp 0.6s ease-out both' }}>
                                 {/* Logo floating over the background */}
                                 <div className="mx-auto mb-3 p-4 rounded-full" style={{
-                                    background: `${wBg}88`,
+                                    background: `${wBgHex}88`,
                                     backdropFilter: 'blur(10px)',
                                     border: `2px solid ${wLogoBorder}`,
                                     display: 'inline-block'
@@ -841,11 +876,11 @@ export default function MenuClient({
                         {/* SVG wave divider */}
                         <div className="relative z-10">
                             <svg viewBox="0 0 400 80" className="w-full block -mb-[2px]" preserveAspectRatio="none" style={{ height: '70px' }}>
-                                <path d="M0,60 C50,20 100,70 150,35 C200,0 250,50 300,25 C350,0 380,40 400,30 L400,80 L0,80 Z" style={{ fill: wBg }} />
-                                <path d="M0,65 C60,30 110,75 160,40 C210,5 260,55 310,30 C355,5 385,45 400,35 L400,80 L0,80 Z" style={{ fill: wBg, opacity: 0.5 }} />
+                                <path d="M0,60 C50,20 100,70 150,35 C200,0 250,50 300,25 C350,0 380,40 400,30 L400,80 L0,80 Z" style={{ fill: wBgHex }} />
+                                <path d="M0,65 C60,30 110,75 160,40 C210,5 260,55 310,30 C355,5 385,45 400,35 L400,80 L0,80 Z" style={{ fill: wBgHex, opacity: 0.5 }} />
                             </svg>
                             {/* Bottom solid panel */}
-                            <div style={{ backgroundColor: wBg }} className="px-6 pb-8 pt-2">
+                            <div style={bgStyle(wBg)} className="px-6 pb-8 pt-2">
                                 <p className="text-center text-sm font-light tracking-[0.1em] mb-5" style={{ color: wSub, animation: 'fadeInUp 0.5s ease-out 0.2s both' }}>{t('welcome')}</p>
 
                                 {renderButtons()}
@@ -916,14 +951,14 @@ export default function MenuClient({
                     <>
                         {/* Diagonal clip: top-right triangle stays transparent for bg */}
                         <div className="absolute inset-0 z-[2] pointer-events-none" style={{
-                            background: `linear-gradient(135deg, transparent 45%, ${wBg} 45%)`,
+                            background: `linear-gradient(135deg, transparent 45%, ${wBgHex} 45%)`,
                         }} />
 
                         {/* Content on the dark (bottom-left) triangle */}
                         <div className="relative flex-1 flex flex-col z-10">
                             {/* Top area: logo on the visible bg part */}
                             <div className="flex-1 flex items-start justify-end p-8 pt-16" style={{ animation: 'fadeInUp 0.5s ease-out both' }}>
-                                <div className="p-3 rounded-2xl" style={{ background: `${wBg}99`, backdropFilter: 'blur(10px)' }}>
+                                <div className="p-3 rounded-2xl" style={{ background: `${wBgHex}99`, backdropFilter: 'blur(10px)' }}>
                                     {logo}
                                 </div>
                             </div>
@@ -951,11 +986,11 @@ export default function MenuClient({
                         <div className="absolute inset-0 z-[2] pointer-events-none flex flex-col">
                             <div className="flex-[3]" /> {/* bg visible */}
                             <div className="h-[3px]" style={{ backgroundColor: wBtnBg, opacity: 0.15 }} />
-                            <div className="flex-[0.5]" style={{ backgroundColor: `${wBg}44` }} />
+                            <div className="flex-[0.5]" style={{ backgroundColor: `${wBgHex}44` }} />
                             <div className="h-[2px]" style={{ backgroundColor: wBtnBg, opacity: 0.25 }} />
-                            <div className="flex-[0.3]" style={{ backgroundColor: `${wBg}66` }} />
+                            <div className="flex-[0.3]" style={{ backgroundColor: `${wBgHex}66` }} />
                             <div className="h-[1px]" style={{ backgroundColor: wBtnBg, opacity: 0.4 }} />
-                            <div className="flex-[4]" style={{ backgroundColor: `${wBg}dd` }} />
+                            <div className="flex-[4]" style={{ backgroundColor: `${wBgHex}dd` }} />
                         </div>
 
                         <div className="relative flex-1 flex flex-col z-10">
@@ -1090,7 +1125,7 @@ export default function MenuClient({
                 return (
                     <div
                         className={`fixed inset-0 z-[100] flex flex-col overflow-hidden transition-opacity duration-500 ${splashFading ? 'opacity-0' : 'opacity-100'}`}
-                        style={{ fontFamily: T.fontFamily, backgroundColor: wBg }}
+                        style={{ fontFamily: T.fontFamily, ...bgStyle(wBg) }}
                     >
                         {bgLayer}
                         {gradient}
@@ -1143,9 +1178,12 @@ export default function MenuClient({
                     {(() => {
                         const hVariant = (T as any).headerVariant || 'classic';
                         const hBg = (T as any).menuHeaderBg || '#ffffff';
+                        const hBgHex = (() => { if (hBg.startsWith('#')) return hBg; const m = hBg.match(/#[0-9a-fA-F]{3,8}/); return m ? m[0] : '#ffffff'; })();
+                        const hBgStyle = (hBg.includes('gradient') || hBg.startsWith('url(')) ? { background: hBg } : { backgroundColor: hBg };
                         const hText = (T as any).menuHeaderTextColor || '#111827';
                         const hIcon = (T as any).menuHeaderIconColor || '#374151';
-                        const hShadow = (() => { const s = (T as any).menuHeaderShadow || 'sm'; switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } })();
+                        const hFontSize = (T as any).menuHeaderFontSize || '18';
+                        const hShadow = (() => { const s = (T as any).menuHeaderShadow || 'sm'; if (s.includes('px')) return s; switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } })();
                         const hLogo = (T as any).headerLogo || '';
                         const bName = BUSINESS_INFO.name || 'Yükleniyor...';
                         const accentColor = (T as any).accentColor || '#000000';
@@ -1158,19 +1196,19 @@ export default function MenuClient({
 
                         // === CLASSIC ===
                         if (hVariant === 'classic') return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                                 {searchBtn}
                             </div>
                         );
 
                         // === TALL ===
                         if (hVariant === 'tall') return (
-                            <div className="h-[80px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                            <div className="h-[80px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 {hamburger}
                                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center max-w-[60%]">
-                                    <span className="font-bold text-xl truncate block" style={{ color: hText }}>{bName}</span>
+                                    <span className="font-bold truncate block" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                                     {BUSINESS_INFO.description && <span className="text-xs truncate block mt-0.5" style={{ color: hText, opacity: 0.5 }}>{BUSINESS_INFO.description}</span>}
                                 </div>
                                 {searchBtn}
@@ -1179,20 +1217,20 @@ export default function MenuClient({
 
                         // === CENTER-LOGO ===
                         if (hVariant === 'center-logo') return (
-                            <div className="flex flex-col items-center pb-2 pt-3 px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                            <div className="flex flex-col items-center pb-2 pt-3 px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2">{hamburger}</div>
                                 <div className="absolute right-4 top-1/2 -translate-y-1/2">{searchBtn}</div>
-                                {logoImg ? <div className="w-12 h-12 rounded-full overflow-hidden border-2 mb-1" style={{ borderColor: hIcon + '33' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center mb-1 text-lg font-bold" style={{ borderColor: hIcon + '33', color: hText, backgroundColor: hBg }}>{bName.charAt(0)}</div>}
-                                <span className="font-bold text-sm truncate max-w-[70%]" style={{ color: hText }}>{bName}</span>
+                                {logoImg ? <div className="w-12 h-12 rounded-full overflow-hidden border-2 mb-1" style={{ borderColor: hIcon + '33' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center mb-1 text-lg font-bold" style={{ borderColor: hIcon + '33', color: hText, backgroundColor: hBgHex }}>{bName.charAt(0)}</div>}
+                                <span className="font-bold text-sm truncate max-w-[70%]" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                             </div>
                         );
 
                         // === LEFT-LOGO ===
                         if (hVariant === 'left-logo') return (
-                            <div className="h-[60px] flex items-center justify-between px-4" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                            <div className="h-[60px] flex items-center justify-between px-4" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                                    {logoImg ? <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 border" style={{ borderColor: hIcon + '22' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-lg font-bold" style={{ backgroundColor: hBg, color: hText, border: `1px solid ${hIcon}22` }}>{bName.charAt(0)}</div>}
-                                    <span className="font-bold text-lg truncate" style={{ color: hText }}>{bName}</span>
+                                    {logoImg ? <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 border" style={{ borderColor: hIcon + '22' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-lg font-bold" style={{ backgroundColor: hBgHex, color: hText, border: `1px solid ${hIcon}22` }}>{bName.charAt(0)}</div>}
+                                    <span className="font-bold truncate" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                                 </div>
                                 <div className="flex items-center gap-1 flex-shrink-0">
                                     {searchBtn}
@@ -1203,11 +1241,11 @@ export default function MenuClient({
 
                         // === LANG ===
                         if (hVariant === 'lang') return (
-                            <div className="h-[60px] flex items-center justify-between px-4" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                            <div className="h-[60px] flex items-center justify-between px-4" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 <div className="flex items-center gap-2 min-w-0 flex-1">
                                     {hamburger}
-                                    {logoImg ? <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border" style={{ borderColor: hIcon + '22' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-sm font-bold" style={{ backgroundColor: hBg, color: hText, border: `1px solid ${hIcon}22` }}>{bName.charAt(0)}</div>}
-                                    <span className="font-bold text-lg truncate" style={{ color: hText }}>{bName}</span>
+                                    {logoImg ? <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border" style={{ borderColor: hIcon + '22' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-sm font-bold" style={{ backgroundColor: hBgHex, color: hText, border: `1px solid ${hIcon}22` }}>{bName.charAt(0)}</div>}
+                                    <span className="font-bold truncate" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                                 </div>
                                 <div className="flex items-center gap-1 flex-shrink-0">
                                     <button className="flex items-center justify-center p-2" style={{ color: hIcon }}><Globe size={18} /></button>
@@ -1219,13 +1257,13 @@ export default function MenuClient({
                         // === BANNER ===
                         if (hVariant === 'banner') return (
                             <div className="h-[100px] flex items-end justify-between px-4 pb-3 relative overflow-hidden" style={{ boxShadow: hShadow }}>
-                                <div className="absolute inset-0" style={{ backgroundColor: hBg }} />
+                                <div className="absolute inset-0" style={hBgStyle} />
                                 {hLogo && <img src={hLogo} alt="" className="absolute inset-0 w-full h-full object-cover" />}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+
                                 <div className="relative flex items-end justify-between w-full">
                                     <div className="flex items-center gap-3">
                                         <button onClick={() => setIsSidebarDrawerOpen(true)} className="flex flex-col items-start justify-center gap-[4px] p-2 text-white/90"><span className="block w-[18px] h-[2px] bg-current rounded-full" /><span className="block w-[14px] h-[2px] bg-current rounded-full" /></button>
-                                        <span className="font-bold text-xl text-white drop-shadow-lg truncate max-w-[200px]">{bName}</span>
+                                        <span className="font-bold text-white drop-shadow-lg truncate max-w-[200px]" style={{ fontSize: hFontSize + 'px' }}>{bName}</span>
                                     </div>
                                     <button onClick={() => setIsSearchOpen(true)} className="flex items-center justify-center p-2 text-white/90"><Search size={20} /></button>
                                 </div>
@@ -1234,28 +1272,28 @@ export default function MenuClient({
 
                         // === MINIMAL ===
                         if (hVariant === 'minimal') return (
-                            <div className="h-[48px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                            <div className="h-[48px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-semibold text-sm tracking-wide uppercase truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-semibold text-sm tracking-wide uppercase truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                                 {searchBtn}
                             </div>
                         );
 
                         // === ROUNDED ===
                         if (hVariant === 'rounded') return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow, borderRadius: '0 0 20px 20px' }}>
+                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow, borderRadius: '0 0 20px 20px' }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                                 {searchBtn}
                             </div>
                         );
 
                         // === SPLIT (name left, icons right) ===
                         if (hVariant === 'split') return (
-                            <div className="h-[60px] flex items-center justify-between px-4" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                            <div className="h-[60px] flex items-center justify-between px-4" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                     {hamburger}
-                                    <span className="font-bold text-lg truncate" style={{ color: hText }}>{bName}</span>
+                                    <span className="font-bold truncate" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                                 </div>
                                 <div className="flex items-center gap-1 flex-shrink-0">
                                     {searchBtn}
@@ -1265,10 +1303,10 @@ export default function MenuClient({
 
                         // === ACCENT-BAR (colored accent line at bottom) ===
                         if (hVariant === 'accent-bar') return (
-                            <div className="relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
+                            <div className="relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
                                 <div className="h-[60px] flex items-center justify-between px-4 relative">
                                     {hamburger}
-                                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                                     {searchBtn}
                                 </div>
                                 <div className="h-[3px] w-full" style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88, ${accentColor}22)` }} />
@@ -1277,9 +1315,9 @@ export default function MenuClient({
 
                         // === GLASS (glassmorphism) ===
                         if (hVariant === 'glass') return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative backdrop-blur-md" style={{ backgroundColor: hBg + 'cc', boxShadow: hShadow, borderBottom: `1px solid ${hIcon}15` }}>
+                            <div className="h-[60px] flex items-center justify-between px-4 relative backdrop-blur-md" style={{ backgroundColor: hBgHex + 'cc', boxShadow: hShadow, borderBottom: `1px solid ${hIcon}15` }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                                 {searchBtn}
                             </div>
                         );
@@ -1288,43 +1326,26 @@ export default function MenuClient({
                         if (hVariant === 'overlay') return (
                             <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: 'transparent', borderBottom: `1px dashed ${hIcon}40` }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText, opacity: 0.8 }}>{bName}</span>
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, opacity: 0.8 }}>{bName}</span>
                                 {searchBtn}
                             </div>
                         );
 
                         // === GRADIENT (background gradient) ===
                         if (hVariant === 'gradient') return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ background: `linear-gradient(135deg, ${hBg}, ${hIcon}30)`, boxShadow: hShadow }}>
+                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ background: `linear-gradient(135deg, ${hBgHex}, ${hIcon}30)`, boxShadow: hShadow }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                                 {searchBtn}
                             </div>
                         );
 
-                        // === NEON (glowing border) ===
-                        if (hVariant === 'neon') return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, border: `1.5px solid ${hIcon}`, boxShadow: `0 0 12px ${hIcon}40, inset 0 0 12px ${hIcon}10` }}>
-                                {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
-                                {searchBtn}
-                            </div>
-                        );
-
-                        // === BOXED (thick bordered frame) ===
-                        if (hVariant === 'boxed') return (
-                            <div className="mx-3 mt-2 rounded-xl h-[56px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, border: `2px solid ${hIcon}`, boxShadow: `0 3px 0 ${hIcon}40` }}>
-                                {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
-                                {searchBtn}
-                            </div>
-                        );
 
                         // Fallback = classic
                         return (
                             <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
                                 {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-lg truncate max-w-[60%] text-center" style={{ color: hText }}>{bName}</span>
+                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px' }}>{bName}</span>
                                 {searchBtn}
                             </div>
                         );
@@ -1771,7 +1792,7 @@ export default function MenuClient({
                                         <img src={BUSINESS_INFO.image} alt={BUSINESS_INFO.name} className="w-full h-full object-cover" />
                                     </div>
                                 ) : (
-                                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0 mb-3" style={{ backgroundColor: '#000000' }}>
+                                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 mb-3" style={{ backgroundColor: '#000000' }}>
                                         {BUSINESS_INFO.name.charAt(0)}
                                     </div>
                                 )}
@@ -2038,17 +2059,17 @@ export default function MenuClient({
             {isSearchOpen && (
                 <div className="fixed inset-0 z-50 flex flex-col p-4 overflow-hidden overscroll-none" style={{ backgroundColor: T.searchOverlayBg || '#ffffff' }}>
                     <div className="flex items-center gap-3 pb-4" style={{ borderBottom: `1px solid ${T.searchOverlayBorderColor || '#f3f4f6'}` }}>
-                        <Search size={20} style={{ color: T.searchOverlayIconColor || '#9ca3af' }} />
+                        <Search size={20} className="flex-shrink-0" style={{ color: T.searchOverlayIconColor || '#9ca3af' }} />
                         <input
                             autoFocus
                             type="text"
                             placeholder="Ürün ara..."
-                            className="flex-1 outline-none text-lg bg-transparent"
+                            className="flex-1 min-w-0 outline-none text-lg bg-transparent"
                             style={{ color: T.searchOverlayInputColor || '#000000' }}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        <button onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }} className="p-2">
+                        <button onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }} className="p-2 flex-shrink-0">
                             <X size={24} style={{ color: T.searchOverlayCloseColor || '#1f2937' }} />
                         </button>
                     </div>
@@ -2131,7 +2152,7 @@ export default function MenuClient({
                     to { transform: translateX(0); }
                 }
             `}</style>
-        </>
+        </div>
     );
 }
 
