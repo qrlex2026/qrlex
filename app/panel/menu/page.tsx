@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Plus, Trash2, Star, Pencil, X, Upload, ChevronDown, ChevronRight, GripVertical, ToggleLeft, ToggleRight, Smartphone, Percent, RefreshCw } from "lucide-react";
+import { Plus, Trash2, Star, Pencil, X, Upload, ChevronDown, ChevronRight, GripVertical, ToggleLeft, ToggleRight, Smartphone, Percent, RefreshCw, Sparkles, Loader2 } from "lucide-react";
 import { useSession } from "@/lib/useSession";
 import { compressVideo } from "@/lib/videoCompress";
 
@@ -41,6 +41,50 @@ export default function PanelMenu() {
     const [priceScope, setPriceScope] = useState<"all" | "category">("all");
     const [priceCatId, setPriceCatId] = useState("");
     const [priceApplying, setPriceApplying] = useState(false);
+
+    // AI Image generation
+    const [showAiImageModal, setShowAiImageModal] = useState(false);
+    const [aiImagePrompt, setAiImagePrompt] = useState("");
+    const [aiImageLoading, setAiImageLoading] = useState(false);
+    const [aiImageResult, setAiImageResult] = useState("");
+    const [aiImageError, setAiImageError] = useState("");
+
+    const handleAiImageGenerate = async () => {
+        if (!aiImagePrompt.trim() || aiImageLoading || !restaurantId) return;
+        setAiImageLoading(true);
+        setAiImageError("");
+        setAiImageResult("");
+        try {
+            const res = await fetch("/api/ai/generate-image", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    restaurantId,
+                    productName: form.name,
+                    productDescription: form.description,
+                    prompt: aiImagePrompt,
+                }),
+            });
+            const data = await res.json();
+            if (data.imageUrl) {
+                setAiImageResult(data.imageUrl);
+            } else {
+                setAiImageError(data.error || "Görsel üretilemedi");
+            }
+        } catch {
+            setAiImageError("Bağlantı hatası");
+        } finally {
+            setAiImageLoading(false);
+        }
+    };
+
+    const applyAiImage = () => {
+        if (!aiImageResult) return;
+        setForm(prev => ({ ...prev, image: aiImageResult }));
+        setShowAiImageModal(false);
+        setAiImageResult("");
+        setAiImagePrompt("");
+    };
 
     // Slug + iframe
     const [slug, setSlug] = useState("");
@@ -359,6 +403,14 @@ export default function PanelMenu() {
                                 <label className="text-xs text-gray-400 mb-2 block">Ürün Resmi</label>
                                 {form.image ? (<div className="relative group"><img src={form.image} alt="" className="w-full h-40 object-cover rounded-xl border border-gray-700" /><button onClick={removeImage} className="absolute top-2 right-2 w-8 h-8 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} className="text-white" /></button></div>
                                 ) : (<div onDragOver={e => e.preventDefault()} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-xl p-6 text-center cursor-pointer transition-colors">{uploading ? (<div><div className="w-full bg-gray-800 rounded-full h-2 mb-2"><div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${uploadProgress}%` }} /></div><p className="text-xs text-gray-400">Yükleniyor... %{uploadProgress}</p></div>) : (<><Upload size={24} className="mx-auto mb-2 text-gray-600" /><p className="text-sm text-gray-400">Sürükle & bırak veya tıkla</p></>)}</div>)}
+                                <button
+                                    type="button"
+                                    onClick={() => { setAiImageResult(""); setAiImageError(""); setShowAiImageModal(true); }}
+                                    className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold border border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 transition-all"
+                                >
+                                    <Sparkles size={13} />
+                                    AI ile Görsel Üret (5 Kredi)
+                                </button>
                                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ""; }} />
                             </div>
                             <div>
@@ -371,6 +423,78 @@ export default function PanelMenu() {
                             <div className="flex items-center gap-4"><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isPopular} onChange={e => setForm({ ...form, isPopular: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Popüler</span></label><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Aktif</span></label></div>
                             <button onClick={handleSave} disabled={saving || !form.name || !form.price || !form.categoryId} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-colors">{saving ? "Kaydediliyor..." : editProduct ? "Güncelle" : "Ekle"}</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* AI Image Generation Modal */}
+            {showAiImageModal && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowAiImageModal(false)}>
+                    <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                                    <Sparkles size={16} className="text-violet-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-base font-bold text-white">AI Görsel Üret</h2>
+                                    <p className="text-[11px] text-gray-500">5 kredi · Gemini 2.0 Flash ile üretim</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowAiImageModal(false)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {form.name && (
+                            <div className="mb-3 px-3 py-2 bg-gray-800/60 rounded-xl text-xs text-gray-400">
+                                🍽️ <span className="text-gray-300 font-medium">{form.name}</span>
+                                {form.description && <span className="text-gray-500"> — {form.description.substring(0, 60)}{form.description.length > 60 ? '...' : ''}</span>}
+                            </div>
+                        )}
+
+                        <div className="mb-4">
+                            <label className="text-xs text-gray-400 mb-1.5 block">Görsel stili ve detayları tarif edin</label>
+                            <textarea
+                                value={aiImagePrompt}
+                                onChange={e => setAiImagePrompt(e.target.value)}
+                                placeholder="Örn: Beyaz tabakta, üzerinde sos, modern sunum, koyu arka plan"
+                                rows={3}
+                                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500 resize-none"
+                            />
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                                {["Profesyonel sunum", "Rustik ahşap masa", "Beyaz arka plan", "Koyu lüks tema", "Taze malzemeler"].map(s => (
+                                    <button key={s} onClick={() => setAiImagePrompt(s)} className="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg text-[11px] transition-colors">{s}</button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {aiImageError && (
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400">{aiImageError}</div>
+                        )}
+
+                        {aiImageResult ? (
+                            <div className="mb-4">
+                                <img src={aiImageResult} alt="AI Generated" className="w-full h-48 object-cover rounded-xl border border-gray-700" />
+                                <div className="flex gap-2 mt-3">
+                                    <button onClick={applyAiImage} className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors">✓ Bu Görseli Kullan</button>
+                                    <button onClick={() => { setAiImageResult(""); handleAiImageGenerate(); }} className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm transition-colors">Yeniden Üret</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={handleAiImageGenerate}
+                                disabled={aiImageLoading || !aiImagePrompt.trim()}
+                                className="w-full py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                                style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', color: 'white' }}
+                            >
+                                {aiImageLoading ? (
+                                    <><Loader2 size={16} className="animate-spin" />Üretiliyor... (~10 sn)</>
+                                ) : (
+                                    <><Sparkles size={16} />Görsel Üret (5 Kredi)</>
+                                )}
+                            </button>
+                        )}
                     </div>
                 </div>
             )}

@@ -48,6 +48,7 @@ model Restaurant {
   users            User[]
   pageViews    PageView[]
   productViews ProductView[]
+  aiCredit         AiCredit?
 
   @@map("restaurants")
 }
@@ -142,4 +143,28 @@ model SupportTicket {
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@map("support_tickets")
+}
+
+model AiCredit {
+  id           String       @id @default(uuid())
+  restaurantId String       @unique @map("restaurant_id")
+  balance      Int          @default(100)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  usageLogs    AiUsageLog[]
+
+  @@map("ai_credits")
+}
+
+model AiUsageLog {
+  id        String   @id @default(uuid())
+  creditId  String   @map("credit_id")
+  type      String   // "theme_generate" | "image_generate"
+  cost      Int
+  prompt    String
+  createdAt DateTime @default(now()) @map("created_at")
+  credit    AiCredit @relation(fields: [creditId], references: [id], onDelete: Cascade)
+
+  @@map("ai_usage_logs")
 }

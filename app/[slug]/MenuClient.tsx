@@ -136,8 +136,8 @@ export default function MenuClient({
     const T = (() => {
         const t = { ...liveTheme };
         if (t.globalThemeBg && t.globalThemeBg !== '#ffffff') {
-            if (!t.pageBg || t.pageBg === '#f9fafb') t.pageBg = t.globalThemeBg;
-            if (!t.cardBg || t.cardBg === '#ffffff') t.cardBg = t.globalThemeBg;
+            if (!t.pageBg) t.pageBg = t.globalThemeBg;
+            if (!t.cardBg) t.cardBg = t.globalThemeBg;
         }
         if (t.globalThemeText && t.globalThemeText !== '#111827') {
             if (!t.productNameColor || t.productNameColor === '#111827') t.productNameColor = t.globalThemeText;
@@ -281,15 +281,52 @@ export default function MenuClient({
     }, []);
 
     // Listen for live theme updates from design panel iframe
+    const [isDesignMode, setIsDesignMode] = useState(false);
+
     useEffect(() => {
         const handleMessage = (e: MessageEvent) => {
             if (e.data?.type === 'theme-update' && e.data.theme) {
                 setLiveTheme(e.data.theme);
             }
+            if (e.data?.type === 'design-mode') {
+                setIsDesignMode(e.data.enabled);
+            }
         };
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
     }, []);
+
+    // Design mode click listeners — highlight & notify parent which component was clicked
+    useEffect(() => {
+        if (!isDesignMode) return;
+
+        const notifyParent = (component: string) => {
+            window.parent.postMessage({ type: 'element-click', component }, '*');
+        };
+
+        const selectors: { selector: string; component: string }[] = [
+            { selector: '[data-design="header"]', component: 'header' },
+            { selector: '[data-design="categoryBar"]', component: 'categoryBar' },
+            { selector: '[data-design="productCard"]', component: 'productCard' },
+            { selector: '[data-design="bottomNav"]', component: 'bottomNav' },
+            { selector: '[data-design="sidebar"]', component: 'sidebar' },
+        ];
+
+        const handlers: { el: Element; fn: () => void }[] = [];
+
+        selectors.forEach(({ selector, component }) => {
+            document.querySelectorAll(selector).forEach(el => {
+                const fn = () => notifyParent(component);
+                el.addEventListener('click', fn);
+                handlers.push({ el, fn });
+            });
+        });
+
+        return () => {
+            handlers.forEach(({ el, fn }) => el.removeEventListener('click', fn));
+        };
+    }, [isDesignMode]);
+
 
     // Dynamically load Google Font when theme font changes
     useEffect(() => {
@@ -1173,7 +1210,15 @@ export default function MenuClient({
 
             <div className="min-h-screen pb-4" style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}>
                 {/* Sticky Header + Category Nav */}
-                <div className="sticky top-0 z-10">
+                <div
+                    className="sticky top-0 z-10"
+                    data-design="header"
+                    style={isDesignMode ? { outline: '2px solid #8b5cf6', outlineOffset: '-2px', cursor: 'pointer', position: 'relative' } : {}}
+                    onClick={isDesignMode ? (e) => { e.stopPropagation(); window.parent.postMessage({ type: 'element-click', component: 'header' }, '*'); } : undefined}
+                >
+                    {isDesignMode && (
+                        <div style={{ position: 'absolute', top: 4, right: 8, zIndex: 99, background: '#8b5cf6', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 6, pointerEvents: 'none', letterSpacing: '0.05em' }}>Header</div>
+                    )}
                     {/* Custom Header — variant-aware */}
                     {(() => {
                         const hVariant = (T as any).headerVariant || 'classic';
@@ -1360,9 +1405,19 @@ export default function MenuClient({
                     })()}
 
                     {/* Category Navbar */}
-                    <div ref={categoryNavRef} className="overflow-x-auto no-scrollbar py-3 px-4 flex gap-2" style={{
-                        backgroundColor: (T as any).categoryNavBg || T.pageBg,
-                    }}>
+                    <div
+                        ref={categoryNavRef}
+                        className="overflow-x-auto no-scrollbar py-3 px-4 flex gap-2"
+                        data-design="categoryBar"
+                        style={{
+                            backgroundColor: (T as any).categoryNavBg || T.pageBg,
+                            ...(isDesignMode ? { outline: '2px solid #06b6d4', outlineOffset: '-2px', cursor: 'pointer', position: 'relative' } : {})
+                        }}
+                        onClick={isDesignMode ? (e) => { e.stopPropagation(); window.parent.postMessage({ type: 'element-click', component: 'categoryBar' }, '*'); } : undefined}
+                    >
+                        {isDesignMode && (
+                            <div style={{ position: 'absolute', top: 4, right: 8, zIndex: 99, background: '#06b6d4', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 6, pointerEvents: 'none', letterSpacing: '0.05em' }}>Kategori Bar</div>
+                        )}
                         {DISPLAY_CATEGORIES.map((cat) => {
                             const btnShadow = (T as any).categoryBtnCustomShadow || ((T as any).categoryBtnShadow && (T as any).categoryBtnShadow !== 'none' ? getShadow((T as any).categoryBtnShadow) : 'none');
                             return (
@@ -1423,7 +1478,15 @@ export default function MenuClient({
                 )}
 
                 {/* Product List (Grouped by Category) */}
-                <div className="pb-4">
+                <div
+                    className="pb-4"
+                    data-design="productCard"
+                    style={isDesignMode ? { outline: '2px solid #f59e0b', outlineOffset: '-2px', position: 'relative' } : {}}
+                    onClick={isDesignMode ? (e) => { e.stopPropagation(); window.parent.postMessage({ type: 'element-click', component: 'productCard' }, '*'); } : undefined}
+                >
+                    {isDesignMode && (
+                        <div style={{ position: 'sticky', top: 0, right: 0, zIndex: 99, background: '#f59e0b', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 6, pointerEvents: 'none', letterSpacing: '0.05em', display: 'inline-block', float: 'right' }}>Ürün Kartı</div>
+                    )}
                     {DISPLAY_CATEGORIES.map((cat) => {
                         const products =
                             cat.id === "populer"
