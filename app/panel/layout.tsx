@@ -7,7 +7,7 @@ import {
     UtensilsCrossed, Settings,
     ArrowRight, Menu, X, QrCode, Paintbrush, ChartNoAxesColumn,
     UserCircle, Inbox, Bell, Brain, Search, Gift, Sun, Moon,
-    Rocket, Command, Info, LogOut, Globe, Check,
+    Rocket, Command, Info, LogOut,
 } from "lucide-react";
 
 interface Notification {
@@ -130,34 +130,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
         '--p-mobile-sidebar': '#ffffff',
     };
 
-    // Language selector state
-    const [showLangDropdown, setShowLangDropdown] = useState(false);
-    const [selectedLang, setSelectedLang] = useState({ code: 'tr', flag: '🇹🇷', name: 'Türkçe' });
-    const langRef = useRef<HTMLDivElement>(null);
 
-    const LANGUAGES = [
-        { code: 'tr', flag: '🇹🇷', name: 'Türkçe' },
-        { code: 'en', flag: '🇬🇧', name: 'English' },
-        { code: 'de', flag: '🇩🇪', name: 'Deutsch' },
-        { code: 'fr', flag: '🇫🇷', name: 'Français' },
-        { code: 'it', flag: '🇮🇹', name: 'Italiano' },
-        { code: 'es', flag: '🇪🇸', name: 'Español' },
-        { code: 'pt', flag: '🇵🇹', name: 'Português' },
-        { code: 'ro', flag: '🇷🇴', name: 'Română' },
-        { code: 'sq', flag: '🇦🇱', name: 'Shqip' },
-        { code: 'el', flag: '🇬🇷', name: 'Ελληνικά' },
-        { code: 'ka', flag: '🇬🇪', name: 'ქართული' },
-        { code: 'ru', flag: '🇷🇺', name: 'Русский' },
-        { code: 'uk', flag: '🇺🇦', name: 'Українська' },
-        { code: 'az', flag: '🇦🇿', name: 'Azərbaycan' },
-        { code: 'hi', flag: '🇮🇳', name: 'हिन्दी' },
-        { code: 'ar', flag: '🇸🇦', name: 'العربية' },
-        { code: 'fa', flag: '🇮🇷', name: 'فارسی' },
-        { code: 'zh', flag: '🇨🇳', name: '中文' },
-        { code: 'ko', flag: '🇰🇷', name: '한국어' },
-        { code: 'ja', flag: '🇯🇵', name: '日本語' },
-        { code: 'id', flag: '🇮🇩', name: 'Bahasa' },
-    ];
 
     useEffect(() => {
         fetch("/api/auth/me")
@@ -204,9 +177,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
             if (giftRef.current && !giftRef.current.contains(e.target as Node)) {
                 setShowGiftDropdown(false);
             }
-            if (langRef.current && !langRef.current.contains(e.target as Node)) {
-                setShowLangDropdown(false);
-            }
+
             if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
                 setShowProfileDropdown(false);
             }
@@ -292,7 +263,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                             >
                                 <div className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all
                                     ${isActive
-                                        ? "bg-orange-500"
+                                        ? "bg-violet-600"
                                         : ""
                                     }`}
                                     style={!isActive ? { backgroundColor: 'var(--p-nav-inactive-bg)' } : {}}
@@ -300,7 +271,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                     <item.icon size={20} style={{ color: isActive ? '#ffffff' : 'var(--p-icon)' }} />
                                 </div>
                                 <span className={`text-[11px] font-medium transition-colors
-                                    ${isActive ? "text-orange-400" : ""
+                                    ${isActive ? "text-violet-400" : ""
                                     }`}
                                     style={!isActive ? { color: 'var(--p-nav-inactive-text)' } : {}}
                                 >
@@ -328,7 +299,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                             >
                                 <div className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all
                                     ${isActive
-                                        ? "bg-orange-500"
+                                        ? "bg-violet-600"
                                         : ""
                                     }`}
                                     style={!isActive ? { backgroundColor: 'var(--p-nav-inactive-bg)' } : {}}
@@ -336,7 +307,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                     <item.icon size={20} style={{ color: isActive ? '#ffffff' : 'var(--p-icon)' }} />
                                 </div>
                                 <span className={`text-[11px] font-medium transition-colors
-                                    ${isActive ? "text-orange-400" : ""
+                                    ${isActive ? "text-violet-400" : ""
                                     }`}
                                     style={!isActive ? { color: 'var(--p-nav-inactive-text)' } : {}}
                                 >
@@ -426,7 +397,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
         `${S} .border-white\\/\\[0\\.08\\]{border-color:rgba(0,0,0,.08)!important}`,
         `${S} .border-white\\/\\[0\\.06\\]{border-color:rgba(0,0,0,.06)!important}`,
         `${S} .bg-emerald-500\\/10{background-color:rgba(16,185,129,.08)!important}`,
-        `${S} .bg-orange-500\\/10{background-color:rgba(249,115,22,.08)!important}`,
+        `${S} .bg-violet-600\\/10{background-color:rgba(249,115,22,.08)!important}`,
     ].join('\n') : '';
 
     const fullLightCSS = [lightThemeCSS, hexOverrides, pseudoOverrides].filter(Boolean).join('\n');
@@ -479,22 +450,22 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                             {showGiftDropdown && (
                                 <div className="absolute right-0 top-[60px] w-[280px] rounded-2xl shadow-2xl z-50 p-4 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
                                     <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center">
-                                            <Gift size={16} className="text-orange-400" />
+                                        <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center">
+                                            <Gift size={16} className="text-violet-400" />
                                         </div>
                                         <h3 className="text-[13px] font-semibold text-gray-100">Referans Programı</h3>
                                     </div>
-                                    <p className="text-[12px] text-gray-400 leading-relaxed mb-3">Arkadaşlarınızı davet edin, her kayıt olan kişi için <span className="text-orange-400 font-medium">50 puan</span> kazanın! Puanlarınızı premium özelliklere dönüştürebilirsiniz.</p>
+                                    <p className="text-[12px] text-gray-400 leading-relaxed mb-3">Arkadaşlarınızı davet edin, her kayıt olan kişi için <span className="text-violet-400 font-medium">50 puan</span> kazanın! Puanlarınızı premium özelliklere dönüştürebilirsiniz.</p>
                                     <div className="bg-[#1e1e1e] rounded-xl p-3 mb-3">
                                         <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Referans Linkiniz</p>
                                         <div className="flex items-center gap-2">
-                                            <code className="flex-1 text-[12px] text-orange-400 bg-[#0c0c0c] rounded-lg px-2 py-1.5 font-mono truncate">qrlex.com/ref/yavuz</code>
+                                            <code className="flex-1 text-[12px] text-violet-400 bg-[#0c0c0c] rounded-lg px-2 py-1.5 font-mono truncate">qrlex.com/ref/yavuz</code>
                                             <button className="text-[11px] text-gray-400 hover:text-white bg-[#0c0c0c] rounded-lg px-2 py-1.5 transition-colors">Kopyala</button>
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between text-[11px]">
                                         <span className="text-gray-500">Toplam davet: <span className="text-gray-300">3</span></span>
-                                        <span className="text-gray-500">Kazanılan puan: <span className="text-orange-400">150</span></span>
+                                        <span className="text-gray-500">Kazanılan puan: <span className="text-violet-400">150</span></span>
                                     </div>
                                 </div>
                             )}
@@ -516,7 +487,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                 <div className="absolute right-0 top-[60px] w-[320px] rounded-2xl shadow-2xl z-50 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
                                     <div className="flex items-center justify-between px-4 py-3">
                                         <h3 className="text-[13px] font-semibold text-gray-100">Bildirimler</h3>
-                                        <button className="text-[11px] text-orange-400 hover:text-orange-300 font-medium transition-colors">Tümünü Okundu Yap</button>
+                                        <button className="text-[11px] text-violet-400 hover:text-violet-300 font-medium transition-colors">Tümünü Okundu Yap</button>
                                     </div>
                                     <div className="mx-3 h-px bg-white/[0.06]" />
                                     <div className="py-1 px-1.5 max-h-[320px] overflow-y-auto">
@@ -529,7 +500,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[13px] font-medium text-gray-200">{n.title}</span>
-                                                        {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />}
+                                                        {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
                                                     </div>
                                                     <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-1">{n.desc}</p>
                                                 </div>
@@ -541,7 +512,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                     <Link
                                         href="/panel/inbox"
                                         onClick={() => setShowNotifDropdown(false)}
-                                        className="block text-center text-[12px] font-medium text-orange-400 hover:text-orange-300 py-2.5 transition-colors"
+                                        className="block text-center text-[12px] font-medium text-violet-400 hover:text-violet-300 py-2.5 transition-colors"
                                     >
                                         Tümünü Gör →
                                     </Link>
@@ -578,7 +549,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[13px] font-medium text-gray-200">{m.sender}</span>
-                                                        {m.unread && <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />}
+                                                        {m.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
                                                     </div>
                                                     <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-1">{m.message}</p>
                                                 </div>
@@ -590,7 +561,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                     <Link
                                         href="/panel/inbox"
                                         onClick={() => setShowInboxDropdown(false)}
-                                        className="block text-center text-[12px] font-medium text-orange-400 hover:text-orange-300 py-2.5 transition-colors"
+                                        className="block text-center text-[12px] font-medium text-violet-400 hover:text-violet-300 py-2.5 transition-colors"
                                     >
                                         Tümünü Gör →
                                     </Link>
@@ -598,54 +569,11 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                             )}
                         </div>
 
-                        {/* Language Selector */}
-                        <div className="relative" ref={langRef}>
-                            <button
-                                onClick={() => { setShowLangDropdown(!showLangDropdown); setShowNotifDropdown(false); setShowInboxDropdown(false); setShowProfileDropdown(false); setShowGiftDropdown(false); }}
-                                className="flex items-center gap-2 h-[52px] pl-2 pr-3.5 rounded-full transition-colors"
-                                style={{ backgroundColor: 'var(--p-surface2)' }}
-                            >
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--p-surface3)' }}>
-                                    <span className="text-[15px] leading-none">{selectedLang.flag}</span>
-                                </div>
-                                <span className="text-[13px] font-medium hidden sm:inline" style={{ color: 'var(--p-text2)' }}>{selectedLang.name}</span>
-                            </button>
-                            {showLangDropdown && (
-                                <div className="absolute right-0 top-[60px] w-[240px] rounded-2xl shadow-2xl z-50 py-2 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
-                                    <div className="px-4 py-2">
-                                        <div className="flex items-center gap-2">
-                                            <Globe size={14} className="text-gray-500" />
-                                            <h3 className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Panel Dili</h3>
-                                        </div>
-                                    </div>
-                                    <div className="mx-3 h-px bg-white/[0.06] mb-1" />
-                                    <div className="max-h-[340px] overflow-y-auto px-1.5">
-                                        {LANGUAGES.map((lang) => (
-                                            <button
-                                                key={lang.code}
-                                                onClick={() => { setSelectedLang(lang); setShowLangDropdown(false); }}
-                                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${selectedLang.code === lang.code
-                                                    ? 'bg-orange-500/10'
-                                                    : 'hover:bg-white/[0.06]'
-                                                    }`}
-                                            >
-                                                <span className="text-lg leading-none">{lang.flag}</span>
-                                                <span className={`text-[13px] font-medium ${selectedLang.code === lang.code ? 'text-orange-400' : 'text-gray-300'
-                                                    }`}>{lang.name}</span>
-                                                {selectedLang.code === lang.code && (
-                                                    <Check size={14} className="ml-auto text-orange-400" />
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
 
                         {/* Profile with Dropdown */}
                         <div className="relative" ref={profileRef}>
                             <button
-                                onClick={() => { setShowProfileDropdown(!showProfileDropdown); setShowNotifDropdown(false); setShowInboxDropdown(false); setShowGiftDropdown(false); setShowLangDropdown(false); }}
+                                onClick={() => { setShowProfileDropdown(!showProfileDropdown); setShowNotifDropdown(false); setShowInboxDropdown(false); setShowGiftDropdown(false); }}
                                 className="flex items-center gap-2 h-[52px] pl-2 pr-3.5 rounded-full transition-colors"
                                 style={{ backgroundColor: 'var(--p-surface2)' }}
                             >

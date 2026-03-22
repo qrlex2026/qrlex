@@ -433,12 +433,28 @@ function AdvancedColorPanel({ value, onChange, onClose }: { value: string; onCha
 // ─── Color Input Component ─────────────────────────────────
 function ColorPicker({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
     const [showPanel, setShowPanel] = useState(false);
+    const hexVal = value.startsWith('#') ? value.replace('#', '').substring(0, 6).toUpperCase() : '';
     return (
-        <div className="flex items-center justify-between gap-3 relative">
-            <label className="text-[14px] text-gray-400 flex-1">{label}</label>
-            <div className="flex items-center gap-1.5 bg-[#1a1a1a] rounded-lg px-1.5 py-1 cursor-pointer" onClick={() => setShowPanel(!showPanel)}>
-                <div className="w-6 h-6 rounded-[5px] flex-shrink-0" style={{ ...(value.includes('gradient') || value.startsWith('url(') ? { background: value } : { backgroundColor: value }), border: '1px solid rgba(255,255,255,0.1)' }} />
-                <input type="text" value={value} onClick={(e) => e.stopPropagation()} onChange={(e) => onChange(e.target.value)} className="w-[68px] px-1 py-0.5 bg-transparent border-0 text-[11px] text-gray-300 font-mono focus:outline-none" />
+        <div className="flex items-center h-7 gap-2 relative">
+            <span className="text-[11px] text-gray-500 flex-1 min-w-0 truncate">{label}</span>
+            <div
+                className="flex items-center gap-1.5 bg-[#1a1a1a] hover:bg-[#222] rounded-md px-1.5 h-7 cursor-pointer transition-colors border border-transparent hover:border-white/[0.06]"
+                onClick={() => setShowPanel(!showPanel)}
+            >
+                <div
+                    className="w-[14px] h-[14px] rounded-[3px] flex-shrink-0"
+                    style={{ ...(value.includes('gradient') || value.startsWith('url(') ? { background: value } : { backgroundColor: value }), border: '1px solid rgba(255,255,255,0.12)' }}
+                />
+                <input
+                    type="text"
+                    value={hexVal}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => onChange('#' + e.target.value.replace('#', ''))}
+                    className="w-[52px] bg-transparent border-0 text-[11px] text-gray-300 font-mono focus:outline-none"
+                />
+                <span className="text-[10px] text-gray-700">|</span>
+                <span className="text-[11px] text-gray-500 font-mono">100</span>
+                <span className="text-[10px] text-gray-700">%</span>
             </div>
             {showPanel && <AdvancedColorPanel value={value} onChange={onChange} onClose={() => setShowPanel(false)} />}
         </div>
@@ -896,8 +912,7 @@ export default function PanelDesign() {
                                 { id: 'lang', name: 'Dil' },
                                 { id: 'banner', name: 'Banner' },
                                 { id: 'minimal', name: 'Minimal' },
-                                { id: 'rounded', name: 'Yuvarlak' },
-                                { id: 'split', name: 'Split' },
+
                                 { id: 'accent-bar', name: 'Çizgi' },
                                 { id: 'glass', name: 'Cam' },
                                 { id: 'overlay', name: 'Saydam' },
@@ -913,19 +928,19 @@ export default function PanelDesign() {
                                 /* ── Per-variant unique preview ── */
                                 const renderPreview = () => {
                                     const menuIcon = (
-                                        <div className="flex flex-col items-start gap-[2px]">
-                                            <div className="w-[10px] h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} />
-                                            <div className="w-[7px] h-[1.5px] rounded-full" style={{ backgroundColor: hIcon }} />
+                                        <div className="flex flex-col items-start gap-[3px]">
+                                            <div className="w-[10px] h-[2px] rounded-full" style={{ backgroundColor: hIcon }} />
+                                            <div className="w-[8px] h-[2px] rounded-full" style={{ backgroundColor: hIcon }} />
                                         </div>
                                     );
-                                    const searchIcon = <Search size={10} strokeWidth={2.5} style={{ color: hIcon }} />;
-                                    const titleBar = <div className="h-1.5 w-7 rounded-full" style={{ backgroundColor: hText, opacity: 0.6 }} />;
+                                    const searchIcon = <Search size={12} strokeWidth={2.5} style={{ color: hIcon }} />;
+                                    const titleBar = <div className="h-[3px] w-[23px] rounded-full" style={{ backgroundColor: hIcon }} />;
                                     const logoCircle = <div className="w-5 h-5 rounded-full border-2" style={{ borderColor: hIcon, backgroundColor: hBg }} />;
 
                                     switch (v.id) {
                                         case 'classic':
                                             return (
-                                                <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: hBg }}>
+                                                <div className="rounded-lg px-3 py-[20px] flex items-center justify-between" style={{ backgroundColor: hBg }}>
                                                     {menuIcon}
                                                     {titleBar}
                                                     {searchIcon}
@@ -943,7 +958,7 @@ export default function PanelDesign() {
                                             );
                                         case 'center-logo':
                                             return (
-                                                <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: hBg }}>
+                                                <div className="rounded-lg px-3 py-[20px] flex items-center justify-between" style={{ backgroundColor: hBg }}>
                                                     {menuIcon}
                                                     {logoCircle}
                                                     {searchIcon}
@@ -951,7 +966,7 @@ export default function PanelDesign() {
                                             );
                                         case 'left-logo':
                                             return (
-                                                <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: hBg }}>
+                                                <div className="rounded-lg px-3 py-[20px] flex items-center justify-between" style={{ backgroundColor: hBg }}>
                                                     <div className="flex items-center gap-2">
                                                         {logoCircle}
                                                         {titleBar}
@@ -961,7 +976,7 @@ export default function PanelDesign() {
                                             );
                                         case 'lang':
                                             return (
-                                                <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: hBg }}>
+                                                <div className="rounded-lg px-3 py-[20px] flex items-center justify-between" style={{ backgroundColor: hBg }}>
                                                     {menuIcon}
                                                     {titleBar}
                                                     <div className="flex items-center gap-1.5">
@@ -989,26 +1004,7 @@ export default function PanelDesign() {
                                                     {searchIcon}
                                                 </div>
                                             );
-                                        case 'rounded':
-                                            return (
-                                                <div className="mx-1 mt-1 rounded-full px-4 py-2 flex items-center justify-between" style={{ backgroundColor: hBg, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
-                                                    {menuIcon}
-                                                    {titleBar}
-                                                    {searchIcon}
-                                                </div>
-                                            );
-                                        case 'split':
-                                            return (
-                                                <div className="rounded-lg overflow-hidden flex" style={{ backgroundColor: hBg }}>
-                                                    <div className="flex-1 px-2 py-2.5 flex items-center gap-2">
-                                                        {menuIcon}
-                                                        {titleBar}
-                                                    </div>
-                                                    <div className="px-2 py-2.5 flex items-center" style={{ backgroundColor: `${hIcon}15` }}>
-                                                        {searchIcon}
-                                                    </div>
-                                                </div>
-                                            );
+
                                         case 'accent-bar':
                                             return (
                                                 <div className="rounded-lg overflow-hidden" style={{ backgroundColor: hBg }}>
@@ -1022,7 +1018,7 @@ export default function PanelDesign() {
                                             );
                                         case 'glass':
                                             return (
-                                                <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: `${hBg}cc`, backdropFilter: 'blur(8px)', border: `1px solid ${hIcon}20` }}>
+                                                <div className="rounded-lg px-3 py-[20px] flex items-center justify-between" style={{ backgroundColor: `${hBg}cc`, backdropFilter: 'blur(8px)', border: `1px solid ${hIcon}20` }}>
                                                     {menuIcon}
                                                     {titleBar}
                                                     {searchIcon}
@@ -1030,7 +1026,7 @@ export default function PanelDesign() {
                                             );
                                         case 'overlay':
                                             return (
-                                                <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: 'transparent', border: `1px dashed ${hIcon}40` }}>
+                                                <div className="rounded-lg px-3 py-[20px] flex items-center justify-between" style={{ backgroundColor: 'transparent', border: `1px dashed ${hIcon}40` }}>
                                                     {menuIcon}
                                                     <div className="h-2 w-10 rounded-full" style={{ backgroundColor: hText, opacity: 0.3 }} />
                                                     {searchIcon}
@@ -1038,7 +1034,7 @@ export default function PanelDesign() {
                                             );
                                         case 'gradient':
                                             return (
-                                                <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ background: `linear-gradient(135deg, ${hBg}, ${hIcon}30)` }}>
+                                                <div className="rounded-lg px-3 py-[20px] flex items-center justify-between" style={{ background: `linear-gradient(135deg, ${hBg}, ${hIcon}30)` }}>
                                                     {menuIcon}
                                                     {titleBar}
                                                     {searchIcon}
@@ -1047,7 +1043,7 @@ export default function PanelDesign() {
 
                                         default:
                                             return (
-                                                <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ backgroundColor: hBg }}>
+                                                <div className="rounded-lg px-3 py-[20px] flex items-center justify-between" style={{ backgroundColor: hBg }}>
                                                     {menuIcon}
                                                     {titleBar}
                                                     {searchIcon}
@@ -1061,15 +1057,15 @@ export default function PanelDesign() {
                                         key={v.id}
                                         onClick={() => updateTheme('headerVariant', v.id)}
                                         className={`group rounded-xl border overflow-hidden transition-all ${isActive
-                                            ? 'border-orange-500/40 bg-orange-500/5 ring-1 ring-orange-500/20'
+                                            ? 'border-violet-500/50 bg-violet-500/10 ring-1 ring-violet-500/30 shadow-[0_0_12px_rgba(139,92,246,0.15)]'
                                             : 'border-white/[0.04] bg-[#111] hover:border-white/[0.08] hover:bg-[#161616]'
                                             }`}
                                     >
-                                        <div className="p-2">
-                                            {renderPreview()}
+                                        <div className="p-2 h-[62px] flex items-center">
+                                            <div className="w-full">{renderPreview()}</div>
                                         </div>
                                         <div className="pb-2 pt-0.5">
-                                            <p className={`text-[10px] font-semibold ${isActive ? 'text-orange-300' : 'text-gray-400'} transition-colors`}>{v.name}</p>
+                                            <p className={`text-[10px] font-semibold ${isActive ? 'text-violet-300' : 'text-gray-400'} transition-colors`}>{v.name}</p>
                                         </div>
                                     </button>
                                 );
@@ -1079,101 +1075,107 @@ export default function PanelDesign() {
                 </div>
 
                 {/* RIGHT PANEL: Properties & Settings */}
-                <div className="w-[340px] border-l border-white/[0.06] overflow-y-auto py-4 px-4 flex-shrink-0 bg-[#080808]">
+                <div className="w-[280px] border-l border-white/[0.06] overflow-y-auto py-4 px-3 flex-shrink-0 bg-[#080808]">
                     {activeSection === 'header' && (<>
 
-
-                        {/* Colors — no border */}
-                        <div className="rounded-2xl p-4 mb-3 bg-[#111]">
-                            <span className="text-[14px] text-gray-500 uppercase font-semibold mb-3 block">Renkler</span>
-                            <div className="space-y-2.5">
+                        {/* ── Renkler ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Renkler</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1">
                                 <ColorPicker label="Arkaplan" value={theme.menuHeaderBg} onChange={(v) => updateTheme("menuHeaderBg", v)} />
                                 <ColorPicker label="Yazı Rengi" value={theme.menuHeaderTextColor} onChange={(v) => updateTheme("menuHeaderTextColor", v)} />
                             </div>
                         </div>
 
-                        {/* Font Size */}
-                        <div className="rounded-2xl p-4 mb-3 bg-[#111]">
-                            <span className="text-[14px] text-gray-500 uppercase font-semibold mb-3 block">Tipografi</span>
-                            <div className="flex items-center justify-between gap-3 mb-3"><label className="text-xs text-gray-400">Yazı Boyutu</label><input type="text" defaultValue={theme.menuHeaderFontSize || '18'} onBlur={(e) => { const v = Math.min(36, Math.max(10, parseInt(e.target.value) || 18)); e.target.value = String(v); updateTheme("menuHeaderFontSize", String(v)); }} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} className="w-12 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-1 text-xs text-gray-300 text-center outline-none focus:border-white/20" /></div>
-                            <div className="flex items-center justify-between gap-3 mb-3 relative"><label className="text-xs text-gray-400">Kalınlık</label>
-                                <select value={theme.menuHeaderFontWeight || '700'} onChange={(e) => updateTheme("menuHeaderFontWeight", e.target.value)} className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-1 text-xs text-gray-300 outline-none focus:border-white/20 cursor-pointer appearance-none pr-6" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}>
-                                    <option value="100">Thin</option>
-                                    <option value="300">Light</option>
-                                    <option value="400">Regular</option>
-                                    <option value="500">Medium</option>
-                                    <option value="600">SemiBold</option>
-                                    <option value="700">Bold</option>
-                                    <option value="800">ExtraBold</option>
-                                </select>
+                        {/* ── Tipografi ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Tipografi</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
                             </div>
-                            <div className="flex items-center justify-between gap-3"><label className="text-xs text-gray-400">Hizalama</label>
-                                <div className="flex gap-1">
-                                    {([
-                                        { value: 'left', icon: <><div className="w-3 h-[1.5px] bg-current rounded-full" /><div className="w-2 h-[1.5px] bg-current rounded-full mt-[2px]" /><div className="w-2.5 h-[1.5px] bg-current rounded-full mt-[2px]" /></> },
-                                        { value: 'center', icon: <><div className="w-3 h-[1.5px] bg-current rounded-full mx-auto" /><div className="w-2 h-[1.5px] bg-current rounded-full mt-[2px] mx-auto" /><div className="w-2.5 h-[1.5px] bg-current rounded-full mt-[2px] mx-auto" /></> },
-                                        { value: 'right', icon: <><div className="w-3 h-[1.5px] bg-current rounded-full ml-auto" /><div className="w-2 h-[1.5px] bg-current rounded-full mt-[2px] ml-auto" /><div className="w-2.5 h-[1.5px] bg-current rounded-full mt-[2px] ml-auto" /></> },
-                                    ] as { value: string; icon: React.ReactNode }[]).map((a) => (
-                                        <button key={a.value} onClick={() => updateTheme("menuHeaderTextAlign" as any, a.value)} className={`w-8 h-7 rounded flex flex-col items-center justify-center transition-colors ${(theme.menuHeaderTextAlign || 'center') === a.value ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}>{a.icon}</button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Shadow */}
-                        <div className="rounded-2xl p-4 mb-3 bg-[#111]">
-                            <span className="text-[14px] text-gray-600 uppercase mb-3 block">Gölge</span>
-                            <ShadowPicker label="Header Gölge" value={theme.menuHeaderShadow} onChange={(v) => updateTheme("menuHeaderShadow", v)} />
-                        </div>
-
-
-                        {/* Menü (Hamburger) Card */}
-                        <div className="rounded-2xl p-4 mb-3 bg-[#111]">
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex flex-col items-center justify-center gap-[3px]">
-                                        <div className="w-3.5 h-[2px] rounded-full bg-gray-400" />
-                                        <div className="w-3.5 h-[2px] rounded-full bg-gray-400" />
-                                        <div className="w-3.5 h-[2px] rounded-full bg-gray-400" />
+                            <div className="space-y-1">
+                                {/* Font Size */}
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Yazı Boyutu</span>
+                                    <div className="flex items-center gap-1 bg-[#1a1a1a] hover:bg-[#222] rounded-md px-2 h-7 transition-colors">
+                                        <input type="text" defaultValue={theme.menuHeaderFontSize || '18'} onBlur={(e) => { const v = Math.min(36, Math.max(10, parseInt(e.target.value) || 18)); e.target.value = String(v); updateTheme("menuHeaderFontSize", String(v)); }} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} className="w-8 bg-transparent text-[11px] text-gray-200 font-mono text-right focus:outline-none" />
+                                        <span className="text-[10px] text-gray-600">px</span>
                                     </div>
-                                    <span className="text-[14px] text-gray-600 uppercase">Menü</span>
                                 </div>
-                                <button
-                                    onClick={() => updateTheme("showMenuButton", theme.showMenuButton !== "false" ? "false" : "true")}
-                                    className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${theme.showMenuButton !== "false" ? 'bg-emerald-500' : 'bg-gray-600'}`}
-                                >
-                                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 ${theme.showMenuButton !== "false" ? 'translate-x-[20px]' : 'translate-x-0.5'}`} />
+                                {/* Font Weight */}
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Kalınlık</span>
+                                    <select value={theme.menuHeaderFontWeight || '700'} onChange={(e) => updateTheme("menuHeaderFontWeight", e.target.value)} className="bg-[#1a1a1a] hover:bg-[#222] h-7 rounded-md px-2 pr-6 text-[11px] text-gray-300 outline-none cursor-pointer appearance-none transition-colors" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 5px center' }}>
+                                        <option value="100">Thin</option>
+                                        <option value="300">Light</option>
+                                        <option value="400">Regular</option>
+                                        <option value="500">Medium</option>
+                                        <option value="600">SemiBold</option>
+                                        <option value="700">Bold</option>
+                                        <option value="800">ExtraBold</option>
+                                    </select>
+                                </div>
+                                {/* Text Align */}
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Hizalama</span>
+                                    <div className="flex gap-0.5">
+                                        {([
+                                            { value: 'left', icon: <><div className="w-3 h-[1.5px] bg-current rounded-full" /><div className="w-2 h-[1.5px] bg-current rounded-full mt-[2px]" /><div className="w-2.5 h-[1.5px] bg-current rounded-full mt-[2px]" /></> },
+                                            { value: 'center', icon: <><div className="w-3 h-[1.5px] bg-current rounded-full mx-auto" /><div className="w-2 h-[1.5px] bg-current rounded-full mt-[2px] mx-auto" /><div className="w-2.5 h-[1.5px] bg-current rounded-full mt-[2px] mx-auto" /></> },
+                                            { value: 'right', icon: <><div className="w-3 h-[1.5px] bg-current rounded-full ml-auto" /><div className="w-2 h-[1.5px] bg-current rounded-full mt-[2px] ml-auto" /><div className="w-2.5 h-[1.5px] bg-current rounded-full mt-[2px] ml-auto" /></> },
+                                        ] as { value: string; icon: React.ReactNode }[]).map((a) => (
+                                            <button key={a.value} onClick={() => updateTheme("menuHeaderTextAlign" as any, a.value)} className={`w-7 h-7 rounded flex flex-col items-center justify-center transition-colors ${(theme.menuHeaderTextAlign || 'center') === a.value ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}>{a.icon}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Gölge ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Gölge</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <ShadowPicker label="Header" value={theme.menuHeaderShadow} onChange={(v) => updateTheme("menuHeaderShadow", v)} />
+                        </div>
+
+                        {/* ── Menü ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Menü</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                                <button onClick={() => updateTheme("showMenuButton", theme.showMenuButton !== "false" ? "false" : "true")} className={`relative w-8 h-4 rounded-full transition-colors duration-200 flex-shrink-0 ${theme.showMenuButton !== "false" ? 'bg-violet-600' : 'bg-gray-700'}`}>
+                                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-md transition-transform duration-200 ${theme.showMenuButton !== "false" ? 'translate-x-[17px]' : 'translate-x-0.5'}`} />
                                 </button>
                             </div>
-                            <div className="space-y-2.5">
+                            <div className="space-y-1">
                                 <ColorPicker label="İkon Rengi" value={theme.menuHeaderIconColor} onChange={(v) => updateTheme("menuHeaderIconColor", v)} />
                             </div>
                         </div>
 
-                        {/* İkon (Search) Card */}
-                        <div className="rounded-2xl p-4 mb-3 bg-[#111]">
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center">
-                                        <Search size={14} className="text-gray-400" />
-                                    </div>
-                                    <span className="text-[14px] text-gray-600 uppercase">İkon</span>
-                                </div>
-                                <button
-                                    onClick={() => updateTheme("showSearchIcon", theme.showSearchIcon !== "false" ? "false" : "true")}
-                                    className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${theme.showSearchIcon !== "false" ? 'bg-emerald-500' : 'bg-gray-600'}`}
-                                >
-                                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 ${theme.showSearchIcon !== "false" ? 'translate-x-[20px]' : 'translate-x-0.5'}`} />
+                        {/* ── Arama ── */}
+                        <div className="mb-4">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Arama</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                                <button onClick={() => updateTheme("showSearchIcon", theme.showSearchIcon !== "false" ? "false" : "true")} className={`relative w-8 h-4 rounded-full transition-colors duration-200 flex-shrink-0 ${theme.showSearchIcon !== "false" ? 'bg-violet-600' : 'bg-gray-700'}`}>
+                                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-md transition-transform duration-200 ${theme.showSearchIcon !== "false" ? 'translate-x-[17px]' : 'translate-x-0.5'}`} />
                                 </button>
                             </div>
-                            <div className="space-y-2.5">
+                            <div className="space-y-1">
                                 <ColorPicker label="İkon Rengi" value={theme.menuHeaderSearchIconColor} onChange={(v) => updateTheme("menuHeaderSearchIconColor", v)} />
                                 <ColorPicker label="Buton Arkaplanı" value={theme.menuHeaderSearchBtnBg} onChange={(v) => updateTheme("menuHeaderSearchBtnBg", v)} />
                             </div>
                         </div>
-                    </>)}
 
+                    </>)}
                 </div>
+
+
             </div >
         </div >
     );

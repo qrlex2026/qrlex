@@ -132,25 +132,8 @@ export default function MenuClient({
     const PRODUCTS = initialProducts;
     const BUSINESS_INFO = initialBusinessInfo;
     const [liveTheme, setLiveTheme] = useState<Record<string, string>>(initialTheme);
-    // Sync globalTheme keys to rendering keys (fallback for data saved before sync was added)
-    const T = (() => {
-        const t = { ...liveTheme };
-        if (t.globalThemeBg && t.globalThemeBg !== '#ffffff') {
-            if (!t.pageBg) t.pageBg = t.globalThemeBg;
-            if (!t.cardBg) t.cardBg = t.globalThemeBg;
-        }
-        if (t.globalThemeText && t.globalThemeText !== '#111827') {
-            if (!t.productNameColor || t.productNameColor === '#111827') t.productNameColor = t.globalThemeText;
-            if (!t.categoryTitleColor || t.categoryTitleColor === '#111827') t.categoryTitleColor = t.globalThemeText;
-        }
-        if (t.globalThemeIcon) {
-            if (!t.accentColor || t.accentColor === '#000000') t.accentColor = t.globalThemeIcon;
-        }
-        if (t.globalThemeSearchBg) {
-            if (!t.searchBg || t.searchBg === '#f3f4f6') t.searchBg = t.globalThemeSearchBg;
-        }
-        return t;
-    })();
+    // T is just the live theme — AI now generates all keys so no overrides needed
+    const T = liveTheme;
 
     // Search Logic
     const searchResults = searchQuery
