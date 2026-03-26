@@ -42,6 +42,25 @@ export default function PanelMenu() {
     const [priceCatId, setPriceCatId] = useState("");
     const [priceApplying, setPriceApplying] = useState(false);
 
+    // Bulk select
+    const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+    const [bulkDeleting, setBulkDeleting] = useState(false);
+    const toggleSelectProduct = (id: string) => setSelectedProducts(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    const toggleSelectAllInCat = (catId: string) => {
+        const catProds = productsByCategory(catId);
+        const allSelected = catProds.length > 0 && catProds.every(p => selectedProducts.has(p.id));
+        setSelectedProducts(prev => { const n = new Set(prev); catProds.forEach(p => allSelected ? n.delete(p.id) : n.add(p.id)); return n; });
+    };
+    const bulkDeleteSelected = async () => {
+        if (!selectedProducts.size || bulkDeleting) return;
+        if (!confirm(`${selectedProducts.size} ürünü silmek istediğinize emin misiniz?`)) return;
+        setBulkDeleting(true);
+        await Promise.all([...selectedProducts].map(id => fetch(`/api/admin/products/${id}`, { method: 'DELETE' })));
+        setSelectedProducts(new Set());
+        setBulkDeleting(false);
+        fetchData();
+    };
+
     // AI Image generation
     const [showAiImageModal, setShowAiImageModal] = useState(false);
     const [aiImagePrompt, setAiImagePrompt] = useState("");
@@ -399,6 +418,11 @@ export default function PanelMenu() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        {selectedProducts.size > 0 && (
+                            <button onClick={bulkDeleteSelected} disabled={bulkDeleting} className="flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-medium transition-all bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 disabled:opacity-40">
+                                <Trash2 size={14} /> {bulkDeleting ? 'Siliniyor...' : `${selectedProducts.size} Ürünü Sil`}
+                            </button>
+                        )}
                         <button onClick={() => { setShowAiMenuModal(true); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFile(null); setAiMenuFilePreview(""); }} className="flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-medium transition-all bg-violet-500/10 text-violet-300 border border-violet-500/20 hover:bg-violet-500/20">
                             <Wand2 size={14} /> AI Menü Oluştur
                         </button>
@@ -457,7 +481,13 @@ export default function PanelMenu() {
                                 >
                                     {/* Category Header */}
                                     <div className="flex items-center gap-2 px-4 py-3 cursor-pointer hover:bg-gray-800/50 transition-colors" onClick={() => toggleCat(cat.id)}>
-                                        <GripVertical size={14} className="text-gray-700 flex-shrink-0 cursor-grab active:cursor-grabbing" />
+                                        <input
+                                            type="checkbox"
+                                            checked={catProducts.length > 0 && catProducts.every(p => selectedProducts.has(p.id))}
+                                            onChange={e => { e.stopPropagation(); toggleSelectAllInCat(cat.id); }}
+                                            onClick={e => e.stopPropagation()}
+                                            className="w-3.5 h-3.5 accent-emerald-500 flex-shrink-0"
+                                        />
                                         {expanded ? <ChevronDown size={16} className="text-gray-500" /> : <ChevronRight size={16} className="text-gray-500" />}
                                         <h3 className="text-sm font-semibold text-white flex-1">{cat.name}</h3>
                                         <span className="text-xs text-gray-500 mr-2">{catProducts.length} ürün</span>
@@ -471,7 +501,13 @@ export default function PanelMenu() {
                                                     className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-800/50 last:border-b-0 hover:bg-gray-800/30 transition-colors ${!product.isActive ? "opacity-40" : ""} ${dragOverId === product.id && dragType === "product" ? "bg-emerald-500/5 border-l-2 border-l-emerald-500" : ""}`}
                                                     draggable onDragStart={e => { e.stopPropagation(); handleProdDragStart(product.id, cat.id); }} onDragOver={e => { e.stopPropagation(); handleProdDragOver(e, product.id); }} onDrop={e => { e.stopPropagation(); handleProdDrop(product.id, cat.id); }} onDragEnd={() => { setDragId(null); setDragOverId(null); setDragType(null); setDragCatId(null); }}
                                                 >
-                                                    <GripVertical size={14} className="text-gray-700 flex-shrink-0 cursor-grab active:cursor-grabbing" />
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedProducts.has(product.id)}
+                                                        onChange={() => toggleSelectProduct(product.id)}
+                                                        onClick={e => e.stopPropagation()}
+                                                        className="w-3.5 h-3.5 accent-emerald-500 flex-shrink-0"
+                                                    />
                                                     {product.image ? <img src={product.image} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-xs text-gray-600">🍽️</div>}
                                                     <div className="flex-1 min-w-0" onDoubleClick={() => startInlineEdit(product)}>
                                                         {inlineEdit?.id === product.id ? (
