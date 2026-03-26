@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         let credit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
         if (!credit) {
             credit = await (prisma as any).aiCredit.create({
-                data: { restaurantId, balance: 100 },
+                data: { restaurantId, balance: 500 },
             });
         }
         if (credit.balance < IMAGE_COST) {
@@ -115,3 +115,4 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: message }, { status: 500 });
     }
 }
+

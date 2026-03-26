@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
     // Kredi kontrolü
     let credit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
     if (!credit) {
-      credit = await (prisma as any).aiCredit.create({ data: { restaurantId, balance: 100 } });
+      credit = await (prisma as any).aiCredit.create({ data: { restaurantId, balance: 500 } });
     }
     if (credit.balance < THEME_COST) {
       return NextResponse.json({ error: "Yetersiz kredi", balance: credit.balance }, { status: 403 });
@@ -223,3 +223,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

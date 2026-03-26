@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   if (!credit) {
     credit = await (prisma as any).aiCredit.create({
-      data: { restaurantId, balance: 100 },
+      data: { restaurantId, balance: 500 },
     });
   }
 
@@ -26,3 +26,4 @@ export async function GET(req: NextRequest) {
     id: credit.id,
   });
 }
+
