@@ -23,12 +23,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const restaurantId = req.nextUrl.searchParams.get("restaurantId") || (await prisma.restaurant.findFirst())?.id || "";
     const body = await req.json();
+    const maxOrder = await prisma.product.findFirst({
+        where: { categoryId: body.categoryId },
+        orderBy: { sortOrder: "desc" },
+    });
     const product = await prisma.product.create({
         data: {
             ...body,
             restaurantId,
             price: parseFloat(body.price),
             discountPrice: body.discountPrice ? parseFloat(body.discountPrice) : null,
+            sortOrder: (maxOrder?.sortOrder ?? -1) + 1,
         },
     });
     return NextResponse.json(product, { status: 201 });
