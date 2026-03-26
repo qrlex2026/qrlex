@@ -7,9 +7,9 @@ export const maxDuration = 60;
 const MENU_COST_PROMPT = 3;
 const MENU_COST_IMAGE = 5;
 
-const SYSTEM_PROMPT = `Sen bir restoran menüsü analiz uzmanısın. Verilen menü görselinden veya tarife göre JSON formatında menü oluşturuyorsun.
+const SYSTEM_PROMPT = `Sen bir restoran menüsü analiz uzmanısın. Görevi menüdeki HER ÜRÜNÜ eksiksiz çıkartmak.
 
-SADECE aşağıdaki JSON formatında çıktı ver, başka şey YAZMA:
+SADECE aşağıdaki JSON formatında çıktı ver, başka hiçbir şey yazma:
 {
   "categories": [
     {
@@ -17,7 +17,7 @@ SADECE aşağıdaki JSON formatında çıktı ver, başka şey YAZMA:
       "products": [
         {
           "name": "Ürün Adı",
-          "description": "Kısa iştah açıcı açıklama (max 80 karakter)",
+          "description": "Lezzetli ve iştah açıcı kısa açıklama (max 80 karakter, BOŞ BIRAKMA)",
           "price": 150
         }
       ]
@@ -25,125 +25,172 @@ SADECE aşağıdaki JSON formatında çıktı ver, başka şey YAZMA:
   ]
 }
 
-KURALLAR:
-- Kategori sayısı: 3-8 arası
-- Her kategoride: 3-10 ürün
-- Fiyatlar: Türk Lirası, sadece sayı (₺ işareti olmadan)
-- Açıklamalar: Türkçe, kısa ve iştah açıcı
-- Eğer görsel varsa: fiyatları görseldeki gibi oku, yoksa mantıklı fiyat tahmin et
-- Sadece JSON döndür, açıklama YAZMA`;
+KESİN KURALLAR:
+1. HİÇBİR ürünü atlama — menüdeki TÜM ürünleri ekle
+2. Açıklama ASLA boş bırakma — eğer menüde açıklama yoksa sen bir tane üret (malzeme, pişirme yöntemi, lezzet)
+3. Fiyat görünmüyorsa veya okunamıyorsa makul bir rakam tahmin et (Türk Lirası)
+4. Kategori isimlerini menüdeki gibi kullan, yoksa mantıklı isim belirle
+5. JSON dışında HİÇBİR şey yazma — markdown, açıklama, yorum yok`;
+
+type Product = { name: string; description: string; price: number };
+type Category = { name: string; products: Product[] };
+type MenuData = { categories: Category[] };
+
+async function processWithGemini(apiKey: string, parts: object[]): Promise<MenuData | null> {
+    const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{ parts }],
+                generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
+            }),
+        }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, rawText];
+    const jsonStr = (jsonMatch[1] || rawText).trim();
+    try {
+        return JSON.parse(jsonStr);
+    } catch {
+        // Try to extract JSON object directly
+        const objMatch = rawText.match(/\{[\s\S]*\}/);
+        if (objMatch) {
+            try { return JSON.parse(objMatch[0]); } catch { return null; }
+        }
+        return null;
+    }
+}
+
+function mergeMenus(menus: MenuData[]): MenuData {
+    const catMap = new Map<string, Product[]>();
+    for (const menu of menus) {
+        for (const cat of (menu.categories || [])) {
+            const key = cat.name.trim().toLowerCase();
+            const existing = catMap.get(key);
+            if (existing) {
+                // Merge products, avoid duplicates by name
+                const existingNames = new Set(existing.map(p => p.name.toLowerCase()));
+                for (const p of cat.products || []) {
+                    if (!existingNames.has(p.name.toLowerCase())) {
+                        existing.push(p);
+                        existingNames.add(p.name.toLowerCase());
+                    }
+                }
+            } else {
+                catMap.set(key, [...(cat.products || [])]);
+            }
+        }
+    }
+    // Rebuild categories preserving original casing from first occurrence
+    const result: Category[] = [];
+    const seenKeys = new Set<string>();
+    for (const menu of menus) {
+        for (const cat of (menu.categories || [])) {
+            const key = cat.name.trim().toLowerCase();
+            if (!seenKeys.has(key)) {
+                seenKeys.add(key);
+                result.push({ name: cat.name, products: catMap.get(key) || [] });
+            }
+        }
+    }
+    return { categories: result };
+}
 
 export async function POST(req: NextRequest) {
     try {
         const contentType = req.headers.get("content-type") || "";
-        let mode: "prompt" | "image";
-        let promptText = "";
-        let imageBase64 = "";
-        let imageMimeType = "image/jpeg";
         let restaurantId = "";
+        let promptText = "";
+        let files: Array<{ base64: string; mimeType: string }> = [];
+        let mode: "prompt" | "image" = "prompt";
 
         if (contentType.includes("multipart/form-data")) {
             const formData = await req.formData();
             restaurantId = formData.get("restaurantId") as string;
-            const file = formData.get("file") as File | null;
-            const extraPrompt = (formData.get("prompt") as string) || "";
+            promptText = (formData.get("prompt") as string) || "";
             mode = "image";
 
-            if (!file) return NextResponse.json({ error: "Dosya gerekli" }, { status: 400 });
-
-            const bytes = await file.arrayBuffer();
-            imageBase64 = Buffer.from(bytes).toString("base64");
-            imageMimeType = file.type || "image/jpeg";
-            promptText = extraPrompt || "Bu menü görselindeki tüm kategori ve ürünleri çıkar.";
+            const rawFiles = formData.getAll("files");
+            for (const f of rawFiles) {
+                if (f instanceof File) {
+                    const bytes = await f.arrayBuffer();
+                    files.push({
+                        base64: Buffer.from(bytes).toString("base64"),
+                        mimeType: f.type || "image/jpeg",
+                    });
+                }
+            }
+            if (files.length === 0) return NextResponse.json({ error: "Dosya gerekli" }, { status: 400 });
         } else {
             const json = await req.json();
             restaurantId = json.restaurantId;
             promptText = json.prompt;
-            mode = "prompt";
         }
 
         if (!restaurantId) return NextResponse.json({ error: "restaurantId gerekli" }, { status: 400 });
 
-        const cost = mode === "image" ? MENU_COST_IMAGE : MENU_COST_PROMPT;
+        const cost = mode === "image" ? Math.min(MENU_COST_IMAGE + (files.length - 1) * 2, 15) : MENU_COST_PROMPT;
         const apiKey = process.env.GEMINI_API_KEY?.trim();
         if (!apiKey) return NextResponse.json({ error: "Gemini API key yapılandırılmamış" }, { status: 500 });
 
-        // Kredi kontrolü
         let credit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
         if (!credit) credit = await (prisma as any).aiCredit.create({ data: { restaurantId, balance: 500 } });
         if (credit.balance < cost) return NextResponse.json({ error: "Yetersiz kredi", balance: credit.balance }, { status: 403 });
 
-        // Build Gemini request
-        let parts: object[];
+        let finalMenu: MenuData;
+
         if (mode === "image") {
-            parts = [
-                { text: SYSTEM_PROMPT + "\n\nKullanıcı notu: " + promptText },
-                { inlineData: { mimeType: imageMimeType, data: imageBase64 } },
-            ];
-        } else {
-            parts = [
-                {
-                    text: SYSTEM_PROMPT + `\n\nKullanıcı isteği: "${promptText}"\n\nBu tarife göre tam bir restoran menüsü oluştur.`
-                }
-            ];
-        }
-
-        const geminiRes = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts }],
-                    generationConfig: { temperature: 0.7 },
-                }),
+            // Process each file separately
+            const results: MenuData[] = [];
+            for (const file of files) {
+                const parts = [
+                    { text: SYSTEM_PROMPT + (promptText ? `\n\nEk not: ${promptText}` : "") },
+                    { inlineData: { mimeType: file.mimeType, data: file.base64 } },
+                ];
+                const result = await processWithGemini(apiKey, parts);
+                if (result) results.push(result);
             }
-        );
-
-        if (!geminiRes.ok) {
-            const errText = await geminiRes.text();
-            return NextResponse.json({ error: "Gemini API hatası: " + errText }, { status: 500 });
+            if (results.length === 0) return NextResponse.json({ error: "Hiçbir dosyadan menü çıkarılamadı" }, { status: 500 });
+            finalMenu = results.length === 1 ? results[0] : mergeMenus(results);
+        } else {
+            const parts = [{
+                text: SYSTEM_PROMPT + `\n\nKullanıcı isteği: "${promptText}"\n\nBu tarife göre eksiksiz bir restoran menüsü oluştur. Her kategoride en az 5 ürün olsun.`
+            }];
+            const result = await processWithGemini(apiKey, parts);
+            if (!result) return NextResponse.json({ error: "Menü oluşturulamadı" }, { status: 500 });
+            finalMenu = result;
         }
 
-        const geminiData = await geminiRes.json();
-        const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        if (!finalMenu.categories?.length) return NextResponse.json({ error: "Geçerli menü verisi bulunamadı" }, { status: 500 });
 
-        // Parse JSON from response
-        const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, rawText];
-        const jsonStr = (jsonMatch[1] || rawText).trim();
-
-        let menuData: { categories: Array<{ name: string; products: Array<{ name: string; description: string; price: number }> }> };
-        try {
-            menuData = JSON.parse(jsonStr);
-        } catch {
-            return NextResponse.json({ error: "AI yanıtı geçersiz JSON", raw: rawText }, { status: 500 });
-        }
-
-        if (!menuData.categories?.length) {
-            return NextResponse.json({ error: "Menü oluşturulamadı", raw: rawText }, { status: 500 });
-        }
-
-        // Kredi düş
+        // Deduct credits
         await prisma.$transaction([
             (prisma as any).aiCredit.update({
                 where: { restaurantId },
                 data: { balance: { decrement: cost } },
             }),
             (prisma as any).aiUsageLog.create({
-                data: { creditId: credit.id, type: "menu_generate", cost, prompt: promptText.substring(0, 500) },
+                data: {
+                    creditId: credit.id,
+                    type: "menu_generate",
+                    cost,
+                    prompt: (promptText || `${files.length} dosya`).substring(0, 500),
+                },
             }),
         ]);
 
         const updatedCredit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
-
         return NextResponse.json({
             success: true,
-            menu: menuData,
+            menu: finalMenu,
             balance: updatedCredit?.balance ?? credit.balance - cost,
             cost,
         });
     } catch (error: unknown) {
-        console.error("AI menü üretim hatası:", error);
         const message = error instanceof Error ? error.message : "Bilinmeyen hata";
         return NextResponse.json({ error: message }, { status: 500 });
     }

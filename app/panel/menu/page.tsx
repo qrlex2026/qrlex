@@ -46,25 +46,29 @@ export default function PanelMenu() {
     const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
     const [bulkDeleting, setBulkDeleting] = useState(false);
     const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+    const [bulkDeleteToast, setBulkDeleteToast] = useState("");
     const toggleSelectProduct = (id: string) => setSelectedProducts(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
     const bulkDeleteSelected = async () => {
         if (!selectedProducts.size || bulkDeleting) return;
         setBulkDeleting(true);
         setConfirmBulkDelete(false);
-        // Find categories where ALL products are selected → delete those categories too
+        const prodCount = selectedProducts.size;
         const catsToDelete = categories.filter(cat => {
             const catProds = products.filter(p => p.categoryId === cat.id);
             return catProds.length > 0 && catProds.every(p => selectedProducts.has(p.id));
         });
-        // Delete products first
         await Promise.all([...selectedProducts].map(id => fetch(`/api/admin/products/${id}`, { method: 'DELETE' })));
-        // Delete empty categories
         if (catsToDelete.length > 0) {
             await Promise.all(catsToDelete.map(cat => fetch(`/api/admin/categories/${cat.id}`, { method: 'DELETE' })));
         }
         setSelectedProducts(new Set());
         setBulkDeleting(false);
         fetchData();
+        const msg = catsToDelete.length > 0
+            ? `✓ ${prodCount} ürün ve ${catsToDelete.length} kategori silindi`
+            : `✓ ${prodCount} ürün silindi`;
+        setBulkDeleteToast(msg);
+        setTimeout(() => setBulkDeleteToast(""), 3000);
     };
 
     // AI Image generation
@@ -78,8 +82,8 @@ export default function PanelMenu() {
     const [showAiMenuModal, setShowAiMenuModal] = useState(false);
     const [aiMenuTab, setAiMenuTab] = useState<"image" | "prompt">("prompt");
     const [aiMenuPrompt, setAiMenuPrompt] = useState("");
-    const [aiMenuFile, setAiMenuFile] = useState<File | null>(null);
-    const [aiMenuFilePreview, setAiMenuFilePreview] = useState("");
+    const [aiMenuFiles, setAiMenuFiles] = useState<File[]>([]);
+    const [aiMenuFilePreviews, setAiMenuFilePreviews] = useState<string[]>([]);
     const [aiMenuLoading, setAiMenuLoading] = useState(false);
     const [aiMenuError, setAiMenuError] = useState("");
     const [aiMenuResult, setAiMenuResult] = useState<{ categories: Array<{ name: string; products: Array<{ name: string; description: string; price: number }> }> } | null>(null);
@@ -125,24 +129,32 @@ export default function PanelMenu() {
     };
 
     // AI Menu handlers
-    const handleAiMenuFileChange = (file: File) => {
-        setAiMenuFile(file);
+    const addAiMenuFiles = (newFiles: File[]) => {
         setAiMenuError("");
         setAiMenuResult(null);
         setAiMenuImportDone(false);
-        if (file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = (e) => setAiMenuFilePreview(e.target?.result as string);
-            reader.readAsDataURL(file);
-        } else {
-            setAiMenuFilePreview("");
-        }
+        setAiMenuFiles(prev => {
+            const combined = [...prev, ...newFiles].slice(0, 5); // max 5 files
+            // Generate previews for images
+            combined.forEach((f, i) => {
+                if (f.type.startsWith("image/") && !aiMenuFilePreviews[i]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => setAiMenuFilePreviews(p => { const n = [...p]; n[i] = e.target?.result as string; return n; });
+                    reader.readAsDataURL(f);
+                }
+            });
+            return combined;
+        });
+    };
+    const removeAiMenuFile = (idx: number) => {
+        setAiMenuFiles(prev => prev.filter((_, i) => i !== idx));
+        setAiMenuFilePreviews(prev => prev.filter((_, i) => i !== idx));
     };
 
     const handleAiMenuGenerate = async () => {
         if (aiMenuLoading || !restaurantId) return;
         if (aiMenuTab === "prompt" && !aiMenuPrompt.trim()) return;
-        if (aiMenuTab === "image" && !aiMenuFile) return;
+        if (aiMenuTab === "image" && aiMenuFiles.length === 0) return;
 
         setAiMenuLoading(true);
         setAiMenuError("");
@@ -151,10 +163,10 @@ export default function PanelMenu() {
 
         try {
             let res: Response;
-            if (aiMenuTab === "image" && aiMenuFile) {
+            if (aiMenuTab === "image" && aiMenuFiles.length > 0) {
                 const fd = new FormData();
                 fd.append("restaurantId", restaurantId);
-                fd.append("file", aiMenuFile);
+                aiMenuFiles.forEach(f => fd.append("files", f));
                 fd.append("prompt", aiMenuPrompt);
                 res = await fetch("/api/ai/generate-menu", { method: "POST", body: fd });
             } else {
@@ -452,7 +464,7 @@ export default function PanelMenu() {
                         ) : (
                             <button onClick={selectAllProducts} className="h-9 px-3 rounded-xl text-[13px] bg-gray-800/60 text-gray-500 hover:text-gray-300 border border-white/[0.04] transition-all">Tümünü Seç</button>
                         )}
-                        <button onClick={() => { setShowAiMenuModal(true); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFile(null); setAiMenuFilePreview(""); }} className="flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-medium transition-all bg-violet-500/10 text-violet-300 border border-violet-500/20 hover:bg-violet-500/20">
+                        <button onClick={() => { setShowAiMenuModal(true); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); }} className="flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-medium transition-all bg-violet-500/10 text-violet-300 border border-violet-500/20 hover:bg-violet-500/20">
                             <Wand2 size={14} /> AI Menü Oluştur
                         </button>
                         <button onClick={() => setShowPricePanel(!showPricePanel)} className={`flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-medium transition-all ${showPricePanel ? "bg-amber-500/10 text-amber-400 border border-amber-500/30" : "bg-[#1e1e1e] text-gray-400 hover:text-white border border-white/[0.06]"}`}><Percent size={14} /> Toplu Fiyat</button>
@@ -564,6 +576,23 @@ export default function PanelMenu() {
                 )}
             </div>
 
+            {/* Bulk Delete Loading Overlay */}
+            {bulkDeleting && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center">
+                    <div className="bg-gray-900 border border-gray-800 rounded-2xl px-8 py-6 flex flex-col items-center gap-3">
+                        <Loader2 size={32} className="text-red-400 animate-spin" />
+                        <p className="text-white font-semibold">Siliniyor...</p>
+                        <p className="text-gray-500 text-xs">Lütfen bekleyin</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Delete Success Toast */}
+            {bulkDeleteToast && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-emerald-600 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-xl flex items-center gap-2 animate-pulse">
+                    {bulkDeleteToast}
+                </div>
+            )}
 
             {/* AI Menu Creator Modal */}
             {showAiMenuModal && (
@@ -625,38 +654,58 @@ export default function PanelMenu() {
                                 </div>
                             )}
 
-                            {/* Image Tab */}
+                            {/* Image Tab — Multi-file */}
                             {aiMenuTab === "image" && (
                                 <div className="space-y-3">
-                                    <div
-                                        onClick={() => aiMenuFileRef.current?.click()}
-                                        onDragOver={e => e.preventDefault()}
-                                        onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleAiMenuFileChange(f); }}
-                                        className="border-2 border-dashed border-gray-700 hover:border-violet-500/50 rounded-xl p-6 text-center cursor-pointer transition-colors"
-                                    >
-                                        {aiMenuFilePreview ? (
-                                            <img src={aiMenuFilePreview} alt="" className="max-h-40 mx-auto rounded-lg object-contain" />
-                                        ) : aiMenuFile ? (
-                                            <div className="flex flex-col items-center gap-2">
-                                                <FileText size={32} className="text-violet-400" />
-                                                <p className="text-sm text-gray-300">{aiMenuFile.name}</p>
-                                            </div>
-                                        ) : (
+                                    {/* File list */}
+                                    {aiMenuFiles.length > 0 && (
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {aiMenuFiles.map((f, i) => (
+                                                <div key={i} className="relative group">
+                                                    {aiMenuFilePreviews[i] ? (
+                                                        <img src={aiMenuFilePreviews[i]} alt="" className="w-full h-20 object-cover rounded-lg border border-gray-700" />
+                                                    ) : (
+                                                        <div className="w-full h-20 bg-gray-800 rounded-lg border border-gray-700 flex flex-col items-center justify-center gap-1">
+                                                            <FileText size={20} className="text-violet-400" />
+                                                            <p className="text-[9px] text-gray-400 px-1 truncate w-full text-center">{f.name}</p>
+                                                        </div>
+                                                    )}
+                                                    <button onClick={() => removeAiMenuFile(i)} className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <X size={10} className="text-white" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            {aiMenuFiles.length < 5 && (
+                                                <button onClick={() => aiMenuFileRef.current?.click()} className="h-20 border-2 border-dashed border-gray-700 hover:border-violet-500/50 rounded-lg flex flex-col items-center justify-center gap-1 transition-colors">
+                                                    <Plus size={18} className="text-gray-600" />
+                                                    <span className="text-[10px] text-gray-600">Ekle</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                    {/* Drop zone (shown when no files) */}
+                                    {aiMenuFiles.length === 0 && (
+                                        <div
+                                            onClick={() => aiMenuFileRef.current?.click()}
+                                            onDragOver={e => e.preventDefault()}
+                                            onDrop={e => { e.preventDefault(); addAiMenuFiles(Array.from(e.dataTransfer.files)); }}
+                                            className="border-2 border-dashed border-gray-700 hover:border-violet-500/50 rounded-xl p-6 text-center cursor-pointer transition-colors"
+                                        >
                                             <div className="flex flex-col items-center gap-2">
                                                 <Upload size={28} className="text-gray-600" />
                                                 <p className="text-sm text-gray-400">Menü resmi veya PDF yükle</p>
-                                                <p className="text-[11px] text-gray-600">JPG, PNG, PDF desteklenir</p>
+                                                <p className="text-[11px] text-gray-600">Birden fazla dosya eklenebilir (max 5) — JPG, PNG, PDF</p>
                                             </div>
-                                        )}
-                                    </div>
-                                    <input ref={aiMenuFileRef} type="file" accept="image/*,.pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleAiMenuFileChange(f); e.target.value = ""; }} />
-                                    {aiMenuFile && (
-                                        <div>
-                                            <label className="text-xs text-gray-400 mb-1 block">Ek not (opsiyonel)</label>
-                                            <input value={aiMenuPrompt} onChange={e => setAiMenuPrompt(e.target.value)} placeholder="Örn: Sadece ana yemekleri al" className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500" />
                                         </div>
                                     )}
-                                    <p className="text-[11px] text-gray-600">💳 5 kredi kullanılacak</p>
+                                    <input ref={aiMenuFileRef} type="file" accept="image/*,.pdf" multiple className="hidden" onChange={e => { const files = Array.from(e.target.files || []); if (files.length) addAiMenuFiles(files); e.target.value = ""; }} />
+                                    {aiMenuFiles.length > 0 && (
+                                        <div>
+                                            <label className="text-xs text-gray-400 mb-1 block">Ek not (opsiyonel)</label>
+                                            <input value={aiMenuPrompt} onChange={e => setAiMenuPrompt(e.target.value)} placeholder="Örn: Sadece ana yemekleri al, fiyatları koru" className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500" />
+                                        </div>
+                                    )}
+                                    <p className="text-[11px] text-gray-600">💳 5 kredi kullanılacak ({aiMenuFiles.length} dosya)</p>
                                 </div>
                             )}
 
