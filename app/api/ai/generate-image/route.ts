@@ -5,6 +5,9 @@ import { uploadToR2 } from "@/lib/r2";
 const prisma = new PrismaClient();
 const IMAGE_COST = 5; // 5 kredi per görsel
 
+// Extend Vercel function timeout — image generation takes 15-30s
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
     try {
         const { restaurantId, productName, productDescription, prompt } = await req.json();
