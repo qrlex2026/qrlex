@@ -51,7 +51,17 @@ export default function PanelMenu() {
         if (!selectedProducts.size || bulkDeleting) return;
         setBulkDeleting(true);
         setConfirmBulkDelete(false);
+        // Find categories where ALL products are selected → delete those categories too
+        const catsToDelete = categories.filter(cat => {
+            const catProds = products.filter(p => p.categoryId === cat.id);
+            return catProds.length > 0 && catProds.every(p => selectedProducts.has(p.id));
+        });
+        // Delete products first
         await Promise.all([...selectedProducts].map(id => fetch(`/api/admin/products/${id}`, { method: 'DELETE' })));
+        // Delete empty categories
+        if (catsToDelete.length > 0) {
+            await Promise.all(catsToDelete.map(cat => fetch(`/api/admin/categories/${cat.id}`, { method: 'DELETE' })));
+        }
         setSelectedProducts(new Set());
         setBulkDeleting(false);
         fetchData();
