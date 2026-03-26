@@ -45,16 +45,12 @@ export default function PanelMenu() {
     // Bulk select
     const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
     const [bulkDeleting, setBulkDeleting] = useState(false);
+    const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
     const toggleSelectProduct = (id: string) => setSelectedProducts(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-    const toggleSelectAllInCat = (catId: string) => {
-        const catProds = productsByCategory(catId);
-        const allSelected = catProds.length > 0 && catProds.every(p => selectedProducts.has(p.id));
-        setSelectedProducts(prev => { const n = new Set(prev); catProds.forEach(p => allSelected ? n.delete(p.id) : n.add(p.id)); return n; });
-    };
     const bulkDeleteSelected = async () => {
         if (!selectedProducts.size || bulkDeleting) return;
-        if (!confirm(`${selectedProducts.size} ürünü silmek istediğinize emin misiniz?`)) return;
         setBulkDeleting(true);
+        setConfirmBulkDelete(false);
         await Promise.all([...selectedProducts].map(id => fetch(`/api/admin/products/${id}`, { method: 'DELETE' })));
         setSelectedProducts(new Set());
         setBulkDeleting(false);
@@ -252,6 +248,13 @@ export default function PanelMenu() {
     useEffect(() => { if (restaurantId) fetchData(); }, [restaurantId, fetchData]);
 
     const productsByCategory = (catId: string) => products.filter(p => p.categoryId === catId).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    const toggleSelectAllInCat = (catId: string) => {
+        const catProds = productsByCategory(catId);
+        const allSelected = catProds.length > 0 && catProds.every(p => selectedProducts.has(p.id));
+        setSelectedProducts(prev => { const n = new Set(prev); catProds.forEach(p => allSelected ? n.delete(p.id) : n.add(p.id)); return n; });
+    };
+    const selectAllProducts = () => setSelectedProducts(new Set(products.map(p => p.id)));
+    const clearSelection = () => { setSelectedProducts(new Set()); setConfirmBulkDelete(false); };
 
     // === Product actions ===
     const toggleField = async (id: string, field: "isPopular" | "isActive", value: boolean) => {
@@ -418,10 +421,26 @@ export default function PanelMenu() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        {selectedProducts.size > 0 && (
-                            <button onClick={bulkDeleteSelected} disabled={bulkDeleting} className="flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-medium transition-all bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 disabled:opacity-40">
-                                <Trash2 size={14} /> {bulkDeleting ? 'Siliniyor...' : `${selectedProducts.size} Ürünü Sil`}
-                            </button>
+                        {selectedProducts.size > 0 ? (
+                            confirmBulkDelete ? (
+                                <>
+                                    <span className="text-xs text-red-400">{selectedProducts.size} ürün silinecek!</span>
+                                    <button onClick={bulkDeleteSelected} disabled={bulkDeleting} className="flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-semibold transition-all bg-red-500 text-white hover:bg-red-600 disabled:opacity-40">
+                                        <Trash2 size={14} /> {bulkDeleting ? 'Siliniyor...' : 'Onayla'}
+                                    </button>
+                                    <button onClick={() => setConfirmBulkDelete(false)} className="h-9 px-3 rounded-xl text-[13px] bg-gray-800 text-gray-400 hover:text-white">Vazgeç</button>
+                                </>
+                            ) : (
+                                <>
+                                    <button onClick={selectAllProducts} className="h-9 px-3 rounded-xl text-[13px] bg-gray-800 text-gray-400 hover:text-white border border-white/[0.06]">Tümünü Seç</button>
+                                    <button onClick={clearSelection} className="h-9 px-3 rounded-xl text-[13px] bg-gray-800 text-gray-400 hover:text-white border border-white/[0.06]">Temizle</button>
+                                    <button onClick={() => setConfirmBulkDelete(true)} disabled={bulkDeleting} className="flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-medium transition-all bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20">
+                                        <Trash2 size={14} /> {selectedProducts.size} Ürünü Sil
+                                    </button>
+                                </>
+                            )
+                        ) : (
+                            <button onClick={selectAllProducts} className="h-9 px-3 rounded-xl text-[13px] bg-gray-800/60 text-gray-500 hover:text-gray-300 border border-white/[0.04] transition-all">Tümünü Seç</button>
                         )}
                         <button onClick={() => { setShowAiMenuModal(true); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFile(null); setAiMenuFilePreview(""); }} className="flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-medium transition-all bg-violet-500/10 text-violet-300 border border-violet-500/20 hover:bg-violet-500/20">
                             <Wand2 size={14} /> AI Menü Oluştur
