@@ -4,7 +4,8 @@ import {
     Save, Loader2, Palette, Type, Square, Layers, Eye, RotateCcw, Settings,
     Sun, Moon, Sparkles, Paintbrush, SlidersHorizontal, Monitor, Menu, Upload, X, Globe,
     LayoutGrid, ChevronDown, ChevronUp, Check, Smartphone, Tablet, RefreshCw, Search, Image as ImageIcon,
-    LayoutList, Grid2X2, Grid3X3, GalleryHorizontal, Newspaper, AlignJustify, RectangleHorizontal, Rows3, LayoutDashboard, FileText
+    LayoutList, Grid2X2, Grid3X3, GalleryHorizontal, Newspaper, AlignJustify, RectangleHorizontal, Rows3, LayoutDashboard, FileText,
+    Droplets, MoreHorizontal, Plus, Minus, Trash2
 } from "lucide-react";
 import { useSession } from "@/lib/useSession";
 
@@ -107,6 +108,33 @@ const DEFAULT_THEME = {
     headerLogo: "",
     showMenuButton: "true",
     showSearchIcon: "true",
+
+    // Header Dimensions
+    menuHeaderHeight: "60",
+    menuHeaderPaddingX: "16",
+
+    // Header Icon Visibility
+    showLangIcon: "false",
+
+    // Icon Positions (left / center / right)
+    menuIconPos: "left",
+    searchIconPos: "right",
+    langIconPos: "right",
+
+    // Menu Icon Style
+    menuIconSize: "20",
+    menuIconBg: "transparent",
+    menuIconRadius: "0",
+
+    // Search Icon Style
+    searchIconSize: "20",
+    searchIconBg: "transparent",
+    searchIconRadius: "0",
+
+    // Lang Icon Style
+    langIconSize: "20",
+    langIconBg: "transparent",
+    langIconRadius: "0",
 
     // Global Theme Preset (independent from header)
     globalThemeBg: "#ffffff",
@@ -227,10 +255,10 @@ function hsvToHex(h: number, s: number, v: number): string {
 }
 
 // ─── Advanced Color Panel ───────────────────────────────────
-type GradientStop = { color: string; position: number };
+type GradientStop = { color: string; position: number; opacity: number };
 type PanelTab = 'solid' | 'linear' | 'radial' | 'angular' | 'image';
 
-function AdvancedColorPanel({ value, onChange, onClose }: { value: string; onChange: (v: string) => void; onClose: () => void }) {
+function AdvancedColorPanel({ value, onChange, onClose, panelStyle }: { value: string; onChange: (v: string) => void; onClose: () => void; panelStyle?: React.CSSProperties }) {
     const panelRef = useRef<HTMLDivElement>(null);
     const satValRef = useRef<HTMLCanvasElement>(null);
     const [activeTab, setActiveTab] = useState<PanelTab>(() => {
@@ -240,16 +268,40 @@ function AdvancedColorPanel({ value, onChange, onClose }: { value: string; onCha
         if (value.startsWith('url(')) return 'image';
         return 'solid';
     });
-    const [hsv, setHsv] = useState<[number, number, number]>(() => hexToHsv(value.startsWith('#') ? value : '#000000'));
-    const [opacity, setOpacity] = useState(100);
-    const [hexInput, setHexInput] = useState(value.startsWith('#') ? value : '#000000');
+    // Extract initial hex for HSV/hexInput (handles rgba too)
+    const initHex = (() => {
+        if (value.startsWith('#')) return value;
+        if (value.startsWith('rgba') || value.startsWith('rgb')) {
+            const m = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+            if (m) return '#' + [parseInt(m[1]),parseInt(m[2]),parseInt(m[3])].map(n=>n.toString(16).padStart(2,'0')).join('');
+        }
+        return '#000000';
+    })();
+    const [hsv, setHsv] = useState<[number, number, number]>(() => hexToHsv(initHex));
+    const [opacity, setOpacity] = useState(() => {
+        if (value.startsWith('rgba')) {
+            const m = value.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*([\d.]+)\)/);
+            if (m) return Math.round(parseFloat(m[1]) * 100);
+        }
+        return 100;
+    });
+    const [hexInput, setHexInput] = useState(initHex);
     const isDraggingSV = useRef(false);
     const isDraggingHue = useRef(false);
+    const isDraggingOpacity = useRef(false);
+    const opacityBarRef = useRef<HTMLDivElement>(null);
     const [gradAngle, setGradAngle] = useState(135);
-    const [gradStops, setGradStops] = useState<GradientStop[]>([{ color: '#E8C3C3', position: 0 }, { color: '#826D6D', position: 100 }]);
+    const [gradStops, setGradStops] = useState<GradientStop[]>([{ color: '#E8C3C3', position: 0, opacity: 100 }, { color: '#826D6D', position: 100, opacity: 100 }]);
     const [editingStop, setEditingStop] = useState(0);
-    const [imageUrl, setImageUrl] = useState('');
+    const [imageUrl, setImageUrl] = useState(() => value.startsWith('url(') ? value.slice(4, -1) : '');
     const [uploading, setUploading] = useState(false);
+    const gradBarRef = useRef<HTMLDivElement>(null);
+    const draggingStopIdx = useRef<number>(-1);
+    const [stopHexInput, setStopHexInput] = useState(gradStops[0]?.color?.replace('#','') ?? 'E8C3C3');
+    const isDraggingGradSV = useRef(false);
+    const isDraggingGradHue = useRef(false);
+    const gradSVRef = useRef<HTMLDivElement>(null);
+    const gradHueRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handler = (e: MouseEvent) => { if (panelRef.current && !panelRef.current.contains(e.target as Node)) onClose(); };
@@ -269,10 +321,27 @@ function AdvancedColorPanel({ value, onChange, onClose }: { value: string; onCha
         ctx.fillStyle = bG; ctx.fillRect(0, 0, w, h);
     }, [hsv[0], activeTab]);
 
+    // Emit when HSV changes (keep current opacity)
     useEffect(() => {
         if (activeTab !== 'solid') return;
-        const hex = hsvToHex(hsv[0], hsv[1], hsv[2]); setHexInput(hex); onChange(hex);
+        const hex = hsvToHex(hsv[0], hsv[1], hsv[2]); setHexInput(hex);
+        if (opacity < 100) {
+            const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+            onChange(`rgba(${r}, ${g}, ${b}, ${(opacity/100).toFixed(2)})`);
+        } else { onChange(hex); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hsv, activeTab]);
+
+    // Emit when opacity changes separately (keep current HSV)
+    useEffect(() => {
+        if (activeTab !== 'solid') return;
+        const hex = hsvToHex(hsv[0], hsv[1], hsv[2]);
+        if (opacity < 100) {
+            const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+            onChange(`rgba(${r}, ${g}, ${b}, ${(opacity/100).toFixed(2)})`);
+        } else { onChange(hex); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [opacity]);
 
     const handleSVMouse = (e: React.MouseEvent<HTMLCanvasElement>) => {
         const canvas = satValRef.current; if (!canvas) return;
@@ -292,23 +361,95 @@ function AdvancedColorPanel({ value, onChange, onClose }: { value: string; onCha
                 const el = document.getElementById('acp-hue-slider');
                 if (el) { const r = el.getBoundingClientRect(); setHsv(p => [Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 360, p[1], p[2]]); }
             }
+            if (isDraggingOpacity.current && opacityBarRef.current) {
+                const r = opacityBarRef.current.getBoundingClientRect();
+                const pct = Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 100);
+                setOpacity(pct);
+            }
         };
-        const up = () => { isDraggingSV.current = false; isDraggingHue.current = false; };
+        const up = () => { isDraggingSV.current = false; isDraggingHue.current = false; isDraggingOpacity.current = false; };
         window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
         return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
     }, []);
 
+    const stopColor = (s: GradientStop) => {
+        if (s.opacity < 100) {
+            const r = parseInt(s.color.slice(1,3),16), g = parseInt(s.color.slice(3,5),16), b = parseInt(s.color.slice(5,7),16);
+            return `rgba(${r},${g},${b},${(s.opacity/100).toFixed(2)})`;
+        }
+        return s.color;
+    };
     const buildGrad = (type: PanelTab, stops: GradientStop[], angle: number) => {
-        const s = [...stops].sort((a, b) => a.position - b.position).map(s => `${s.color} ${s.position}%`).join(', ');
+        const s = [...stops].sort((a,b) => a.position - b.position).map(st => `${stopColor(st)} ${st.position}%`).join(', ');
         return type === 'linear' ? `linear-gradient(${angle}deg, ${s})` : type === 'radial' ? `radial-gradient(circle, ${s})` : `conic-gradient(from ${angle}deg, ${s})`;
     };
     const emitGrad = (stops?: GradientStop[], angle?: number, tab?: PanelTab) => onChange(buildGrad(tab || activeTab, stops || gradStops, angle ?? gradAngle));
-    const updateStop = (i: number, k: 'color' | 'position', v: string | number) => {
-        const ns = [...gradStops]; if (k === 'color') ns[i].color = v as string; else ns[i].position = v as number;
-        setGradStops(ns); emitGrad(ns);
+    const updateStop = (i: number, k: keyof GradientStop, v: string | number) => {
+        const ns = gradStops.map((s,j) => j === i ? { ...s, [k]: v } : s);
+        setGradStops(ns);
+        if (k === 'color') setStopHexInput((v as string).replace('#',''));
+        emitGrad(ns);
     };
-    const addStop = () => { const ns = [...gradStops, { color: '#ffffff', position: 50 }]; setGradStops(ns); setEditingStop(ns.length - 1); emitGrad(ns); };
-    const removeStop = (i: number) => { if (gradStops.length <= 2) return; const ns = gradStops.filter((_, j) => j !== i); setGradStops(ns); setEditingStop(Math.min(editingStop, ns.length - 1)); emitGrad(ns); };
+    const addStopAtPct = (pct: number) => {
+        // interpolate colour at pct
+        const sorted = [...gradStops].sort((a,b)=>a.position-b.position);
+        let col = sorted[0].color;
+        for (let i=0;i<sorted.length-1;i++) {
+            if (pct >= sorted[i].position && pct <= sorted[i+1].position) {
+                const t = (pct - sorted[i].position) / (sorted[i+1].position - sorted[i].position || 1);
+                const hexToRgb = (h: string) => [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+                const a = hexToRgb(sorted[i].color), b2 = hexToRgb(sorted[i+1].color);
+                col = '#'+[0,1,2].map(c=>Math.round(a[c]+(b2[c]-a[c])*t).toString(16).padStart(2,'0')).join('');
+                break;
+            }
+        }
+        const newStop: GradientStop = { color: col, position: Math.round(pct), opacity: 100 };
+        const ns = [...gradStops, newStop].sort((a,b)=>a.position-b.position);
+        const idx = ns.findIndex(s=>s===newStop);
+        setGradStops(ns); setEditingStop(idx); setStopHexInput(col.replace('#','')); emitGrad(ns);
+    };
+    const addStop = () => addStopAtPct(50);
+    const removeStop = (i: number) => {
+        if (gradStops.length <= 2) return;
+        const ns = gradStops.filter((_,j)=>j!==i);
+        setGradStops(ns); setEditingStop(Math.min(editingStop, ns.length-1)); emitGrad(ns);
+    };
+    // Drag stops on bar + sat/val + hue for selected stop
+    useEffect(() => {
+        const move = (e: MouseEvent) => {
+            // Bar drag
+            if (draggingStopIdx.current >= 0 && gradBarRef.current) {
+                const r = gradBarRef.current.getBoundingClientRect();
+                const pct = Math.round(Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100)));
+                const ns = gradStops.map((s,j)=>j===draggingStopIdx.current?{...s,position:pct}:s);
+                setGradStops(ns); emitGrad(ns);
+            }
+            // Sat/Val drag for selected stop
+            if (isDraggingGradSV.current && gradSVRef.current) {
+                const r = gradSVRef.current.getBoundingClientRect();
+                const sx = Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+                const sy = Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
+                const [h2] = hexToHsv(gradStops[editingStop]?.color || '#ff0000');
+                const nc = hsvToHex(h2, sx*100, (1-sy)*100);
+                const ns = gradStops.map((s,j)=>j===editingStop?{...s,color:nc}:s);
+                setGradStops(ns); setStopHexInput(nc.replace('#','')); emitGrad(ns);
+            }
+            // Hue drag for selected stop
+            if (isDraggingGradHue.current && gradHueRef.current) {
+                const r = gradHueRef.current.getBoundingClientRect();
+                const h2 = Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*360;
+                const [,s2,v2] = hexToHsv(gradStops[editingStop]?.color || '#ff0000');
+                const nc = hsvToHex(h2,s2,v2);
+                const ns = gradStops.map((s,j)=>j===editingStop?{...s,color:nc}:s);
+                setGradStops(ns); setStopHexInput(nc.replace('#','')); emitGrad(ns);
+            }
+        };
+        const up = () => { draggingStopIdx.current = -1; isDraggingGradSV.current = false; isDraggingGradHue.current = false; };
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
+        return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gradStops, gradAngle, activeTab, editingStop]);
 
     const handleImgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0]; if (!f) return; setUploading(true);
@@ -320,13 +461,13 @@ function AdvancedColorPanel({ value, onChange, onClose }: { value: string; onCha
     const tBtn = (t: PanelTab) => `w-7 h-7 rounded-lg flex items-center justify-center transition-all ${activeTab === t ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04] opacity-50 hover:opacity-80'}`;
 
     return (
-        <div ref={panelRef} className="absolute right-0 top-full mt-2 z-[100] w-[272px] bg-[#2c2c2c] rounded-xl shadow-2xl border border-white/[0.08]" style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}>
+        <div ref={panelRef} className="fixed z-[99999] w-[272px] bg-[#2c2c2c] rounded-xl shadow-2xl border border-white/[0.08]" style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.5)', ...panelStyle }}>
             {/* Tabs */}
             <div className="flex items-center gap-0.5 px-3 pt-3 pb-2 border-b border-white/[0.06]">
-                <button className={tBtn('solid')} onClick={() => { setActiveTab('solid'); const hex = hsvToHex(hsv[0], hsv[1], hsv[2]); onChange(hex); }} title="Düz Renk"><div className="w-3.5 h-3.5 rounded-[3px] border-2 border-gray-400" /></button>
-                <button className={tBtn('linear')} onClick={() => { setActiveTab('linear'); onChange(buildGrad('linear', gradStops, gradAngle)); }} title="Linear"><div className="w-3.5 h-3.5 rounded-[3px]" style={{ background: 'linear-gradient(135deg, #fff, #555)' }} /></button>
-                <button className={tBtn('radial')} onClick={() => { setActiveTab('radial'); onChange(buildGrad('radial', gradStops, gradAngle)); }} title="Radial"><div className="w-3.5 h-3.5 rounded-full" style={{ background: 'radial-gradient(circle, #fff, #555)' }} /></button>
-                <button className={tBtn('angular')} onClick={() => { setActiveTab('angular'); onChange(buildGrad('angular', gradStops, gradAngle)); }} title="Angular"><div className="w-3.5 h-3.5 rounded-full" style={{ background: 'conic-gradient(#fff, #555, #fff)' }} /></button>
+                <button className={tBtn('solid')} onClick={() => { if (activeTab === 'image' && imageUrl && !window.confirm('Resim silinecek. Devam etmek istiyor musun?')) return; setActiveTab('solid'); const hex = hsvToHex(hsv[0], hsv[1], hsv[2]); onChange(hex); }} title="Düz Renk"><div className="w-3.5 h-3.5 rounded-[3px] border-2 border-gray-400" /></button>
+                <button className={tBtn('linear')} onClick={() => { if (activeTab === 'image' && imageUrl && !window.confirm('Resim silinecek. Devam etmek istiyor musun?')) return; setActiveTab('linear'); onChange(buildGrad('linear', gradStops, gradAngle)); }} title="Linear"><div className="w-3.5 h-3.5 rounded-[3px]" style={{ background: 'linear-gradient(135deg, #fff, #555)' }} /></button>
+                <button className={tBtn('radial')} onClick={() => { if (activeTab === 'image' && imageUrl && !window.confirm('Resim silinecek. Devam etmek istiyor musun?')) return; setActiveTab('radial'); onChange(buildGrad('radial', gradStops, gradAngle)); }} title="Radial"><div className="w-3.5 h-3.5 rounded-full" style={{ background: 'radial-gradient(circle, #fff, #555)' }} /></button>
+                <button className={tBtn('angular')} onClick={() => { if (activeTab === 'image' && imageUrl && !window.confirm('Resim silinecek. Devam etmek istiyor musun?')) return; setActiveTab('angular'); onChange(buildGrad('angular', gradStops, gradAngle)); }} title="Angular"><div className="w-3.5 h-3.5 rounded-full" style={{ background: 'conic-gradient(#fff, #555, #fff)' }} /></button>
                 <button className={tBtn('image')} onClick={() => setActiveTab('image')} title="Resim">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
                 </button>
@@ -349,16 +490,18 @@ function AdvancedColorPanel({ value, onChange, onClose }: { value: string; onCha
                 <div className="px-3 pb-2 flex items-start gap-2">
                     <div className="w-8 h-8 rounded-lg flex-shrink-0 border border-white/[0.08]" style={{ backgroundColor: curColor }} />
                     <div className="flex-1 space-y-2">
-                        <div id="acp-hue-slider" className="h-3 rounded-full cursor-pointer relative"
+                        <div id="acp-hue-slider" className="h-3 rounded-full cursor-pointer relative overflow-hidden"
                             style={{ background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)' }}
                             onMouseDown={(e) => { isDraggingHue.current = true; const r = e.currentTarget.getBoundingClientRect(); setHsv([Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 360, hsv[1], hsv[2]]); }}>
                             <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-white pointer-events-none"
-                                style={{ left: `calc(${(hsv[0] / 360) * 100}% - 7px)`, boxShadow: '0 1px 3px rgba(0,0,0,0.3)', backgroundColor: `hsl(${hsv[0]}, 100%, 50%)` }} />
+                                style={{ left: `clamp(0px, calc(${(hsv[0] / 360) * 100}% - 7px), calc(100% - 14px))`, boxShadow: '0 1px 3px rgba(0,0,0,0.3)', backgroundColor: `hsl(${hsv[0]}, 100%, 50%)` }} />
                         </div>
-                        <div className="h-3 rounded-full cursor-pointer relative"
-                            style={{ background: `linear-gradient(to right, transparent, ${curColor}), repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50%/8px 8px` }}>
+                        <div ref={opacityBarRef} className="h-3 rounded-full cursor-pointer relative overflow-hidden"
+                            style={{ background: `linear-gradient(to right, transparent, ${curColor}), repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50%/8px 8px` }}
+                            onMouseDown={(e) => { isDraggingOpacity.current = true; const r = opacityBarRef.current!.getBoundingClientRect(); setOpacity(Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 100)); }}
+                        >
                             <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-white pointer-events-none"
-                                style={{ left: `calc(${opacity}% - 7px)`, boxShadow: '0 1px 3px rgba(0,0,0,0.3)', backgroundColor: curColor }} />
+                                style={{ left: `clamp(0px, calc(${opacity}% - 7px), calc(100% - 14px))`, boxShadow: '0 1px 3px rgba(0,0,0,0.3)', backgroundColor: curColor }} />
                         </div>
                     </div>
                 </div>
@@ -369,7 +512,14 @@ function AdvancedColorPanel({ value, onChange, onClose }: { value: string; onCha
                             className="flex-1 bg-transparent border-0 text-[11px] text-gray-300 font-mono focus:outline-none w-[60px]" />
                     </div>
                     <div className="flex items-center bg-[#1e1e1e] rounded-lg px-2 py-1.5">
-                        <input type="number" value={opacity} onChange={(e) => setOpacity(Math.max(0, Math.min(100, Number(e.target.value))))}
+                        <input type="text" value={opacity} onChange={(e) => {
+                            const newOp = Math.max(0, Math.min(100, Number(e.target.value.replace(/[^0-9]/g,''))||0));
+                            setOpacity(newOp);
+                            if (activeTab === 'solid') {
+                                const r = parseInt(hexInput.slice(1,3),16), g = parseInt(hexInput.slice(3,5),16), b = parseInt(hexInput.slice(5,7),16);
+                                onChange(`rgba(${r}, ${g}, ${b}, ${(newOp/100).toFixed(2)})`);
+                            }
+                        }}
                             className="w-8 bg-transparent border-0 text-[11px] text-gray-300 font-mono focus:outline-none text-center" />
                         <span className="text-[10px] text-gray-500 ml-0.5">%</span>
                     </div>
@@ -378,34 +528,150 @@ function AdvancedColorPanel({ value, onChange, onClose }: { value: string; onCha
 
             {/* GRADIENT */}
             {(activeTab === 'linear' || activeTab === 'radial' || activeTab === 'angular') && (<>
-                <div className="px-3 pt-2 pb-1 flex items-center justify-between">
+                {/* Angle row */}
+                <div className="px-3 pt-2 pb-2 flex items-center justify-between">
                     <span className="text-[11px] text-gray-500 font-medium">{activeTab === 'linear' ? 'Linear' : activeTab === 'radial' ? 'Radial' : 'Angular'}</span>
                     {activeTab !== 'radial' && (
                         <div className="flex items-center gap-1">
-                            <input type="number" value={gradAngle} onChange={(e) => { const a = Number(e.target.value); setGradAngle(a); emitGrad(undefined, a); }}
+                            <input type="number" value={gradAngle} onChange={(e) => { const a = ((Number(e.target.value) % 360)+360)%360; setGradAngle(a); emitGrad(undefined, a); }}
                                 className="w-10 bg-[#1e1e1e] rounded px-1.5 py-0.5 text-[10px] text-gray-300 font-mono border-0 focus:outline-none text-center" />
                             <span className="text-[10px] text-gray-500">°</span>
                         </div>
                     )}
                 </div>
-                <div className="px-3 pb-2"><div className="h-8 rounded-lg border border-white/[0.06]" style={{ background: buildGrad(activeTab, gradStops, gradAngle) }} /></div>
-                <div className="px-3 pb-1 flex items-center justify-between">
-                    <span className="text-[10px] text-gray-500 font-medium">Stops</span>
-                    <button onClick={addStop} className="text-gray-400 hover:text-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg></button>
+
+                {/* Interactive gradient bar */}
+                <div className="px-3 pb-2">
+                    <div className="relative" style={{ height: 32 }}>
+                        {/* bar */}
+                        <div
+                            ref={gradBarRef}
+                            className="absolute inset-x-0 rounded-lg border border-white/[0.06] cursor-crosshair"
+                            style={{ top: 8, bottom: 8, background: buildGrad(activeTab, gradStops, gradAngle) }}
+                            onClick={(e) => {
+                                if (draggingStopIdx.current >= 0) return;
+                                const r = gradBarRef.current!.getBoundingClientRect();
+                                const pct = Math.round(Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100)));
+                                addStopAtPct(pct);
+                            }}
+                        />
+                        {/* stop markers */}
+                        {gradStops.map((stop, i) => (
+                            <div
+                                key={i}
+                                onMouseDown={(e) => { e.stopPropagation(); draggingStopIdx.current = i; setEditingStop(i); setStopHexInput(stop.color.replace('#','')); }}
+                                onClick={(e) => { e.stopPropagation(); setEditingStop(i); setStopHexInput(stop.color.replace('#','')); }}
+                                className="absolute top-1/2 -translate-y-1/2 cursor-grab"
+                                style={{ left: `calc(${stop.position}% - 8px)`, zIndex: editingStop === i ? 10 : 5 }}
+                            >
+                                <div className="w-4 h-4 rounded-[3px] border-2 shadow-md"
+                                    style={{
+                                        backgroundColor: stopColor(stop),
+                                        borderColor: editingStop === i ? '#60a5fa' : '#fff',
+                                        boxShadow: editingStop === i ? '0 0 0 1px #3b82f6' : '0 1px 4px rgba(0,0,0,0.5)'
+                                    }}
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <div className="px-3 pb-3 space-y-1.5 max-h-[140px] overflow-y-auto">
-                    {gradStops.map((stop, i) => (
-                        <div key={i} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${editingStop === i ? 'bg-white/[0.04]' : ''}`} onClick={() => setEditingStop(i)}>
-                            <input type="text" value={`${stop.position}%`} onChange={(e) => updateStop(i, 'position', parseInt(e.target.value) || 0)}
-                                className="w-10 bg-transparent text-[10px] text-gray-400 font-mono focus:outline-none" />
-                            <input type="color" value={stop.color} onChange={(e) => updateStop(i, 'color', e.target.value)}
-                                className="w-5 h-5 rounded-[4px] cursor-pointer border-0 bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-[4px] [&::-webkit-color-swatch]:border-0" />
-                            <input type="text" value={stop.color.replace('#', '').toUpperCase()} onChange={(e) => updateStop(i, 'color', '#' + e.target.value)}
-                                className="flex-1 bg-transparent text-[10px] text-gray-300 font-mono focus:outline-none" />
-                            <span className="text-[10px] text-gray-500">100%</span>
-                            {gradStops.length > 2 && <button onClick={(e) => { e.stopPropagation(); removeStop(i); }} className="text-gray-500 hover:text-red-400"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14" /></svg></button>}
+
+                {/* Selected stop controls */}
+                {gradStops[editingStop] && (
+                    <div className="mx-3 mb-2 bg-[#1a1a1a] rounded-lg p-2 space-y-2">
+                        {/* sat/val mini canvas for selected stop */}
+                        <div ref={gradSVRef} className="relative rounded-md overflow-hidden cursor-crosshair" style={{ height: 100 }}
+                            onMouseDown={(e) => {
+                                isDraggingGradSV.current = true;
+                                const r = gradSVRef.current!.getBoundingClientRect();
+                                const sx = Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+                                const sy = Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
+                                const [h2] = hexToHsv(gradStops[editingStop].color);
+                                const nc = hsvToHex(h2, sx*100, (1-sy)*100);
+                                updateStop(editingStop,'color',nc);
+                            }}
+                        >
+                            {(() => {
+                                const [h2] = hexToHsv(gradStops[editingStop].color);
+                                return (
+                                    <>
+                                        <div className="absolute inset-0" style={{ background: `hsl(${h2},100%,50%)` }} />
+                                        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right,#fff,rgba(255,255,255,0))' }} />
+                                        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom,rgba(0,0,0,0),#000)' }} />
+                                        {(() => { const [,s2,v2]=hexToHsv(gradStops[editingStop].color); return (
+                                            <div className="absolute w-3 h-3 rounded-full border-2 border-white pointer-events-none"
+                                                style={{ left:`calc(${s2}% - 6px)`, top:`calc(${100-v2}% - 6px)`, backgroundColor:gradStops[editingStop].color, boxShadow:'0 0 0 1px rgba(0,0,0,0.3)' }} />
+                                        ); })()}
+                                    </>
+                                );
+                            })()}
                         </div>
-                    ))}
+                        {/* hue for stop */}
+                        <div ref={gradHueRef} className="h-3 rounded-full cursor-pointer relative"
+                            style={{ background:'linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)' }}
+                            onMouseDown={(e) => {
+                                isDraggingGradHue.current = true;
+                                const r = gradHueRef.current!.getBoundingClientRect();
+                                const h2 = Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*360;
+                                const [,s2,v2]=hexToHsv(gradStops[editingStop].color);
+                                updateStop(editingStop,'color',hsvToHex(h2,s2,v2));
+                            }}
+                        >
+                            {(() => { const [h2]=hexToHsv(gradStops[editingStop].color); return (
+                                <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-white pointer-events-none"
+                                    style={{ left:`clamp(0px,calc(${(h2/360)*100}% - 7px),calc(100% - 14px))`, backgroundColor:`hsl(${h2},100%,50%)`, boxShadow:'0 1px 3px rgba(0,0,0,0.4)' }} />
+                            ); })()}
+                        </div>
+                        {/* hex + opacity row for selected stop */}
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-4 h-4 rounded-[3px] flex-shrink-0 border border-white/10" style={{ backgroundColor: stopColor(gradStops[editingStop]) }} />
+                            <div className="flex items-center bg-[#111] rounded px-1.5 py-1 flex-1">
+                                <span className="text-[9px] text-gray-600 mr-1">Hex</span>
+                                <input type="text" value={stopHexInput}
+                                    onChange={(e) => {
+                                        setStopHexInput(e.target.value);
+                                        const c = e.target.value.replace('#','');
+                                        if (c.length===6 && /^[0-9a-fA-F]{6}$/.test(c)) updateStop(editingStop,'color','#'+c);
+                                    }}
+                                    className="flex-1 bg-transparent border-0 text-[10px] text-gray-300 font-mono focus:outline-none w-14" />
+                            </div>
+                            <div className="flex items-center bg-[#111] rounded px-1.5 py-1">
+                                <input type="text" value={gradStops[editingStop].opacity}
+                                    onChange={(e) => updateStop(editingStop,'opacity',Math.max(0,Math.min(100,Number(e.target.value.replace(/[^0-9]/g,''))||0)))}
+                                    className="w-6 bg-transparent border-0 text-[10px] text-gray-300 font-mono focus:outline-none text-right" />
+                                <span className="text-[9px] text-gray-600 ml-0.5">%</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Stops list */}
+                <div className="px-3 pb-1 flex items-center justify-between">
+                    <span className="text-[10px] text-gray-600 font-semibold uppercase tracking-widest">Stops</span>
+                    <button onClick={addStop} className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
+                    </button>
+                </div>
+                <div className="px-3 pb-3 space-y-0.5 max-h-[120px] overflow-y-auto">
+                    {[...gradStops].sort((a,b)=>a.position-b.position).map((stop) => {
+                        const origIdx = gradStops.indexOf(stop);
+                        const isActive = origIdx === editingStop;
+                        return (
+                            <div key={origIdx} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg cursor-pointer transition-colors ${isActive ? 'bg-white/[0.06]' : 'hover:bg-white/[0.03]'}`}
+                                onClick={() => { setEditingStop(origIdx); setStopHexInput(stop.color.replace('#','')); }}>
+                                <span className="text-[10px] text-gray-500 font-mono w-8">{stop.position}%</span>
+                                <div className="w-[14px] h-[14px] rounded-[3px] flex-shrink-0 border border-white/10" style={{ backgroundColor: stopColor(stop) }} />
+                                <span className="flex-1 text-[10px] text-gray-300 font-mono">{stop.color.replace('#','').toUpperCase()}</span>
+                                <span className="text-[10px] text-gray-500 font-mono">{stop.opacity}%</span>
+                                {gradStops.length > 2 && (
+                                    <button onClick={(e) => { e.stopPropagation(); removeStop(origIdx); }}
+                                        className="w-4 h-4 flex items-center justify-center text-gray-600 hover:text-red-400 transition-colors">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14" /></svg>
+                                    </button>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </>)}
 
@@ -422,7 +688,7 @@ function AdvancedColorPanel({ value, onChange, onClose }: { value: string; onCha
                         {uploading && <span className="text-[11px] text-gray-400">Yükleniyor...</span>}
                         {imageUrl && <label className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity"><span className="text-[11px] text-white font-medium">Değiştir</span><input type="file" accept="image/*" className="hidden" onChange={handleImgUpload} /></label>}
                     </div>
-                    {imageUrl && <button onClick={() => { setImageUrl(''); onChange(''); }} className="text-[10px] text-red-400 hover:text-red-300">Resmi Kaldır</button>}
+                    {imageUrl && <button onClick={() => { setImageUrl(''); onChange(''); }} className="flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-red-400 transition-colors mt-1"><Trash2 size={12} /> Resmi Kaldır</button>}
                 </div>
             </>)}
         </div>
@@ -433,13 +699,67 @@ function AdvancedColorPanel({ value, onChange, onClose }: { value: string; onCha
 // ─── Color Input Component ─────────────────────────────────
 function ColorPicker({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
     const [showPanel, setShowPanel] = useState(false);
-    const hexVal = value.startsWith('#') ? value.replace('#', '').substring(0, 6).toUpperCase() : '';
+    const triggerRef = useRef<HTMLDivElement>(null);
+    const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
+
+    // Extract display hex
+    const hexVal = value.startsWith('#')
+        ? value.replace('#', '').substring(0, 6).toUpperCase()
+        : value.startsWith('rgba')
+            ? (() => { const m = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/); if (!m) return '000000'; return [parseInt(m[1]),parseInt(m[2]),parseInt(m[3])].map(n => n.toString(16).padStart(2,'0')).join('').toUpperCase(); })()
+            : '';
+
+    // Extract current opacity (0-100)
+    const opacityVal = (() => {
+        if (value.startsWith('rgba')) { const m = value.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*([\d.]+)\)/); if (m) return Math.round(parseFloat(m[1]) * 100); }
+        if (value.startsWith('#') && value.length === 9) return Math.round(parseInt(value.slice(7, 9), 16) / 255 * 100);
+        return 100;
+    })();
+
+    const handleOpacity = (opPct: number) => {
+        opPct = Math.max(0, Math.min(100, opPct));
+        if (opPct === 100) {
+            // Full opacity -> emit plain hex
+            const hex = (value.startsWith('#') ? value.replace('#', '').substring(0, 6) : hexVal) || '000000';
+            onChange(`#${hex}`);
+            return;
+        }
+        const hex = (value.startsWith('#') ? value.replace('#', '').substring(0, 6) : hexVal) || '000000';
+        const r = parseInt(hex.substring(0, 2), 16) || 0;
+        const g = parseInt(hex.substring(2, 4), 16) || 0;
+        const b = parseInt(hex.substring(4, 6), 16) || 0;
+        // Use precise float: e.g. 99 -> 0.99, 1 -> 0.01
+        const alpha = opPct / 100;
+        onChange(`rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`);
+    };
+
+    const openPanel = () => {
+        if (triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            // Position panel below the trigger, right-aligned
+            const panelWidth = 272;
+            let left = rect.right - panelWidth;
+            if (left < 8) left = 8;
+            // If panel would go off-screen bottom, position above
+            const spaceBelow = window.innerHeight - rect.bottom;
+            let top = rect.bottom + 8;
+            if (spaceBelow < 380) {
+                top = rect.top - 380;
+                if (top < 8) top = 8;
+            }
+            setPanelPos({ top, left });
+        }
+        setShowPanel(!showPanel);
+    };
+
     return (
-        <div className="flex items-center h-7 gap-2 relative">
+        <div className="flex items-center h-7 gap-1.5 relative">
             <span className="text-[11px] text-gray-500 flex-1 min-w-0 truncate">{label}</span>
+            {/* Color trigger (hex) */}
             <div
+                ref={triggerRef}
                 className="flex items-center gap-1.5 bg-[#1a1a1a] hover:bg-[#222] rounded-md px-1.5 h-7 cursor-pointer transition-colors border border-transparent hover:border-white/[0.06]"
-                onClick={() => setShowPanel(!showPanel)}
+                onClick={openPanel}
             >
                 <div
                     className="w-[14px] h-[14px] rounded-[3px] flex-shrink-0"
@@ -452,14 +772,22 @@ function ColorPicker({ label, value, onChange }: { label: string; value: string;
                     onChange={(e) => onChange('#' + e.target.value.replace('#', ''))}
                     className="w-[52px] bg-transparent border-0 text-[11px] text-gray-300 font-mono focus:outline-none"
                 />
-                <span className="text-[10px] text-gray-700">|</span>
-                <span className="text-[11px] text-gray-500 font-mono">100</span>
-                <span className="text-[10px] text-gray-700">%</span>
             </div>
-            {showPanel && <AdvancedColorPanel value={value} onChange={onChange} onClose={() => setShowPanel(false)} />}
+            {/* Opacity — separate, does NOT open color picker */}
+            <div className="flex items-center gap-0.5 bg-[#1a1a1a] hover:bg-[#222] rounded-md px-1.5 h-7 transition-colors">
+                <input
+                    type="text"
+                    value={opacityVal}
+                    onChange={(e) => handleOpacity(Number(e.target.value.replace(/[^0-9]/g, '')))}
+                    className="w-6 bg-transparent border-0 text-[11px] text-gray-300 font-mono focus:outline-none text-right"
+                />
+                <span className="text-[10px] text-gray-600">%</span>
+            </div>
+            {showPanel && panelPos && <AdvancedColorPanel value={value} onChange={onChange} onClose={() => setShowPanel(false)} panelStyle={{ top: panelPos.top, left: panelPos.left }} />}
         </div>
     );
 }
+
 
 // ─── Collapsible Section ───────────────────────────────────
 function Section({ title, icon, children, defaultOpen = false }: { title: string; icon: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean }) {
@@ -491,109 +819,130 @@ function getShadowCSS(shadow: string) {
 }
 
 // ─── Figma-Style Shadow Picker ─────────────────────────────
-function ShadowPicker({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-    const [open, setOpen] = useState(false);
-    const panelRef = useRef<HTMLDivElement>(null);
+function ShadowPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const [showDetail, setShowDetail] = useState(false);
+    const [showColorPanel, setShowColorPanel] = useState(false);
+    const detailRef = useRef<HTMLDivElement>(null);
 
-    // Parse shadow string: "Xpx Ypx Blurpx Spreadpx rgba(r,g,b,a)" or preset
     const resolved = getShadowCSS(value);
+    const isNone = resolved === 'none';
+
     const parsed = (() => {
-        if (resolved === 'none') return { x: 0, y: 0, blur: 0, spread: 0, color: '000000', opacity: 0 };
+        if (resolved === 'none') return { x: 0, y: 4, blur: 8, spread: 0, color: '000000', opacity: 25 };
         const m = resolved.match(/([-\d.]+)px\s+([-\d.]+)px\s+([-\d.]+)px\s+([-\d.]+)px\s+rgba?\(([^)]+)\)/);
         if (m) {
-            const parts = m[5].split(',').map(s => s.trim());
+            const parts = m[5].split(',').map((s: string) => s.trim());
             const r = parseInt(parts[0]) || 0, g = parseInt(parts[1]) || 0, b = parseInt(parts[2]) || 0;
             const a = parts[3] !== undefined ? parseFloat(parts[3]) : 1;
-            const hex = [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+            const hex = [r, g, b].map((c: number) => c.toString(16).padStart(2, '0')).join('');
             return { x: parseFloat(m[1]), y: parseFloat(m[2]), blur: parseFloat(m[3]), spread: parseFloat(m[4]), color: hex, opacity: Math.round(a * 100) };
         }
-        return { x: 0, y: 4, blur: 4, spread: 0, color: '000000', opacity: 25 };
+        return { x: 0, y: 4, blur: 8, spread: 0, color: '000000', opacity: 25 };
     })();
 
-    const build = (x: number, y: number, blur: number, spread: number, color: string, opacity: number) => {
-        const r = parseInt(color.substring(0, 2), 16) || 0;
-        const g = parseInt(color.substring(2, 4), 16) || 0;
-        const b = parseInt(color.substring(4, 6), 16) || 0;
-        if (opacity === 0 && x === 0 && y === 0 && blur === 0) return 'none';
-        return `${x}px ${y}px ${blur}px ${spread}px rgba(${r},${g},${b},${(opacity / 100).toFixed(2)})`;
+    const buildShadow = (p: typeof parsed) => {
+        const r = parseInt(p.color.substring(0, 2), 16) || 0;
+        const g = parseInt(p.color.substring(2, 4), 16) || 0;
+        const b = parseInt(p.color.substring(4, 6), 16) || 0;
+        return `${p.x}px ${p.y}px ${p.blur}px ${p.spread}px rgba(${r},${g},${b},${(p.opacity / 100).toFixed(2)})`;
     };
 
     const update = (field: string, val: number | string) => {
         const p = { ...parsed, [field]: val };
-        onChange(build(p.x, p.y, p.blur, p.spread, p.color, p.opacity));
+        onChange(buildShadow(p));
     };
 
     useEffect(() => {
-        if (!open) return;
-        const handler = (e: MouseEvent) => { if (panelRef.current && !panelRef.current.contains(e.target as Node)) setOpen(false); };
+        if (!showDetail) return;
+        const handler = (e: MouseEvent) => { if (detailRef.current && !detailRef.current.contains(e.target as Node)) setShowDetail(false); };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
-    }, [open]);
-
-    const isNone = resolved === 'none';
+    }, [showDetail]);
 
     return (
         <div className="relative">
-            <div className="flex items-center justify-between gap-3">
-                <label className="text-xs text-gray-400">{label}</label>
-                <button onClick={() => setOpen(!open)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all border ${isNone ? 'bg-gray-800 border-gray-700 text-gray-500' : 'bg-[#1a1a1a] border-gray-700 text-gray-300'}`}>
-                    {!isNone && <div className="w-3 h-3 rounded-sm" style={{ boxShadow: resolved, backgroundColor: '#888' }} />}
-                    <span>{isNone ? 'Yok' : 'Drop shadow'}</span>
-                    <ChevronDown size={12} className="text-gray-500" />
-                </button>
-            </div>
-            {open && (
-                <div ref={panelRef} className="absolute right-0 top-full mt-2 z-[100] w-[260px] bg-[#2c2c2c] border border-white/10 rounded-xl p-4 shadow-2xl" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                            <span className="text-[12px] text-gray-200 font-medium">Drop shadow</span>
-                            <ChevronDown size={12} className="text-gray-500" />
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <button onClick={() => { onChange('none'); }} className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-gray-200 transition-colors" title="Sıfırla"><RotateCcw size={13} /></button>
-                            <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-gray-200 transition-colors"><X size={13} /></button>
-                        </div>
+            {/* Shadow row */}
+            {!isNone && (
+                <div className="flex items-center h-7 gap-1.5 mb-1">
+                    {/* Color swatch + hex — opens color picker */}
+                    <div className="flex items-center gap-1.5 bg-[#1a1a1a] hover:bg-[#222] rounded-md px-1.5 h-7 flex-1 cursor-pointer transition-colors"
+                        onClick={() => setShowColorPanel(!showColorPanel)}>
+                        <div className="w-[14px] h-[14px] rounded-[3px] flex-shrink-0" style={{ backgroundColor: `#${parsed.color}`, border: '1px solid rgba(255,255,255,0.12)' }} />
+                        <span className="text-[11px] text-gray-300 font-mono">{parsed.color.toUpperCase()}</span>
                     </div>
-                    {/* Position */}
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                        <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-lg px-2.5 py-1.5">
-                            <span className="text-[11px] text-gray-500 w-4">X</span>
-                            <input type="number" value={parsed.x} onChange={(e) => update('x', Number(e.target.value))} className="w-full bg-transparent text-[12px] text-gray-200 font-mono focus:outline-none" />
-                        </div>
-                        <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-lg px-2.5 py-1.5">
-                            <span className="text-[11px] text-gray-500 w-4">Y</span>
-                            <input type="number" value={parsed.y} onChange={(e) => update('y', Number(e.target.value))} className="w-full bg-transparent text-[12px] text-gray-200 font-mono focus:outline-none" />
-                        </div>
+                    {/* Opacity */}
+                    <div className="flex items-center gap-0.5 bg-[#1a1a1a] hover:bg-[#222] rounded-md px-1.5 h-7 transition-colors">
+                        <input type="text" value={parsed.opacity}
+                            onChange={(e) => update('opacity', Math.max(0, Math.min(100, Number(e.target.value.replace(/[^0-9]/g, '')))))}
+                            className="w-6 bg-transparent text-[11px] text-gray-300 font-mono text-right focus:outline-none" />
+                        <span className="text-[10px] text-gray-600">%</span>
                     </div>
-                    {/* Blur & Spread */}
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                        <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-lg px-2.5 py-1.5">
-                            <span className="text-[11px] text-gray-500">Blur</span>
-                            <input type="number" min={0} value={parsed.blur} onChange={(e) => update('blur', Math.max(0, Number(e.target.value)))} className="w-full bg-transparent text-[12px] text-gray-200 font-mono focus:outline-none text-right" />
-                        </div>
-                        <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-lg px-2.5 py-1.5">
-                            <span className="text-[11px] text-gray-500">Spread</span>
-                            <input type="number" value={parsed.spread} onChange={(e) => update('spread', Number(e.target.value))} className="w-full bg-transparent text-[12px] text-gray-200 font-mono focus:outline-none text-right" />
-                        </div>
-                    </div>
-                    {/* Color */}
-                    <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-lg px-2.5 py-1.5">
-                        <span className="text-[11px] text-gray-500">Color</span>
-                        <div className="flex items-center gap-1.5 flex-1">
-                            <input type="color" value={`#${parsed.color}`} onChange={(e) => update('color', e.target.value.replace('#', ''))} className="w-5 h-5 rounded cursor-pointer border-0 bg-transparent p-0" />
-                            <input type="text" value={parsed.color} onChange={(e) => update('color', e.target.value.replace('#', ''))} className="w-[56px] bg-transparent text-[11px] text-gray-300 font-mono focus:outline-none" />
-                        </div>
-                        <div className="flex items-center gap-1 border-l border-gray-700 pl-2">
-                            <input type="number" min={0} max={100} value={parsed.opacity} onChange={(e) => update('opacity', Math.min(100, Math.max(0, Number(e.target.value))))} className="w-8 bg-transparent text-[11px] text-gray-300 font-mono focus:outline-none text-right" />
-                            <span className="text-[10px] text-gray-500">%</span>
-                        </div>
-                    </div>
+                    {/* Drop icon → detail panel */}
+                    <button onClick={() => setShowDetail(!showDetail)}
+                        className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${showDetail ? 'bg-violet-500/20 text-violet-400' : 'bg-[#1a1a1a] hover:bg-[#222] text-gray-400'}`}>
+                        <Droplets size={12} />
+                    </button>
+                    {/* Remove */}
+                    <button onClick={() => onChange('none')}
+                        className="w-7 h-7 flex items-center justify-center hover:bg-white/[0.06] rounded-md transition-colors text-gray-600 hover:text-red-400">
+                        <Minus size={12} />
+                    </button>
                 </div>
             )}
+
+            {/* Detail panel (X, Y, Blur, Spread) */}
+            {showDetail && !isNone && (
+                <div ref={detailRef} className="bg-[#111] rounded-xl border border-white/[0.05] p-2.5 space-y-1 mb-1">
+                    {([
+                        { label: 'X', field: 'x', value: parsed.x },
+                        { label: 'Y', field: 'y', value: parsed.y },
+                        { label: 'Bulanıklık', field: 'blur', value: parsed.blur },
+                        { label: 'Yayılma', field: 'spread', value: parsed.spread },
+                    ] as { label: string; field: string; value: number }[]).map(({ label, field, value: fval }) => (
+                        <div key={field} className="flex items-center h-7">
+                            <span className="text-[11px] text-gray-500 flex-1">{label}</span>
+                            <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-md px-2 h-7">
+                                <input type="text" value={fval}
+                                    onChange={(e) => update(field, Number(e.target.value.replace(/[^0-9.-]/g, '')) || 0)}
+                                    className="w-8 bg-transparent text-[11px] text-gray-200 font-mono text-right focus:outline-none" />
+                                <span className="text-[10px] text-gray-600">px</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Color panel — anchored to outer relative div, stays in front */}
+            {showColorPanel && !isNone && (
+                <div className="absolute left-0 top-8 z-[9999]">
+                    <AdvancedColorPanel
+                        value={`#${parsed.color}`}
+                        onChange={(v) => {
+                            const hex = v.startsWith('#') ? v.replace('#','').substring(0,6) :
+                                v.startsWith('rgba') ? (() => { const m = v.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/); return m ? [parseInt(m[1]),parseInt(m[2]),parseInt(m[3])].map(n=>n.toString(16).padStart(2,'0')).join('') : '000000'; })() : '000000';
+                            update('color', hex);
+                        }}
+                        onClose={() => setShowColorPanel(false)}
+                    />
+                </div>
+            )}
+
+            {/* Bottom: ... + */}
+            <div className="flex items-center justify-end gap-1">
+                <button className="w-6 h-6 flex items-center justify-center text-gray-700 hover:text-gray-400 transition-colors">
+                    <MoreHorizontal size={12} />
+                </button>
+                <button onClick={() => { if (isNone) onChange(buildShadow(parsed)); }}
+                    className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-200 transition-colors">
+                    <Plus size={12} />
+                </button>
+            </div>
         </div>
     );
 }
+
+
+
 
 // ─── Main Page ─────────────────────────────────────────────
 export default function PanelDesign() {
@@ -608,7 +957,7 @@ export default function PanelDesign() {
     const [fontSearch, setFontSearch] = useState("");
     const [searchedFonts, setSearchedFonts] = useState<{ name: string; label: string }[]>([]);
     const [headerLogoUploading, setHeaderLogoUploading] = useState(false);
-    const [activeSection, setActiveSection] = useState('header');
+    const [activeSection, setActiveSection] = useState('');
     const headerLogoRef = useRef<HTMLInputElement>(null);
     const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [previewWidth, setPreviewWidth] = useState(360);
@@ -622,6 +971,7 @@ export default function PanelDesign() {
     const [miniPrompt, setMiniPrompt] = useState('');
     const [miniLoading, setMiniLoading] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [iconPanelOpen, setIconPanelOpen] = useState<Record<string,boolean>>({});
 
     useEffect(() => {
         if (!restaurantId) return;
@@ -746,18 +1096,21 @@ export default function PanelDesign() {
             {/* CONTENT ROW */}
             <div className="flex flex-1 min-h-0 bg-[#050505]">
                 {/* LEFT SIDEBAR: Section selector */}
-                <div className="w-[220px] border-r border-white/[0.06] overflow-y-auto py-4 px-3 flex-shrink-0 bg-[#080808]">
-                    <p className="text-[12px] text-gray-500 uppercase font-medium px-2 mb-3">Bileşenler</p>
-                    <div className="flex flex-col gap-2">
+                <div className="w-[180px] border-r border-white/[0.06] overflow-y-auto py-4 px-2.5 flex-shrink-0 bg-[#080808]">
+                    <p className="text-[10px] text-gray-600 uppercase font-semibold tracking-widest px-1 mb-3">Bileşenler</p>
+                    <div className="grid grid-cols-2 gap-2">
                         <button
-                            onClick={() => setActiveSection('header')}
-                            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border text-center transition-all bg-white/[0.08] border-emerald-500/40 text-white ring-1 ring-emerald-500/20"
+                            onClick={() => setActiveSection(activeSection === 'header' ? '' : 'header')}
+                            className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-center transition-all ${
+                                activeSection === 'header'
+                                    ? 'border-violet-500/40 bg-violet-500/10 text-violet-300 ring-1 ring-violet-500/20'
+                                    : 'border-white/[0.04] bg-[#111] text-gray-400 hover:bg-[#161616] hover:text-gray-300'
+                            }`}
                         >
-                            <LayoutGrid size={20} className="text-emerald-400" />
-                            <span className="text-[11px] font-medium leading-tight px-1">Başlık Düzenleri</span>
+                            <LayoutGrid size={16} className={activeSection === 'header' ? 'text-violet-400' : 'text-gray-500'} />
+                            <span className="text-[10px] font-medium leading-tight">Başlık</span>
                         </button>
                     </div>
-
                 </div>
 
                 {/* CENTER: Phone/Tablet preview */}
@@ -893,7 +1246,7 @@ export default function PanelDesign() {
                 </div>
 
                 {/* SUB-PANEL: Variant/Option selection */}
-                <div className="w-[260px] border-l border-white/[0.06] overflow-y-auto py-4 px-3 flex-shrink-0 bg-[#0a0a0a]">
+                {activeSection && <div className="w-[260px] border-l border-white/[0.06] overflow-y-auto py-4 px-3 flex-shrink-0 bg-[#0a0a0a]">
                     {/* Auto-save toast */}
                     {(saving || saved) && (
                         <div className="fixed bottom-[50px] left-[80px] z-50">
@@ -1072,11 +1425,35 @@ export default function PanelDesign() {
                             })}
                         </div>
                     </>)}
-                </div>
+                </div>}
 
                 {/* RIGHT PANEL: Properties & Settings */}
-                <div className="w-[280px] border-l border-white/[0.06] overflow-y-auto py-4 px-3 flex-shrink-0 bg-[#080808]">
+                {activeSection && <div className="w-[280px] border-l border-white/[0.06] overflow-y-auto py-4 px-3 flex-shrink-0 bg-[#080808]">
                     {activeSection === 'header' && (<>
+
+                        {/* ── Boyutlar ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Boyutlar</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1">
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Yükseklik</span>
+                                    <div className="flex items-center gap-1 bg-[#1a1a1a] hover:bg-[#222] rounded-md px-2 h-7 transition-colors">
+                                        <input type="text" defaultValue={theme.menuHeaderHeight || '60'} onBlur={(e) => { const v = Math.min(200, Math.max(32, parseInt(e.target.value) || 60)); e.target.value = String(v); updateTheme("menuHeaderHeight", String(v)); }} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} className="w-8 bg-transparent text-[11px] text-gray-200 font-mono text-right focus:outline-none" />
+                                        <span className="text-[10px] text-gray-600">px</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Yatay Boşluk</span>
+                                    <div className="flex items-center gap-1 bg-[#1a1a1a] hover:bg-[#222] rounded-md px-2 h-7 transition-colors">
+                                        <input type="text" defaultValue={theme.menuHeaderPaddingX || '16'} onBlur={(e) => { const v = Math.min(64, Math.max(0, parseInt(e.target.value) || 16)); e.target.value = String(v); updateTheme("menuHeaderPaddingX", String(v)); }} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} className="w-8 bg-transparent text-[11px] text-gray-200 font-mono text-right focus:outline-none" />
+                                        <span className="text-[10px] text-gray-600">px</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         {/* ── Renkler ── */}
                         <div className="mb-5">
@@ -1097,7 +1474,6 @@ export default function PanelDesign() {
                                 <div className="flex-1 h-px bg-white/[0.05]" />
                             </div>
                             <div className="space-y-1">
-                                {/* Font Size */}
                                 <div className="flex items-center h-7">
                                     <span className="text-[11px] text-gray-500 flex-1">Yazı Boyutu</span>
                                     <div className="flex items-center gap-1 bg-[#1a1a1a] hover:bg-[#222] rounded-md px-2 h-7 transition-colors">
@@ -1105,7 +1481,6 @@ export default function PanelDesign() {
                                         <span className="text-[10px] text-gray-600">px</span>
                                     </div>
                                 </div>
-                                {/* Font Weight */}
                                 <div className="flex items-center h-7">
                                     <span className="text-[11px] text-gray-500 flex-1">Kalınlık</span>
                                     <select value={theme.menuHeaderFontWeight || '700'} onChange={(e) => updateTheme("menuHeaderFontWeight", e.target.value)} className="bg-[#1a1a1a] hover:bg-[#222] h-7 rounded-md px-2 pr-6 text-[11px] text-gray-300 outline-none cursor-pointer appearance-none transition-colors" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 5px center' }}>
@@ -1118,7 +1493,6 @@ export default function PanelDesign() {
                                         <option value="800">ExtraBold</option>
                                     </select>
                                 </div>
-                                {/* Text Align */}
                                 <div className="flex items-center h-7">
                                     <span className="text-[11px] text-gray-500 flex-1">Hizalama</span>
                                     <div className="flex gap-0.5">
@@ -1140,40 +1514,82 @@ export default function PanelDesign() {
                                 <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Gölge</span>
                                 <div className="flex-1 h-px bg-white/[0.05]" />
                             </div>
-                            <ShadowPicker label="Header" value={theme.menuHeaderShadow} onChange={(v) => updateTheme("menuHeaderShadow", v)} />
+                            <ShadowPicker value={theme.menuHeaderShadow} onChange={(v) => updateTheme("menuHeaderShadow", v)} />
                         </div>
 
-                        {/* ── Menü ── */}
+                        {/* ── İkonlar ── */}
                         <div className="mb-5">
                             <div className="flex items-center gap-2 mb-2.5">
-                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Menü</span>
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">İkonlar</span>
                                 <div className="flex-1 h-px bg-white/[0.05]" />
-                                <button onClick={() => updateTheme("showMenuButton", theme.showMenuButton !== "false" ? "false" : "true")} className={`relative w-8 h-4 rounded-full transition-colors duration-200 flex-shrink-0 ${theme.showMenuButton !== "false" ? 'bg-violet-600' : 'bg-gray-700'}`}>
-                                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-md transition-transform duration-200 ${theme.showMenuButton !== "false" ? 'translate-x-[17px]' : 'translate-x-0.5'}`} />
-                                </button>
                             </div>
-                            <div className="space-y-1">
-                                <ColorPicker label="İkon Rengi" value={theme.menuHeaderIconColor} onChange={(v) => updateTheme("menuHeaderIconColor", v)} />
-                            </div>
-                        </div>
-
-                        {/* ── Arama ── */}
-                        <div className="mb-4">
-                            <div className="flex items-center gap-2 mb-2.5">
-                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Arama</span>
-                                <div className="flex-1 h-px bg-white/[0.05]" />
-                                <button onClick={() => updateTheme("showSearchIcon", theme.showSearchIcon !== "false" ? "false" : "true")} className={`relative w-8 h-4 rounded-full transition-colors duration-200 flex-shrink-0 ${theme.showSearchIcon !== "false" ? 'bg-violet-600' : 'bg-gray-700'}`}>
-                                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-md transition-transform duration-200 ${theme.showSearchIcon !== "false" ? 'translate-x-[17px]' : 'translate-x-0.5'}`} />
-                                </button>
-                            </div>
-                            <div className="space-y-1">
-                                <ColorPicker label="İkon Rengi" value={theme.menuHeaderSearchIconColor} onChange={(v) => updateTheme("menuHeaderSearchIconColor", v)} />
-                                <ColorPicker label="Buton Arkaplanı" value={theme.menuHeaderSearchBtnBg} onChange={(v) => updateTheme("menuHeaderSearchBtnBg", v)} />
+                            <div className="space-y-1.5">
+                                {([
+                                    { label: 'Menü', showKey: 'showMenuButton', posKey: 'menuIconPos', sizeKey: 'menuIconSize', bgKey: 'menuIconBg', radKey: 'menuIconRadius' },
+                                    { label: 'Arama', showKey: 'showSearchIcon', posKey: 'searchIconPos', sizeKey: 'searchIconSize', bgKey: 'searchIconBg', radKey: 'searchIconRadius' },
+                                    { label: 'Dil', showKey: 'showLangIcon', posKey: 'langIconPos', sizeKey: 'langIconSize', bgKey: 'langIconBg', radKey: 'langIconRadius' },
+                                ] as { label: string; showKey: string; posKey: string; sizeKey: string; bgKey: string; radKey: string }[]).map(({ label, showKey, posKey, sizeKey, bgKey, radKey }) => {
+                                    const isOn = (theme as any)[showKey] !== 'false';
+                                    const iconOpen = !!iconPanelOpen[showKey];
+                                    return (
+                                        <div key={showKey} className="bg-[#111] rounded-xl overflow-hidden border border-white/[0.04]">
+                                            {/* Row: toggle + label + open button */}
+                                            <div className="flex items-center h-9 px-3 gap-2">
+                                                <button onClick={() => updateTheme(showKey as any, isOn ? 'false' : 'true')}
+                                                    className={`relative w-8 h-4 rounded-full transition-colors flex-shrink-0 ${isOn ? 'bg-violet-500' : 'bg-white/10'}`}>
+                                                    <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${isOn ? 'right-0.5' : 'left-0.5'}`} />
+                                                </button>
+                                                <span className="text-[11px] text-gray-300 flex-1 font-medium">{label}</span>
+                                                {isOn && (
+                                                    <button onClick={() => setIconPanelOpen(p => ({ ...p, [showKey]: !p[showKey] }))}
+                                                        className={`text-[10px] px-2 py-0.5 rounded transition-colors ${iconOpen ? 'bg-violet-500/20 text-violet-300' : 'text-gray-500 hover:text-gray-300'}`}>
+                                                        {iconOpen ? 'Kapat' : 'Düzenle'}
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {/* Sub-panel */}
+                                            {isOn && iconOpen && (
+                                                <div className="px-3 pb-3 space-y-2 border-t border-white/[0.05] pt-2">
+                                                    {/* Position */}
+                                                    <div className="flex items-center h-7">
+                                                        <span className="text-[11px] text-gray-500 flex-1">Konum</span>
+                                                        <div className="flex gap-0.5">
+                                                            {(['left','center','right'] as const).map(pos => (
+                                                                <button key={pos} onClick={() => updateTheme(posKey as any, pos)}
+                                                                    className={`px-2 h-6 rounded text-[10px] font-medium transition-colors ${(theme as any)[posKey] === pos ? 'bg-violet-500/20 text-violet-300' : 'text-gray-500 hover:text-gray-300 bg-white/[0.03]'}`}>
+                                                                    {pos === 'left' ? 'Sol' : pos === 'center' ? 'Orta' : 'Sağ'}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    {/* Size */}
+                                                    <div className="flex items-center h-7">
+                                                        <span className="text-[11px] text-gray-500 flex-1">Boyut</span>
+                                                        <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-md px-2 h-7">
+                                                            <input type="text" defaultValue={(theme as any)[sizeKey] || '20'} onBlur={(e) => { const v = Math.min(48, Math.max(12, parseInt(e.target.value) || 20)); e.target.value = String(v); updateTheme(sizeKey as any, String(v)); }} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} className="w-8 bg-transparent text-[11px] text-gray-200 font-mono text-right focus:outline-none" />
+                                                            <span className="text-[10px] text-gray-600">px</span>
+                                                        </div>
+                                                    </div>
+                                                    {/* Bg color */}
+                                                    <ColorPicker label="Arkaplan" value={(theme as any)[bgKey] || 'transparent'} onChange={(v) => updateTheme(bgKey as any, v)} />
+                                                    {/* Radius */}
+                                                    <div className="flex items-center h-7">
+                                                        <span className="text-[11px] text-gray-500 flex-1">Radius</span>
+                                                        <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-md px-2 h-7">
+                                                            <input type="text" defaultValue={(theme as any)[radKey] || '0'} onBlur={(e) => { const v = Math.min(999, Math.max(0, parseInt(e.target.value) || 0)); e.target.value = String(v); updateTheme(radKey as any, String(v)); }} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} className="w-8 bg-transparent text-[11px] text-gray-200 font-mono text-right focus:outline-none" />
+                                                            <span className="text-[10px] text-gray-600">px</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
 
                     </>)}
-                </div>
+                </div>}
 
 
             </div >

@@ -514,7 +514,15 @@ export default function MenuClient({
                 const wVideo = (T as any).welcomeVideo || '';
                 const wImage = (T as any).welcomeImage || '';
                 const wBg = T.welcomeBg || '#000000';
-                const baseHex = (v: string) => { if (v.startsWith('#')) return v; const m = v.match(/#[0-9a-fA-F]{3,8}/); return m ? m[0] : '#000000'; };
+                const baseHex = (v: string) => { 
+                    if (v.startsWith('#')) return v.substring(0, 7); 
+                    if (v.startsWith('rgba') || v.startsWith('rgb')) {
+                        const m = v.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                        if (m) return '#' + [parseInt(m[1]), parseInt(m[2]), parseInt(m[3])].map(n => n.toString(16).padStart(2, '0')).join('');
+                    }
+                    const m = v.match(/#[0-9a-fA-F]{3,8}/); 
+                    return m ? m[0].substring(0, 7) : '#000000'; 
+                };
                 const wBgHex = baseHex(wBg);
                 const bgStyle = (v: string) => (v.includes('gradient') || v.startsWith('url(')) ? { background: v } : { backgroundColor: v };
                 const wText = T.welcomeTextColor || '#ffffff';
@@ -1191,7 +1199,7 @@ export default function MenuClient({
                 </div>
             )}
 
-            <div className="min-h-screen pb-4" style={{ backgroundColor: T.pageBg, fontFamily: T.fontFamily }}>
+            <div className="min-h-screen pb-4" style={{ ...(T.pageBg?.includes('gradient') || T.pageBg?.startsWith('url(') ? { background: T.pageBg } : { backgroundColor: T.pageBg }), fontFamily: T.fontFamily }}>
                 {/* Sticky Header + Category Nav */}
                 <div
                     className="sticky top-0 z-10"
@@ -1206,7 +1214,15 @@ export default function MenuClient({
                     {(() => {
                         const hVariant = (T as any).headerVariant || 'classic';
                         const hBg = (T as any).menuHeaderBg || '#ffffff';
-                        const hBgHex = (() => { if (hBg.startsWith('#')) return hBg; const m = hBg.match(/#[0-9a-fA-F]{3,8}/); return m ? m[0] : '#ffffff'; })();
+                        const hBgHex = (() => { 
+                            if (hBg.startsWith('#')) return hBg.substring(0, 7); 
+                            if (hBg.startsWith('rgba') || hBg.startsWith('rgb')) {
+                                const m = hBg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                                if (m) return '#' + [parseInt(m[1]), parseInt(m[2]), parseInt(m[3])].map(n => n.toString(16).padStart(2, '0')).join('');
+                            }
+                            const m = hBg.match(/#[0-9a-fA-F]{3,8}/); 
+                            return m ? m[0].substring(0, 7) : '#ffffff'; 
+                        })();
                         const hBgStyle = (hBg.includes('gradient') || hBg.startsWith('url(')) ? { background: hBg } : { backgroundColor: hBg };
                         const hText = (T as any).menuHeaderTextColor || '#111827';
                         const hIcon = (T as any).menuHeaderIconColor || '#374151';
@@ -1224,30 +1240,106 @@ export default function MenuClient({
                             </div>
                         );
 
-                        // Reusable elements — standard hamburger icon always (18px top + 14px bottom)
-                        const hamburger = <button onClick={() => setIsSidebarDrawerOpen(true)} className="flex flex-col items-start justify-center gap-[4px] z-10 p-2" style={{ color: hIcon }}><span className="block w-[18px] h-[2px] bg-current rounded-full" /><span className="block w-[14px] h-[2px] bg-current rounded-full" /></button>;
-                        // Search button — no circle bg, just icon
-                        const searchBtn = <button onClick={() => setIsSearchOpen(true)} className="flex items-center justify-center z-10 p-2" style={{ color: hIcon }}><Search size={20} /></button>;
+                        // Reusable elements — dynamic icon style from theme
+                        const hHeight = parseInt((T as any).menuHeaderHeight || '60');
+                        const hPaddingX = parseInt((T as any).menuHeaderPaddingX || '16');
+                        const showMenu = (T as any).showMenuButton !== 'false';
+                        const showSearch = (T as any).showSearchIcon !== 'false';
+                        const showLangIc = (T as any).showLangIcon === 'true';
+                        const menuPos = (T as any).menuIconPos || 'left';
+                        const searchPos = (T as any).searchIconPos || 'right';
+                        const langPos = (T as any).langIconPos || 'right';
+                        const mSz = parseInt((T as any).menuIconSize || '20');
+                        const sSz = parseInt((T as any).searchIconSize || '20');
+                        const lSz = parseInt((T as any).langIconSize || '20');
+                        const mBg = (T as any).menuIconBg || 'transparent';
+                        const sBg = (T as any).searchIconBg || 'transparent';
+                        const lBg = (T as any).langIconBg || 'transparent';
+                        const mRad = parseInt((T as any).menuIconRadius || '0');
+                        const sRad = parseInt((T as any).searchIconRadius || '0');
+                        const lRad = parseInt((T as any).langIconRadius || '0');
+
+                        const hasIconBg = (bg: string) => bg !== 'transparent' && bg !== '' && bg !== 'rgba(0,0,0,0)';
+                        const iconWrapStyle = (bg: string, rad: number, sz: number) => ({
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            ...(hasIconBg(bg) || rad > 0 ? { backgroundColor: bg, borderRadius: rad, width: sz + 16, height: sz + 16 } : {}),
+                        });
+
+                        const hamburger = showMenu ? (
+                            <button onClick={() => setIsSidebarDrawerOpen(true)} className="flex items-center justify-center p-1.5 z-10 flex-shrink-0" style={{ color: hIcon }}>
+                                <span style={iconWrapStyle(mBg, mRad, mSz)}>
+                                    <span className="flex flex-col items-start justify-center gap-[4px]" style={{ width: mSz, height: mSz }}>
+                                        <span className="block h-[2px] bg-current rounded-full" style={{ width: Math.round(mSz * 0.9) }} />
+                                        <span className="block h-[2px] bg-current rounded-full" style={{ width: Math.round(mSz * 0.7) }} />
+                                    </span>
+                                </span>
+                            </button>
+                        ) : null;
+
+                        const searchBtn = showSearch ? (
+                            <button onClick={() => setIsSearchOpen(true)} className="flex items-center justify-center p-1.5 z-10 flex-shrink-0" style={{ color: hIcon }}>
+                                <span style={iconWrapStyle(sBg, sRad, sSz)}>
+                                    <Search size={sSz} />
+                                </span>
+                            </button>
+                        ) : null;
+
+                        const langBtn = showLangIc ? (
+                            <button onClick={() => setShowLangPicker(true)} className="flex items-center justify-center p-1.5 z-10 flex-shrink-0" style={{ color: hIcon }}>
+                                <span style={iconWrapStyle(lBg, lRad, lSz)}>
+                                    <Globe size={lSz} />
+                                </span>
+                            </button>
+                        ) : null;
+
+                        // Slot-based icon layout: collect each icon into left / center / right bucket
+                        const slots: Record<string, React.ReactNode[]> = { left: [], center: [], right: [] };
+                        if (hamburger) slots[menuPos]?.push(<span key="m">{hamburger}</span>);
+                        if (searchBtn) slots[searchPos]?.push(<span key="s">{searchBtn}</span>);
+                        if (langBtn) slots[langPos]?.push(<span key="l">{langBtn}</span>);
+
                         const logoImg = hLogo ? <img src={hLogo} alt="" className="object-contain" /> : null;
 
-                        // === CLASSIC ===
-                        if (hVariant === 'classic') return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
-                                {hamburger}
+                        const hBase: React.CSSProperties = {
+                            ...hBgStyle,
+                            boxShadow: hShadow,
+                            minHeight: hHeight,
+                            paddingLeft: hPaddingX,
+                            paddingRight: hPaddingX,
+                            display: 'flex',
+                            alignItems: 'center',
+                        };
+
+                        // Slot groups — center icons sit between left group and title, or title and right group
+                        // We put center icons in a dedicated middle group so position truly reflects placement
+                        const leftGroup  = <div className="flex items-center flex-shrink-0 gap-0.5">{slots.left}</div>;
+                        const centerGroup = slots.center.length > 0 ? <div className="flex items-center flex-shrink-0 gap-0.5">{slots.center}</div> : null;
+                        const rightGroup = <div className="flex items-center flex-shrink-0 gap-0.5">{slots.right}</div>;
+
+                        // Standard layout: [left] [centerL?] [flex-1 title] [centerR?] [right]
+                        // Simple approach: put center items after left and before right inside a justify-between wrapper
+                        const standardHeader = (extraStyle?: React.CSSProperties) => (
+                            <div style={{ ...hBase, ...extraStyle }}>
+                                {leftGroup}
+                                {centerGroup}
                                 {titleSpan}
-                                {searchBtn}
+                                {rightGroup}
                             </div>
                         );
 
+                        // === CLASSIC ===
+                        if (hVariant === 'classic') return standardHeader();
+
                         // === TALL ===
                         if (hVariant === 'tall') return (
-                            <div className="h-[80px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
-                                {hamburger}
-                                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center max-w-[60%]">
-                                    {titleSpan}
+                            <div style={hBase}>
+                                {leftGroup}
+                                {centerGroup}
+                                <div className="flex-1 text-center min-w-0">
+                                    <span className="truncate inline-block max-w-full" style={{ color: hText, fontSize: hFontSize + 'px', fontWeight: hFontWeight }}>{bName}</span>
                                     {BUSINESS_INFO.description && <span className="text-xs truncate block mt-0.5" style={{ color: hText, opacity: 0.5 }}>{BUSINESS_INFO.description}</span>}
                                 </div>
-                                {searchBtn}
+                                {rightGroup}
                             </div>
                         );
 
@@ -1263,128 +1355,59 @@ export default function MenuClient({
 
                         // === LEFT-LOGO ===
                         if (hVariant === 'left-logo') return (
-                            <div className="h-[60px] flex items-center justify-between px-4" style={{ ...hBgStyle, boxShadow: hShadow }}>
+                            <div style={hBase}>
+                                {leftGroup}
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                     {logoImg ? <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 border" style={{ borderColor: hIcon + '22' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-lg font-bold" style={{ backgroundColor: hBgHex, color: hText, border: `1px solid ${hIcon}22` }}>{bName.charAt(0)}</div>}
                                     {titleSpan}
                                 </div>
-                                <div className="flex items-center gap-1 flex-shrink-0">
-                                    {searchBtn}
-                                    {hamburger}
-                                </div>
+                                {centerGroup}
+                                {rightGroup}
                             </div>
                         );
 
                         // === LANG ===
-                        if (hVariant === 'lang') return (
-                            <div className="h-[60px] flex items-center justify-between px-4" style={{ ...hBgStyle, boxShadow: hShadow }}>
-                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                    {hamburger}
-                                    {logoImg ? <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border" style={{ borderColor: hIcon + '22' }}><img src={hLogo} alt="" className="w-full h-full object-cover" /></div> : <div className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-sm font-bold" style={{ backgroundColor: hBgHex, color: hText, border: `1px solid ${hIcon}22` }}>{bName.charAt(0)}</div>}
-                                    {titleSpan}
-                                </div>
-                                <div className="flex items-center gap-1 flex-shrink-0">
-                                    <button className="flex items-center justify-center p-2" style={{ color: hIcon }}><Globe size={18} /></button>
-                                    {searchBtn}
-                                </div>
-                            </div>
-                        );
+                        if (hVariant === 'lang') return standardHeader();
 
                         // === BANNER ===
                         if (hVariant === 'banner') return (
-                            <div className="h-[100px] flex items-end justify-between px-4 pb-3 relative overflow-hidden" style={{ boxShadow: hShadow }}>
+                            <div style={{ ...hBase, alignItems: 'flex-end', paddingBottom: 12, overflow: 'hidden', position: 'relative' }}>
                                 <div className="absolute inset-0" style={hBgStyle} />
                                 {hLogo && <img src={hLogo} alt="" className="absolute inset-0 w-full h-full object-cover" />}
-
-                                <div className="relative flex items-end justify-between w-full">
-                                    <div className="flex items-center gap-3">
-                                        <button onClick={() => setIsSidebarDrawerOpen(true)} className="flex flex-col items-start justify-center gap-[4px] p-2 text-white/90"><span className="block w-[18px] h-[2px] bg-current rounded-full" /><span className="block w-[14px] h-[2px] bg-current rounded-full" /></button>
-                                        <span className="text-white drop-shadow-lg truncate max-w-[200px]" style={{ fontSize: hFontSize + 'px', fontWeight: hFontWeight }}>{bName}</span>
-                                    </div>
-                                    <button onClick={() => setIsSearchOpen(true)} className="flex items-center justify-center p-2 text-white/90"><Search size={20} /></button>
+                                <div className="relative flex items-center w-full">
+                                    {leftGroup}{centerGroup}{titleSpan}{rightGroup}
                                 </div>
                             </div>
                         );
 
                         // === MINIMAL ===
-                        if (hVariant === 'minimal') return (
-                            <div className="h-[48px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
-                                {hamburger}
-                                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-sm tracking-wide uppercase truncate max-w-[60%] text-center" style={{ color: hText, fontSize: hFontSize + 'px', fontWeight: hFontWeight }}>{bName}</span>
-                                {searchBtn}
-                            </div>
-                        );
+                        if (hVariant === 'minimal') return standardHeader({ borderBottom: `1px solid ${hIcon}20` });
 
                         // === ROUNDED ===
-                        if (hVariant === 'rounded') return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ ...hBgStyle, boxShadow: hShadow, borderRadius: '0 0 20px 20px' }}>
-                                {hamburger}
-                                {titleSpan}
-                                {searchBtn}
-                            </div>
-                        );
+                        if (hVariant === 'rounded') return standardHeader({ borderRadius: '0 0 20px 20px' });
 
-                        // === SPLIT (name left, icons right) ===
-                        if (hVariant === 'split') return (
-                            <div className="h-[60px] flex items-center justify-between px-4" style={{ ...hBgStyle, boxShadow: hShadow }}>
-                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                    {hamburger}
-                                    {titleSpan}
-                                </div>
-                                <div className="flex items-center gap-1 flex-shrink-0">
-                                    {searchBtn}
-                                </div>
-                            </div>
-                        );
+                        // === SPLIT ===
+                        if (hVariant === 'split') return standardHeader();
 
-                        // === ACCENT-BAR (colored accent line at bottom) ===
+                        // === ACCENT-BAR ===
                         if (hVariant === 'accent-bar') return (
-                            <div className="relative" style={{ ...hBgStyle, boxShadow: hShadow }}>
-                                <div className="h-[60px] flex items-center justify-between px-4 relative">
-                                    {hamburger}
-                                    {titleSpan}
-                                    {searchBtn}
-                                </div>
+                            <div style={{ ...hBgStyle, boxShadow: hShadow }}>
+                                {standardHeader({ boxShadow: 'none' })}
                                 <div className="h-[3px] w-full" style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88, ${accentColor}22)` }} />
                             </div>
                         );
 
-                        // === GLASS (glassmorphism) ===
-                        if (hVariant === 'glass') return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative backdrop-blur-md" style={{ backgroundColor: hBgHex + 'cc', boxShadow: hShadow, borderBottom: `1px solid ${hIcon}15` }}>
-                                {hamburger}
-                                {titleSpan}
-                                {searchBtn}
-                            </div>
-                        );
+                        // === GLASS ===
+                        if (hVariant === 'glass') return standardHeader({ backgroundColor: hBgHex + 'cc', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${hIcon}15` });
 
-                        // === OVERLAY (transparent, dashed border) ===
-                        if (hVariant === 'overlay') return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: 'transparent', borderBottom: `1px dashed ${hIcon}40` }}>
-                                {hamburger}
-                                <div className="flex-1 min-w-0 mx-[5px]" style={{ textAlign: hTextAlign as any, opacity: 0.8 }}><span className="truncate inline-block max-w-full" style={titleStyle}>{bName}</span></div>
-                                {searchBtn}
-                            </div>
-                        );
+                        // === OVERLAY ===
+                        if (hVariant === 'overlay') return standardHeader({ backgroundColor: 'transparent', borderBottom: `1px dashed ${hIcon}40`, boxShadow: 'none' });
 
-                        // === GRADIENT (background gradient) ===
-                        if (hVariant === 'gradient') return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ background: `linear-gradient(135deg, ${hBgHex}, ${hIcon}30)`, boxShadow: hShadow }}>
-                                {hamburger}
-                                {titleSpan}
-                                {searchBtn}
-                            </div>
-                        );
+                        // === GRADIENT ===
+                        if (hVariant === 'gradient') return standardHeader({ background: `linear-gradient(135deg, ${hBgHex}, ${hIcon}30)` });
 
-
-                        // Fallback = classic
-                        return (
-                            <div className="h-[60px] flex items-center justify-between px-4 relative" style={{ backgroundColor: hBg, boxShadow: hShadow }}>
-                                {hamburger}
-                                {titleSpan}
-                                {searchBtn}
-                            </div>
-                        );
+                        // Fallback
+                        return standardHeader();
                     })()}
 
                     {/* Category Navbar */}
@@ -1685,7 +1708,7 @@ export default function MenuClient({
 
             {/* Business Profile Overlay */}
             {isProfileOpen && (
-                <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain" style={{ backgroundColor: T.pageBg || '#ffffff' }}>
+                <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain" style={{ ...(T.pageBg?.includes('gradient') || T.pageBg?.startsWith('url(') ? { background: T.pageBg } : { backgroundColor: T.pageBg || '#ffffff' }) }}>
                     {/* Back Button - Sticky */}
                     <button
                         onClick={() => setIsProfileOpen(false)}

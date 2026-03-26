@@ -233,21 +233,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
         return (
             <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--p-sidebar)' }}>
 
-                {/* Brand Logo */}
-                <div className="flex items-center justify-center py-3 px-2">
-                    <div
-                        className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center"
-                        style={{
-                            backgroundColor: '#000000',
-                        }}
-                    >
-                        <span
-                            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '28px', fontWeight: 700, color: '#ffffff' }}
-                        >
-                            Q
-                        </span>
-                    </div>
-                </div>
+
 
                 {/* Primary Navigation - Icon + Label below */}
                 <nav className="flex flex-col items-center gap-3 px-2 mt-2">
