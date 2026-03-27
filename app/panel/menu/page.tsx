@@ -20,7 +20,7 @@ export default function PanelMenu() {
     const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
     const [showModal, setShowModal] = useState(false);
     const [editProduct, setEditProduct] = useState<Product | null>(null);
-    const [form, setForm] = useState({ name: "", description: "", price: "", discountPrice: "", image: "", video: "", prepTime: "", calories: "", categoryId: "", isPopular: false, isActive: true });
+    const [form, setForm] = useState({ name: "", description: "", price: "", discountPrice: "", image: "", video: "", prepTime: "", calories: "", ingredients: "", categoryId: "", isPopular: false, isActive: true });
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -368,12 +368,12 @@ export default function PanelMenu() {
     };
     const openAddModal = (catId: string) => {
         setEditProduct(null);
-        setForm({ name: "", description: "", price: "", discountPrice: "", image: "", video: "", prepTime: "", calories: "", categoryId: catId, isPopular: false, isActive: true });
+        setForm({ name: "", description: "", price: "", discountPrice: "", image: "", video: "", prepTime: "", calories: "", ingredients: "", categoryId: catId, isPopular: false, isActive: true });
         setShowModal(true);
     };
     const openEditModal = (p: Product) => {
         setEditProduct(p);
-        setForm({ name: p.name, description: p.description || "", price: String(p.price), discountPrice: p.discountPrice ? String(p.discountPrice) : "", image: p.image || "", video: p.video || "", prepTime: p.prepTime || "", calories: p.calories || "", categoryId: p.categoryId, isPopular: p.isPopular, isActive: p.isActive });
+        setForm({ name: p.name, description: p.description || "", price: String(p.price), discountPrice: p.discountPrice ? String(p.discountPrice) : "", image: p.image || "", video: p.video || "", prepTime: p.prepTime || "", calories: p.calories || "", ingredients: (p as any).ingredients ? (p as any).ingredients.join(', ') : "", categoryId: p.categoryId, isPopular: p.isPopular, isActive: p.isActive });
         setShowModal(true);
     };
     const startInlineEdit = (product: Product) => { setInlineEdit({ id: product.id, field: "name", value: product.name }); };
@@ -499,7 +499,7 @@ export default function PanelMenu() {
     const handleDrop = (e: React.DragEvent) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file) handleFileUpload(file); };
     const handleSave = async () => {
         setSaving(true);
-        const payload = { name: form.name, description: form.description || null, price: form.price, discountPrice: form.discountPrice || null, image: form.image || null, video: form.video || null, prepTime: form.prepTime || null, calories: form.calories || null, categoryId: form.categoryId, isPopular: form.isPopular, isActive: form.isActive };
+        const payload = { name: form.name, description: form.description || null, price: form.price, discountPrice: form.discountPrice || null, image: form.image || null, video: form.video || null, prepTime: form.prepTime || null, calories: form.calories || null, ingredients: form.ingredients ? form.ingredients.split(',').map(s => s.trim()).filter(Boolean) : [], categoryId: form.categoryId, isPopular: form.isPopular, isActive: form.isActive };
         if (editProduct) await fetch(`/api/admin/products/${editProduct.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
         else await fetch(`/api/admin/products?restaurantId=${restaurantId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
         setShowModal(false); setSaving(false); fetchData();
@@ -930,39 +930,92 @@ export default function PanelMenu() {
             )}
 
 
-            {/* Product Modal */}
+            {/* Product Modal — Right Drawer */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
-                    <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-between mb-6"><h2 className="text-lg font-bold text-white">{editProduct ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}</h2><button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white"><X size={18} /></button></div>
-                        <div className="space-y-4">
+                <div className="fixed inset-0 z-50" onClick={() => setShowModal(false)}>
+                    {/* Backdrop */}
+                    <div className="absolute inset-0 bg-black/40" style={{ backdropFilter: 'blur(2px)' }} />
+                    {/* Drawer */}
+                    <div
+                        className="absolute top-0 right-0 bottom-0 w-[30%] min-w-[340px] bg-gray-900 border-l border-gray-800 flex flex-col overflow-hidden"
+                        style={{ animation: 'slideInRight 0.25s ease-out' }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 flex-shrink-0">
+                            <h2 className="text-base font-bold text-white">{editProduct ? 'Ürünü Düzenle' : 'Yeni Ürün Ekle'}</h2>
+                            <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white"><X size={18} /></button>
+                        </div>
+                        {/* Scrollable body */}
+                        <div className="flex-1 overflow-y-auto p-5 space-y-4">
                             <div><label className="text-xs text-gray-400 mb-1 block">Ürün Adı *</label><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" /></div>
                             <div><label className="text-xs text-gray-400 mb-1 block">Açıklama</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 resize-none" /></div>
-                            <div className="grid grid-cols-2 gap-3"><div><label className="text-xs text-gray-400 mb-1 block">Fiyat (₺) *</label><input type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" /></div><div><label className="text-xs text-gray-400 mb-1 block">İndirimli Fiyat</label><input type="number" value={form.discountPrice} onChange={e => setForm({ ...form, discountPrice: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" /></div></div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div><label className="text-xs text-gray-400 mb-1 block">Fiyat (₺) *</label><input type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" /></div>
+                                <div><label className="text-xs text-gray-400 mb-1 block">İndirimli Fiyat</label><input type="number" value={form.discountPrice} onChange={e => setForm({ ...form, discountPrice: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" /></div>
+                            </div>
                             <div><label className="text-xs text-gray-400 mb-1 block">Kategori *</label><select value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">{categories.map(c => (<option key={c.id} value={c.id}>{c.name}</option>))}</select></div>
+
+                            {/* Medya — Resim + Video birleşik */}
                             <div>
-                                <label className="text-xs text-gray-400 mb-2 block">Ürün Resmi</label>
-                                {form.image ? (<div className="relative group"><img src={form.image} alt="" className="w-full h-40 object-cover rounded-xl border border-gray-700" /><button onClick={removeImage} className="absolute top-2 right-2 w-8 h-8 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} className="text-white" /></button></div>
-                                ) : (<div onDragOver={e => e.preventDefault()} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-xl p-6 text-center cursor-pointer transition-colors">{uploading ? (<div><div className="w-full bg-gray-800 rounded-full h-2 mb-2"><div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${uploadProgress}%` }} /></div><p className="text-xs text-gray-400">Yükleniyor... %{uploadProgress}</p></div>) : (<><Upload size={24} className="mx-auto mb-2 text-gray-600" /><p className="text-sm text-gray-400">Sürükle & bırak veya tıkla</p></>)}</div>)}
-                                <button
-                                    type="button"
-                                    onClick={() => { setAiImageResult(""); setAiImageError(""); setShowAiImageModal(true); }}
-                                    className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold border border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 transition-all"
-                                >
-                                    <Sparkles size={13} />
-                                    AI ile Görsel Üret (5 Kredi)
+                                <label className="text-xs text-gray-400 mb-2 block">Medya</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {/* Resim */}
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 mb-1">Resim</p>
+                                        {form.image ? (
+                                            <div className="relative group">
+                                                <img src={form.image} alt="" className="w-full h-28 object-cover rounded-xl border border-gray-700" />
+                                                <button onClick={removeImage} className="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} className="text-white" /></button>
+                                            </div>
+                                        ) : (
+                                            <div onDragOver={e => e.preventDefault()} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-xl h-28 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors">
+                                                {uploading ? (<><div className="w-full px-3"><div className="w-full bg-gray-700 rounded-full h-1.5"><div className="bg-emerald-500 h-1.5 rounded-full transition-all" style={{ width: `${uploadProgress}%` }} /></div></div><p className="text-[10px] text-gray-500">%{uploadProgress}</p></>) : (<><Upload size={18} className="text-gray-600" /><p className="text-[10px] text-gray-500">Yükle / Sürükhle</p></>)}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* Video */}
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 mb-1">Video</p>
+                                        {form.video ? (
+                                            <div className="relative group">
+                                                <video src={form.video} className="w-full h-28 object-cover rounded-xl border border-gray-700" autoPlay muted loop playsInline />
+                                                <button onClick={removeVideo} className="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} className="text-white" /></button>
+                                            </div>
+                                        ) : (
+                                            <div onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleVideoUpload(f); }} onClick={() => videoInputRef.current?.click()} className="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-xl h-28 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors">
+                                                {videoUploading ? (<><div className="w-full px-3"><div className="w-full bg-gray-700 rounded-full h-1.5"><div className="bg-emerald-500 h-1.5 rounded-full transition-all" style={{ width: `${videoUploadProgress}%` }} /></div></div><p className="text-[10px] text-gray-500 text-center px-1">{videoStatus || `%${videoUploadProgress}`}</p></>) : (<><Upload size={18} className="text-gray-600" /><p className="text-[10px] text-gray-500">Video Yükle</p></>)}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                {/* AI Gorse buton */}
+                                <button type="button" onClick={() => { setAiImageResult(""); setAiImageError(""); setShowAiImageModal(true); }} className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold border border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 transition-all">
+                                    <Sparkles size={13} /> AI ile Görsel Üret (5 Kredi)
                                 </button>
                                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ""; }} />
-                            </div>
-                            <div>
-                                <label className="text-xs text-gray-400 mb-2 block">Ürün Videosu</label>
-                                {form.video ? (<div className="relative group"><video src={form.video} className="w-full h-40 object-cover rounded-xl border border-gray-700" autoPlay muted loop playsInline /><button onClick={removeVideo} className="absolute top-2 right-2 w-8 h-8 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} className="text-white" /></button></div>
-                                ) : (<div onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleVideoUpload(f); }} onClick={() => videoInputRef.current?.click()} className="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-xl p-4 text-center cursor-pointer transition-colors">{videoUploading ? (<div><div className="w-full bg-gray-800 rounded-full h-2 mb-2"><div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${videoUploadProgress}%` }} /></div><p className="text-xs text-gray-400">{videoStatus || `İşleniyor... %${videoUploadProgress}`}</p></div>) : (<><Upload size={20} className="mx-auto mb-1 text-gray-600" /><p className="text-xs text-gray-400">Video sürükle veya tıkla</p></>)}</div>)}
                                 <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleVideoUpload(f); e.target.value = ""; }} />
                             </div>
-                            <div className="grid grid-cols-2 gap-3"><div><label className="text-xs text-gray-400 mb-1 block">Hazırlama Süresi</label><input value={form.prepTime} onChange={e => setForm({ ...form, prepTime: e.target.value })} placeholder="15-20 dk" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500" /></div><div><label className="text-xs text-gray-400 mb-1 block">Kalori</label><input value={form.calories} onChange={e => setForm({ ...form, calories: e.target.value })} placeholder="650 kcal" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500" /></div></div>
-                            <div className="flex items-center gap-4"><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isPopular} onChange={e => setForm({ ...form, isPopular: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Popüler</span></label><label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Aktif</span></label></div>
-                            <button onClick={handleSave} disabled={saving || !form.name || !form.price || !form.categoryId} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-colors">{saving ? "Kaydediliyor..." : editProduct ? "Güncelle" : "Ekle"}</button>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div><label className="text-xs text-gray-400 mb-1 block">Hazırlama Süresi</label><input value={form.prepTime} onChange={e => setForm({ ...form, prepTime: e.target.value })} placeholder="15-20 dk" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500" /></div>
+                                <div><label className="text-xs text-gray-400 mb-1 block">Kalori</label><input value={form.calories} onChange={e => setForm({ ...form, calories: e.target.value })} placeholder="650 kcal" className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500" /></div>
+                            </div>
+
+                            {/* İçindekiler */}
+                            <div>
+                                <label className="text-xs text-gray-400 mb-1 block">İçindekiler <span className="text-gray-600">(virgülle ayır)</span></label>
+                                <textarea value={form.ingredients} onChange={e => setForm({ ...form, ingredients: e.target.value })} rows={2} placeholder="Domates, soğan, zeytinyagı, kıyma..." className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500 resize-none" />
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isPopular} onChange={e => setForm({ ...form, isPopular: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Popüler</span></label>
+                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Aktif</span></label>
+                            </div>
+                        </div>
+                        {/* Sticky footer */}
+                        <div className="px-5 py-4 border-t border-gray-800 flex-shrink-0">
+                            <button onClick={handleSave} disabled={saving || !form.name || !form.price || !form.categoryId} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-colors">{saving ? 'Kaydediliyor...' : editProduct ? 'Güncelle' : 'Ekle'}</button>
                         </div>
                     </div>
                 </div>
