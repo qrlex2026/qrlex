@@ -107,6 +107,13 @@ export default function PanelMenu() {
     const aiMenuAbortRef = useRef(false);
     const aiMenuReset = () => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); setAiMenuImageResults({}); setAiMenuImageProgress({ current: 0, total: 0 }); setAiMenuGeneratingImages(false); };
 
+    // Body scroll lock — prevent background scroll when any modal is open
+    useEffect(() => {
+        const anyOpen = showModal || showCatModal || showAiMenuModal || showAiImageModal;
+        document.body.style.overflow = anyOpen ? "hidden" : "";
+        return () => { document.body.style.overflow = ""; };
+    }, [showModal, showCatModal, showAiMenuModal, showAiImageModal]);
+
     const handleAiImageGenerate = async () => {
         if (!aiImagePrompt.trim() || aiImageLoading || !restaurantId) return;
         setAiImageLoading(true);
