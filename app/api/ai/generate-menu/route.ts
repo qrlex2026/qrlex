@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const MENU_COST_PROMPT = 3;
 const MENU_COST_IMAGE = 7; // increased: extraction + verification

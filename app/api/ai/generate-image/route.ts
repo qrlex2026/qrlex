@@ -5,8 +5,12 @@ import { uploadToR2 } from "@/lib/r2";
 const prisma = new PrismaClient();
 const IMAGE_COST = 5; // 5 kredi per görsel
 
-// Extend Vercel function timeout — image generation takes 15-30s
-export const maxDuration = 60;
+// Imagen 4 Fast — 2x cheaper than gemini-2.5-flash-image, better quality, same API key
+// $0.02/image vs $0.039/image previously
+const IMAGEN_MODEL = "imagen-4.0-fast-generate-preview-06-06";
+
+// Extended timeout — Imagen 4 can take up to 30-40s per image
+export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
     try {
@@ -34,53 +38,81 @@ export async function POST(req: NextRequest) {
 
         // 2. Build detailed food photography prompt
         const fullPrompt = [
-            "Create a stunning professional food photography image.",
-            productName ? `The dish is: ${productName}.` : "",
+            "Professional food photography.",
+            productName ? `Dish: ${productName}.` : "",
             productDescription ? `Description: ${productDescription}.` : "",
-            `Visual style: ${prompt}.`,
-            "Requirements: high resolution, appetizing presentation, perfect studio lighting, photorealistic, no text, no watermarks, no people.",
+            `Style: ${prompt}.`,
+            "High resolution, appetizing presentation, perfect studio lighting, photorealistic. No text, no watermarks, no people.",
         ].filter(Boolean).join(" ");
 
-        // 3. Call Nano Banana (gemini-2.5-flash-image) — confirmed available in API key
-        const geminiRes = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
+        // 3. Call Imagen 4 Fast via Gemini API predict endpoint
+        const imagenRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${IMAGEN_MODEL}:predict?key=${apiKey}`,
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: fullPrompt }] }],
-                    generationConfig: {
-                        responseModalities: ["IMAGE", "TEXT"],
+                    instances: [{ prompt: fullPrompt }],
+                    parameters: {
+                        sampleCount: 1,
+                        aspectRatio: "1:1",
+                        personGeneration: "dont_allow",
+                        safetySetting: "BLOCK_MEDIUM_AND_ABOVE",
                     },
                 }),
             }
         );
 
-        if (!geminiRes.ok) {
-            const errText = await geminiRes.text();
-            console.error("Nano Banana API error:", errText);
-            return NextResponse.json({ error: "Görsel üretimi başarısız: " + errText }, { status: 500 });
-        }
+        if (!imagenRes.ok) {
+            const errText = await imagenRes.text();
+            console.error("Imagen 4 API error:", errText);
 
-        const geminiData = await geminiRes.json();
+            // Fallback to gemini-2.5-flash-image if Imagen 4 fails
+            const fallbackRes = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: fullPrompt }] }],
+                        generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+                    }),
+                }
+            );
 
-        // Extract base64 image from response
-        let base64Image: string | null = null;
-        let mimeType = "image/png";
-
-        const parts = geminiData?.candidates?.[0]?.content?.parts ?? [];
-        for (const part of parts) {
-            if (part?.inlineData?.data) {
-                base64Image = part.inlineData.data;
-                mimeType = part.inlineData.mimeType ?? "image/png";
-                break;
+            if (!fallbackRes.ok) {
+                return NextResponse.json({ error: "Görsel üretimi başarısız. Lütfen tekrar deneyin." }, { status: 500 });
             }
+
+            const fallbackData = await fallbackRes.json();
+            const fbParts = fallbackData?.candidates?.[0]?.content?.parts ?? [];
+            for (const part of fbParts) {
+                if (part?.inlineData?.data) {
+                    const mimeType = part.inlineData.mimeType ?? "image/png";
+                    const ext = mimeType.includes("jpeg") ? "jpg" : "png";
+                    const imageBuffer = Buffer.from(part.inlineData.data, "base64");
+                    const key = `ai-generated/${restaurantId}/${Date.now()}.${ext}`;
+                    const imageUrl = await uploadToR2(imageBuffer, key, mimeType);
+                    await deductCredit(prisma, restaurantId, credit, IMAGE_COST, fullPrompt);
+                    const updatedCredit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
+                    return NextResponse.json({ success: true, imageUrl, balance: updatedCredit?.balance ?? credit.balance - IMAGE_COST });
+                }
+            }
+            return NextResponse.json({ error: "Görsel üretilemedi." }, { status: 500 });
         }
 
-        if (!base64Image) {
-            console.error("No image in response:", JSON.stringify(geminiData).substring(0, 600));
+        const imagenData = await imagenRes.json();
+
+        // Extract base64 image from Imagen 4 response format
+        // Format: { predictions: [{ bytesBase64Encoded: "...", mimeType: "image/png" }] }
+        const prediction = imagenData?.predictions?.[0];
+        if (!prediction?.bytesBase64Encoded) {
+            console.error("No image in Imagen 4 response:", JSON.stringify(imagenData).substring(0, 600));
             return NextResponse.json({ error: "Görsel üretilemedi. Farklı bir prompt deneyin." }, { status: 500 });
         }
+
+        const base64Image = prediction.bytesBase64Encoded;
+        const mimeType = prediction.mimeType ?? "image/png";
 
         // 4. Upload to R2
         const ext = mimeType.includes("jpeg") ? "jpg" : "png";
@@ -90,20 +122,7 @@ export async function POST(req: NextRequest) {
         const imageUrl = await uploadToR2(imageBuffer, key, mimeType);
 
         // 5. Kredi düş + log
-        await prisma.$transaction([
-            (prisma as any).aiCredit.update({
-                where: { restaurantId },
-                data: { balance: { decrement: IMAGE_COST } },
-            }),
-            (prisma as any).aiUsageLog.create({
-                data: {
-                    creditId: credit.id,
-                    type: "image_generate",
-                    cost: IMAGE_COST,
-                    prompt: fullPrompt.substring(0, 500),
-                },
-            }),
-        ]);
+        await deductCredit(prisma, restaurantId, credit, IMAGE_COST, fullPrompt);
 
         const updatedCredit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
 
@@ -119,3 +138,25 @@ export async function POST(req: NextRequest) {
     }
 }
 
+async function deductCredit(
+    prisma: PrismaClient,
+    restaurantId: string,
+    credit: { id: string },
+    cost: number,
+    prompt: string
+) {
+    await (prisma as any).$transaction([
+        (prisma as any).aiCredit.update({
+            where: { restaurantId },
+            data: { balance: { decrement: cost } },
+        }),
+        (prisma as any).aiUsageLog.create({
+            data: {
+                creditId: credit.id,
+                type: "image_generate",
+                cost,
+                prompt: prompt.substring(0, 500),
+            },
+        }),
+    ]);
+}
