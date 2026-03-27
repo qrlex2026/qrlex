@@ -1153,7 +1153,7 @@ export default function MenuClient({
                 return (
                     <div
                         className={`fixed inset-0 z-[100] flex flex-col overflow-hidden transition-opacity duration-500 ${splashFading ? 'opacity-0' : 'opacity-100'}`}
-                        style={{ fontFamily: T.fontFamily, ...bgStyle(wBg) }}
+                        style={{ fontFamily: T.fontFamily, ...bgStyle(wBg), paddingBottom: 'env(safe-area-inset-bottom)' }}
                     >
                         {bgLayer}
                         {gradient}
@@ -2050,40 +2050,37 @@ export default function MenuClient({
 
                     {/* Detail Card - scrolls with page */}
                     <div
-                        className="relative -mt-6"
+                        className="relative -mt-6 min-h-[60vh]"
                         style={{ borderRadius: '25px 25px 0 0', backgroundColor: T.detailBg || '#ffffff' }}
                     >
                         <div className="px-5 pt-7 pb-10">
-                            {/* Product Name & Price */}
-                            <div className="flex items-start justify-between gap-3 mb-3">
-                                <h2 className="text-2xl font-bold leading-tight" style={{ color: T.detailNameColor || '#111827' }}>{selectedProduct.name}</h2>
-                                <span className="text-2xl font-bold whitespace-nowrap" style={{ color: T.detailPriceColor || '#000000' }}>{selectedProduct.price} TL</span>
-                            </div>
+                            {/* Product Name */}
+                            <h2 className="text-2xl font-bold leading-tight mb-1" style={{ color: T.detailNameColor || '#111827' }}>{selectedProduct.name}</h2>
+
+                            {/* Price — under name */}
+                            <p className="text-2xl font-bold mb-3" style={{ color: T.detailPriceColor || '#000000' }}>{selectedProduct.discountPrice ? (
+                                <><span>{selectedProduct.discountPrice} TL</span><span className="text-base font-normal line-through ml-2 opacity-50">{selectedProduct.price} TL</span></>
+                            ) : `${selectedProduct.price} TL`}</p>
+
+                            {/* Meta row: prep · cal — dot-separated, no icon backgrounds */}
+                            {(selectedProduct.prepTime || selectedProduct.calories) && (
+                                <div className="flex items-center gap-2 mb-4">
+                                    {selectedProduct.prepTime && (
+                                        <span className="text-[13px]" style={{ color: T.detailDescColor || '#9ca3af' }}>{selectedProduct.prepTime}</span>
+                                    )}
+                                    {selectedProduct.prepTime && selectedProduct.calories && (
+                                        <span className="text-[13px]" style={{ color: T.detailDescColor || '#9ca3af' }}>·</span>
+                                    )}
+                                    {selectedProduct.calories && (
+                                        <span className="text-[13px]" style={{ color: T.detailDescColor || '#9ca3af' }}>{selectedProduct.calories}</span>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Description */}
-                            <p className="text-sm leading-relaxed mb-5" style={{ color: T.detailDescColor || '#6b7280' }}>{selectedProduct.description}</p>
-
-                            {/* Prep Time & Calories */}
-                            <div className="flex gap-3 mb-6">
-                                <div className="flex-1 rounded-xl p-3.5 flex items-center gap-3" style={{ backgroundColor: T.detailInfoBg || '#f9fafb', border: `1px solid ${T.detailInfoBorder || '#f3f4f6'}` }}>
-                                    <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-                                        <Clock size={18} className="text-orange-500" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[11px] font-medium uppercase tracking-wide" style={{ color: T.detailDescColor || '#9ca3af' }}>Hazırlanış</p>
-                                        <p className="text-sm font-semibold" style={{ color: T.detailNameColor || '#111827' }}>{selectedProduct.prepTime}</p>
-                                    </div>
-                                </div>
-                                <div className="flex-1 rounded-xl p-3.5 flex items-center gap-3" style={{ backgroundColor: T.detailInfoBg || '#f9fafb', border: `1px solid ${T.detailInfoBorder || '#f3f4f6'}` }}>
-                                    <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                                        <Flame size={18} className="text-red-500" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[11px] font-medium uppercase tracking-wide" style={{ color: T.detailDescColor || '#9ca3af' }}>Kalori</p>
-                                        <p className="text-sm font-semibold" style={{ color: T.detailNameColor || '#111827' }}>{selectedProduct.calories}</p>
-                                    </div>
-                                </div>
-                            </div>
+                            {selectedProduct.description && (
+                                <p className="text-sm leading-relaxed mb-5" style={{ color: T.detailDescColor || '#6b7280' }}>{selectedProduct.description}</p>
+                            )}
 
                             {/* Ingredients */}
                             <div className="mb-6">
