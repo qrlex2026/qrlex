@@ -2039,17 +2039,23 @@ export default function MenuClient({
                                 <><span>{selectedProduct.discountPrice} TL</span><span className="text-base font-normal line-through ml-2 opacity-50">{selectedProduct.price} TL</span></>
                             ) : `${selectedProduct.price} TL`}</p>
 
-                            {/* Meta row: prep · cal — dot-separated, no icon backgrounds */}
+                            {/* Meta row: Clock icon + prepTime · Flame icon + cal */}
                             {(selectedProduct.prepTime || selectedProduct.calories) && (
-                                <div className="flex items-center gap-2 mb-4">
+                                <div className="flex items-center gap-3 mb-4">
                                     {selectedProduct.prepTime && (
-                                        <span className="text-[13px]" style={{ color: T.detailDescColor || '#9ca3af' }}>{selectedProduct.prepTime}</span>
+                                        <span className="flex items-center gap-1">
+                                            <Clock size={13} style={{ color: T.detailDescColor || '#9ca3af' }} />
+                                            <span className="text-[13px]" style={{ color: T.detailDescColor || '#9ca3af' }}>{selectedProduct.prepTime}</span>
+                                        </span>
                                     )}
                                     {selectedProduct.prepTime && selectedProduct.calories && (
                                         <span className="text-[13px]" style={{ color: T.detailDescColor || '#9ca3af' }}>·</span>
                                     )}
                                     {selectedProduct.calories && (
-                                        <span className="text-[13px]" style={{ color: T.detailDescColor || '#9ca3af' }}>{selectedProduct.calories}</span>
+                                        <span className="flex items-center gap-1">
+                                            <Flame size={13} style={{ color: T.detailDescColor || '#9ca3af' }} />
+                                            <span className="text-[13px]" style={{ color: T.detailDescColor || '#9ca3af' }}>{selectedProduct.calories}</span>
+                                        </span>
                                     )}
                                 </div>
                             )}
@@ -2060,22 +2066,22 @@ export default function MenuClient({
                             )}
 
                             {/* Ingredients */}
-                            <div className="mb-6">
-                                <h3 className="text-base font-bold mb-3" style={{ color: T.detailLabelColor || '#111827' }}>📋 İçindekiler</h3>
-                                <div className="rounded-xl p-4" style={{ backgroundColor: T.detailInfoBg || '#f9fafb', border: `1px solid ${T.detailInfoBorder || '#f3f4f6'}` }}>
+                            {selectedProduct.ingredients.length > 0 && (
+                                <div className="mb-6">
+                                    <h3 className="text-base font-bold mb-3" style={{ color: T.detailLabelColor || '#111827' }}>İçindekiler</h3>
                                     <div className="flex flex-wrap gap-2">
                                         {selectedProduct.ingredients.map((item, i) => (
                                             <span
                                                 key={i}
                                                 className="text-xs font-medium px-3 py-1.5 rounded-full"
-                                                style={{ backgroundColor: T.detailIngredientBg || '#ffffff', color: T.detailIngredientText || '#374151', border: `1px solid ${T.detailIngredientBorder || '#e5e7eb'}` }}
+                                                style={{ backgroundColor: T.detailIngredientBg || '#f3f4f6', color: T.detailIngredientText || '#374151', border: `1px solid ${T.detailIngredientBorder || '#e5e7eb'}` }}
                                             >
                                                 {item}
                                             </span>
                                         ))}
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Allergen Warning */}
                             {selectedProduct.allergens.length > 0 && (
