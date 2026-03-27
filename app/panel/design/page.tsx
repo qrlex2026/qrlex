@@ -972,15 +972,20 @@ export default function PanelDesign() {
     const [miniLoading, setMiniLoading] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [iconPanelOpen, setIconPanelOpen] = useState<Record<string,boolean>>({});
+    type SavedTheme = { id: string; name: string; ts: number; data: ThemeType; cardVariant?: string; detailVariant?: string };
+    const [savedThemes, setSavedThemes] = useState<SavedTheme[]>([]);
 
     useEffect(() => {
         if (!restaurantId) return;
         fetch(`/api/admin/theme?restaurantId=${restaurantId}`)
             .then((r) => r.json())
             .then((data) => {
-                const merged = { ...DEFAULT_THEME, ...data };
-                setTheme(merged);
-                setSavedTheme(merged);
+                if (data && typeof data === 'object' && !('error' in data)) {
+                    const loaded = { ...DEFAULT_THEME, ...data };
+                    setTheme(loaded);
+                    setSavedTheme(loaded);
+                    if (Array.isArray((data as any)._savedThemes)) setSavedThemes((data as any)._savedThemes as SavedTheme[]);
+                }
                 setLoading(false);
             });
     }, [restaurantId]);
@@ -1079,6 +1084,7 @@ export default function PanelDesign() {
             const newTheme = merged;
             setTheme(newTheme);
             doSave(newTheme);
+            saveAiThemePreset(newTheme as ThemeType, aiPrompt);
             setAiCredits(data.balance);
             setAiSuccess(true);
             setTimeout(() => setAiSuccess(false), 3000);
@@ -1088,6 +1094,20 @@ export default function PanelDesign() {
             setAiLoading(false);
         }
     }, [aiPrompt, aiLoading, restaurantId, theme, doSave]);
+
+    const saveAiThemePreset = (themeData: ThemeType, prompt: string) => {
+        const name = prompt.length > 28 ? prompt.substring(0, 28) + '...' : prompt;
+        const newEntry: SavedTheme = { id: Date.now().toString(36), name, ts: Date.now(), data: themeData, cardVariant: (themeData as any).cardVariant, detailVariant: (themeData as any).detailVariant };
+        setSavedThemes(prev => {
+            const updated = [newEntry, ...prev].slice(0, 20);
+            const next: any = { ...themeData, _savedThemes: updated };
+            doSave(next as ThemeType);
+            return updated;
+        });
+    };
+    const applyAiTheme = (st: SavedTheme) => { const next = { ...theme, ...st.data }; setTheme(next); doSave(next); if (iframeRef.current) { const s = iframeRef.current.src; iframeRef.current.src = ''; iframeRef.current.src = s; } };
+    const deleteAiTheme = (id: string) => { setSavedThemes(prev => { const updated = prev.filter(t => t.id !== id); const next: any = { ...theme, _savedThemes: updated }; doSave(next as ThemeType); return updated; }); };
+    const resetToDefault = () => { const next: any = { ...DEFAULT_THEME, _savedThemes: savedThemes }; setTheme(next as ThemeType); doSave(next as ThemeType); if (iframeRef.current) { const s = iframeRef.current.src; iframeRef.current.src = ''; iframeRef.current.src = s; } };
 
     if (sessionLoading || loading) return <div className="text-center py-20 text-gray-500">Yükleniyor...</div>;
 
@@ -1109,6 +1129,17 @@ export default function PanelDesign() {
                         >
                             <LayoutGrid size={16} className={activeSection === 'header' ? 'text-violet-400' : 'text-gray-500'} />
                             <span className="text-[10px] font-medium leading-tight">Başlık</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveSection(activeSection === 'tema' ? '' : 'tema')}
+                            className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-center transition-all ${
+                                activeSection === 'tema'
+                                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20'
+                                    : 'border-white/[0.04] bg-[#111] text-gray-400 hover:bg-[#161616] hover:text-gray-300'
+                            }`}
+                        >
+                            <Sparkles size={16} className={activeSection === 'tema' ? 'text-emerald-400' : 'text-gray-500'} />
+                            <span className="text-[10px] font-medium leading-tight">Tema</span>
                         </button>
                     </div>
                 </div>
@@ -1588,6 +1619,51 @@ export default function PanelDesign() {
                             </div>
                         </div>
 
+                    </>)}
+
+                    {activeSection === 'tema' && (<>
+                        <div className="mb-4 p-3 bg-[#111] rounded-xl border border-white/[0.05]">
+                            <p className="text-[10px] text-gray-600 uppercase font-semibold mb-2">Aktif Varyant</p>
+                            <div className="flex flex-wrap gap-1.5">
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Kart: {(theme as any).cardVariant || 'classic'}</span>
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">Detay: {(theme as any).detailVariant || 'classic'}</span>
+                            </div>
+                        </div>
+                        <div className="mb-3">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Kayıtlı Temalar</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            {savedThemes.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <Sparkles size={24} className="text-gray-700 mx-auto mb-2" />
+                                    <p className="text-[11px] text-gray-600">Henüz kayıtlı tema yok.</p>
+                                    <p className="text-[10px] text-gray-700 mt-1">AI prompt kutusuna bir istek yaz!</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {savedThemes.map((st) => (
+                                        <div key={st.id} className="flex items-start gap-2 p-2.5 bg-[#111] rounded-xl border border-white/[0.05] hover:border-emerald-500/20 transition-all">
+                                            <div className="flex-shrink-0 w-8 h-8 rounded-lg overflow-hidden border border-white/10">
+                                                <div className="w-full h-1/2" style={{ background: (st.data as any).accentColor || '#6366f1' }} />
+                                                <div className="w-full h-1/2" style={{ background: (st.data as any).pageBg || '#111' }} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[11px] text-gray-300 font-medium truncate">{st.name}</p>
+                                                <p className="text-[9px] text-gray-600">{st.cardVariant || 'classic'} · {st.detailVariant || 'classic'}</p>
+                                            </div>
+                                            <div className="flex gap-1">
+                                                <button onClick={() => applyAiTheme(st)} className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors">Uygula</button>
+                                                <button onClick={() => deleteAiTheme(st.id)} className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"><Trash2 size={11} /></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <button onClick={resetToDefault} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/[0.06] text-[11px] text-gray-500 hover:text-gray-200 hover:border-white/[0.12] hover:bg-white/[0.03] transition-all">
+                            <RotateCcw size={12} />Varsayılana Sıfırla
+                        </button>
                     </>)}
                 </div>}
 

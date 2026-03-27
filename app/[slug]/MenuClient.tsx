@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 // Using regular img tags for external URLs
 import { Info, Star, Search, X, ChevronUp, Clock, Flame, AlertTriangle, ChevronLeft, ArrowRight, ChevronRight, MapPin, Phone, Globe, Instagram, Mail, ThumbsUp, MessageCircle, Send, Utensils, HandHeart, Music, BadgeDollarSign, Check, Loader2, CalendarDays, Users, Menu, LayoutGrid, LayoutList, Bell, Inbox, User, CigaretteOff, Baby, Car, Wifi, Accessibility, TreePine, Home, PawPrint, Wine, Coffee, Truck, ShoppingBag, Copy, Filter, BellRing, Languages } from "lucide-react";
+import { CardCentered, CardMagazineOverlay } from "./themes/CardVariants";
+import DetailSheet from "./themes/DetailSheet";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -1538,8 +1540,16 @@ export default function MenuClient({
                                     </div>
                                 )}
 
+                                {/* ── THEME cardVariant override ── */}
+                                {(T as any).cardVariant === 'centered' && (
+                                    <CardCentered products={products} T={T} onClick={handleClick} />
+                                )}
+                                {(T as any).cardVariant === 'magazine-overlay' && (
+                                    <CardMagazineOverlay products={products} T={T} onClick={handleClick} />
+                                )}
+
                                 {/* ── LAYOUT: list (default) ── */}
-                                {layout === 'list' && (
+                                {(!(T as any).cardVariant || (T as any).cardVariant === 'classic') && layout === 'list' && (
                                     <div className="space-y-2.5">
                                         {products.map((product) => (
                                             <div key={product.id} onClick={() => handleClick(product)} className="p-2 flex gap-3 min-h-[88px] active:scale-[0.98] transition-transform cursor-pointer overflow-hidden" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
@@ -1559,7 +1569,7 @@ export default function MenuClient({
                                 )}
 
                                 {/* ── LAYOUT: grid-2 ── */}
-                                {layout === 'grid-2' && (
+                                {(!(T as any).cardVariant || (T as any).cardVariant === 'classic') && layout === 'grid-2' && (
                                     <div className="grid grid-cols-2 gap-3">
                                         {products.map((product) => (
                                             <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
@@ -1575,7 +1585,7 @@ export default function MenuClient({
                                 )}
 
                                 {/* ── LAYOUT: grid-3 ── */}
-                                {layout === 'grid-3' && (
+                                {(!(T as any).cardVariant || (T as any).cardVariant === 'classic') && layout === 'grid-3' && (
                                     <div className="grid grid-cols-3 gap-2">
                                         {products.map((product) => (
                                             <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
@@ -1590,7 +1600,7 @@ export default function MenuClient({
                                 )}
 
                                 {/* ── LAYOUT: horizontal scroll ── */}
-                                {layout === 'horizontal' && (() => {
+                                {(!(T as any).cardVariant || (T as any).cardVariant === 'classic') && layout === 'horizontal' && (() => {
                                     const itemsPerPage = 2;
                                     const totalPages = Math.ceil(products.length / itemsPerPage);
                                     return (
@@ -1621,7 +1631,7 @@ export default function MenuClient({
                                 })()}
 
                                 {/* ── LAYOUT: magazine ── */}
-                                {layout === 'magazine' && (
+                                {(!(T as any).cardVariant || (T as any).cardVariant === 'classic') && layout === 'magazine' && (
                                     <div className="space-y-3">
                                         {/* First product large */}
                                         {products[0] && (
@@ -1650,7 +1660,7 @@ export default function MenuClient({
                                 )}
 
                                 {/* ── LAYOUT: compact ── */}
-                                {layout === 'compact' && (
+                                {(!(T as any).cardVariant || (T as any).cardVariant === 'classic') && layout === 'compact' && (
                                     <div className="px-4">
                                         {products.map((product, idx) => (
                                             <div key={product.id} onClick={() => handleClick(product)} className={`flex items-center gap-3 py-3 cursor-pointer active:bg-gray-50 transition-colors ${idx > 0 ? 'border-t' : ''}`} style={{ borderColor: T.cardBorder }}>
@@ -1666,7 +1676,7 @@ export default function MenuClient({
                                 )}
 
                                 {/* ── LAYOUT: full-card ── */}
-                                {layout === 'full-card' && (
+                                {(!(T as any).cardVariant || (T as any).cardVariant === 'classic') && layout === 'full-card' && (
                                     <div className="space-y-4">
                                         {products.map((product) => (
                                             <div key={product.id} onClick={() => handleClick(product)} className="overflow-hidden active:scale-[0.98] transition-transform cursor-pointer" style={{ backgroundColor: T.cardBg, border: `1px solid ${T.cardBorder}`, borderRadius: `${T.cardRadius}px`, boxShadow: getShadow(T.cardShadow) }}>
@@ -1685,7 +1695,7 @@ export default function MenuClient({
 
 
                                 {/* ── LAYOUT: text-only ── */}
-                                {layout === 'text-only' && (
+                                {(!(T as any).cardVariant || (T as any).cardVariant === 'classic') && layout === 'text-only' && (
                                     <div className="px-4" style={{ backgroundColor: T.cardBg, borderRadius: `${T.cardRadius}px`, border: `1px solid ${T.cardBorder}`, boxShadow: getShadow(T.cardShadow) }}>
                                         {products.map((product, idx) => (
                                             <div key={product.id} onClick={() => handleClick(product)} className={`flex items-center justify-between py-3.5 px-3 cursor-pointer hover:bg-gray-50 transition-colors ${idx > 0 ? 'border-t' : ''}`} style={{ borderColor: T.cardBorder }}>
@@ -1701,6 +1711,11 @@ export default function MenuClient({
                             </div>
                         );
                     })}
+
+                    {/* ── THEME VARIANT: centered or magazine-overlay (overrides per-category layout) ── */}
+                    {((T as any).cardVariant === 'centered' || (T as any).cardVariant === 'magazine-overlay') && (
+                        <div className="hidden" />
+                    )}
                 </div>
             </div>
 
@@ -1987,8 +2002,15 @@ export default function MenuClient({
                 );
             })()}
 
-            {/* Product Detail Overlay */}
-            {selectedProduct && (
+            {/* Product Detail Overlay — variant-aware */}
+            {selectedProduct && ((T as any).detailVariant === 'sheet' ? (
+                <DetailSheet
+                    product={selectedProduct as any}
+                    T={T}
+                    t={t}
+                    onClose={() => setSelectedProduct(null)}
+                />
+            ) : (
                 <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain" style={{ backgroundColor: T.pageBg || '#ffffff' }}>
                     {/* Back Button - Sticky */}
                     <button
@@ -2110,7 +2132,8 @@ export default function MenuClient({
                         </div>
                     </div>
                 </div>
-            )}
+            ))}
+
 
             {/* Search Popup */}
             {isSearchOpen && (

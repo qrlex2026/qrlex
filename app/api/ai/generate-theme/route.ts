@@ -114,6 +114,25 @@ pageBg:#150800 | menuHeaderBg:#1c0c00 | cardBg:#211000 | gradient:#7a2800→#cc5
 ☀️ Kahvaltı / Aydınlık:
 pageBg:#fffbf5 | menuHeaderBg:#fff8f0 | cardBg:#ffffff | gradient:#ff9a3c→#ff6b35 | accent:#e85d04 | price:#dc2626
 
+━━━ KART VE DETAY VARYANTLARı ━━━
+
+cardVariant — Ürün kartı düzeni:
+• "classic" → Yatay: solda resim, sağda metin/fiyat. Nötr, sade.
+• "centered" → 2 sütun grid: resim üstte tam genişlik, altında isim/açıklama/fiyat. Modern, minimalist.
+• "magazine-overlay" → Büyük resim hero, gradient overlay, metin resmIN üzerinde. Bold, dramatik.
+
+detailVariant — Ürün detay sayfası:
+• "classic" → Yukarıda resim, aşağı kayan beyaz kart. Temiz.
+• "sheet" → Full-ekran resim/video + alttan yukarı çıkan saydam sheet. İmmersive, premium.
+
+Stile göre seç:
+- Sade/minimal → classic + classic
+- Modern/dark → centered + sheet
+- Bold/dramatik → magazine-overlay + sheet
+- Aydınlık/organik → centered + classic
+
+Bu iki alanı mutlaka JSON'a ekle: cardVariant ve detailVariant
+
 ━━━ DÖNDÜR ━━━
 pageBg, globalThemeBg, globalThemeText, globalThemeIcon, globalThemeSearchBg, fontFamily, accentColor,
 menuHeaderBg, menuHeaderTextColor, menuHeaderIconColor, menuHeaderSearchBtnBg, menuHeaderShadow, headerGradientFrom, headerGradientTo,
@@ -124,7 +143,8 @@ categoryTitleColor, categoryTitleWeight, popularBadgeBg, popularBadgeText,
 searchBg, searchBorder, searchText, searchOverlayBg, searchOverlayInputColor, searchOverlayResultBg, searchOverlayResultNameColor, searchOverlayResultPriceColor,
 detailBg, detailNameColor, detailPriceColor, detailDescColor, detailLabelColor, detailInfoBg, detailInfoBorder,
 sidebarBg, sidebarNameColor, sidebarItemColor, sidebarActiveItemBg, sidebarActiveItemColor,
-bottomNavBg, bottomNavActive, bottomNavInactive
+bottomNavBg, bottomNavActive, bottomNavInactive,
+cardVariant, detailVariant
 
 SADECE JSON. Başka hiçbir şey YAZMA.`;
 
