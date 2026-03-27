@@ -97,6 +97,15 @@ export default function PanelMenu() {
     const [aiMenuImporting, setAiMenuImporting] = useState(false);
     const [aiMenuImportDone, setAiMenuImportDone] = useState(false);
     const aiMenuFileRef = useRef<HTMLInputElement>(null);
+    // Wizard
+    const [aiMenuStep, setAiMenuStep] = useState<1 | 2 | 3 | 4>(1);
+    const [aiMenuAddImages, setAiMenuAddImages] = useState(false);
+    const [aiMenuImageStyle, setAiMenuImageStyle] = useState("");
+    const [aiMenuImageResults, setAiMenuImageResults] = useState<Record<string, string>>({});
+    const [aiMenuImageProgress, setAiMenuImageProgress] = useState({ current: 0, total: 0 });
+    const [aiMenuGeneratingImages, setAiMenuGeneratingImages] = useState(false);
+    const aiMenuAbortRef = useRef(false);
+    const aiMenuReset = () => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); setAiMenuImageResults({}); setAiMenuImageProgress({ current: 0, total: 0 }); setAiMenuGeneratingImages(false); };
 
     const handleAiImageGenerate = async () => {
         if (!aiImagePrompt.trim() || aiImageLoading || !restaurantId) return;
@@ -158,6 +167,8 @@ export default function PanelMenu() {
         setAiMenuFilePreviews(prev => prev.filter((_, i) => i !== idx));
     };
 
+    const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
     const handleAiMenuGenerate = async () => {
         if (aiMenuLoading || !restaurantId) return;
         if (aiMenuTab === "prompt" && !aiMenuPrompt.trim()) return;
@@ -186,6 +197,7 @@ export default function PanelMenu() {
             const data = await res.json();
             if (data.success && data.menu) {
                 setAiMenuResult(data.menu);
+                setAiMenuStep(2); // → preview + image option
             } else {
                 setAiMenuError(data.error || "Menü oluşturulamadı");
             }
@@ -196,12 +208,52 @@ export default function PanelMenu() {
         }
     };
 
+    const generateImagesForMenu = async () => {
+        if (!aiMenuResult || !restaurantId) return;
+        aiMenuAbortRef.current = false;
+        const allProds = aiMenuResult.categories.flatMap(c => c.products);
+        const total = Math.min(allProds.length, 20);
+        setAiMenuImageProgress({ current: 0, total });
+        setAiMenuGeneratingImages(true);
+        setAiMenuStep(3);
+        const results: Record<string, string> = {};
+
+        for (let i = 0; i < total; i++) {
+            if (aiMenuAbortRef.current) break;
+            const prod = allProds[i];
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    const res = await fetch('/api/ai/generate-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            restaurantId,
+                            productName: prod.name,
+                            productDescription: prod.description,
+                            prompt: aiMenuImageStyle || "professional food photography, studio lighting, white background, top view",
+                        }),
+                    });
+                    if (res.status === 429) { await delay(10000); continue; } // rate limited — wait 10s
+                    const data = await res.json();
+                    if (data.success && data.imageUrl) results[String(i)] = data.imageUrl;
+                    break;
+                } catch { if (attempt === 2) break; await delay(5000); }
+            }
+            setAiMenuImageProgress(prev => ({ ...prev, current: i + 1 }));
+            if (i < total - 1 && !aiMenuAbortRef.current) await delay(4000); // 4s between requests
+        }
+
+        setAiMenuImageResults(results);
+        setAiMenuGeneratingImages(false);
+        setAiMenuStep(4);
+    };
+
     const handleAiMenuImport = async () => {
         if (!aiMenuResult || !restaurantId || aiMenuImporting) return;
         setAiMenuImporting(true);
         try {
+            let globalIndex = 0;
             for (const cat of aiMenuResult.categories) {
-                // Create category
                 const catRes = await fetch(`/api/admin/categories?restaurantId=${restaurantId}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -209,24 +261,23 @@ export default function PanelMenu() {
                 });
                 const catData = await catRes.json();
                 const catId = catData.id;
-                if (!catId) continue;
-                // Create products in parallel batches of 3
-                const prods = cat.products || [];
-                for (let i = 0; i < prods.length; i += 3) {
-                    await Promise.all(prods.slice(i, i + 3).map(p =>
-                        fetch(`/api/admin/products?restaurantId=${restaurantId}`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                name: p.name,
-                                description: p.description || null,
-                                price: Number(p.price) || 0,
-                                categoryId: catId,
-                                isActive: true,
-                                isPopular: false,
-                            }),
-                        })
-                    ));
+                if (!catId) { globalIndex += (cat.products || []).length; continue; }
+                for (const p of (cat.products || [])) {
+                    const imageUrl = aiMenuImageResults[String(globalIndex)] || null;
+                    await fetch(`/api/admin/products?restaurantId=${restaurantId}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            name: p.name,
+                            description: p.description || null,
+                            price: Number(p.price) || 0,
+                            categoryId: catId,
+                            image: imageUrl,
+                            isActive: true,
+                            isPopular: false,
+                        }),
+                    });
+                    globalIndex++;
                 }
             }
             setAiMenuImportDone(true);
@@ -633,7 +684,17 @@ export default function PanelMenu() {
                         </div>
 
                         <div className="p-6">
-                            {/* Tabs */}
+                            {/* Step indicator */}
+                            {aiMenuStep > 1 && (
+                                <div className="flex items-center gap-1 mb-5">
+                                    {[1,2,3,4].map(s => (
+                                        <div key={s} className={`h-1 flex-1 rounded-full transition-all ${s <= aiMenuStep ? 'bg-violet-500' : 'bg-gray-800'}`} />
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* STEP 1: Input */}
+                            {aiMenuStep === 1 && (<>
                             <div className="flex gap-1 p-1 bg-gray-800 rounded-xl mb-5">
                                 <button onClick={() => setAiMenuTab("prompt")} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${aiMenuTab === "prompt" ? "bg-violet-600 text-white" : "text-gray-400 hover:text-white"}`}>
                                     <Sparkles size={14} /> Prompt ile
@@ -729,71 +790,138 @@ export default function PanelMenu() {
                                 </div>
                             )}
 
-                            {/* Error */}
-                            {aiMenuError && (
-                                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400">{aiMenuError}</div>
-                            )}
+                            {aiMenuError && <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400">{aiMenuError}</div>}
 
-                            {/* Preview Result */}
-                            {aiMenuResult && !aiMenuImportDone && (
-                                <div className="mt-5">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <p className="text-sm font-semibold text-white">Önizleme</p>
-                                        <span className="text-[11px] text-gray-500">{aiMenuResult.categories.reduce((a, c) => a + c.products.length, 0)} ürün / {aiMenuResult.categories.length} kategori</span>
-                                    </div>
-                                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                                        {aiMenuResult.categories.map((cat, ci) => (
-                                            <div key={ci} className="bg-gray-800 rounded-xl overflow-hidden">
-                                                <div className="px-3 py-2 bg-gray-750">
-                                                    <p className="text-xs font-bold text-violet-300">{cat.name}</p>
-                                                </div>
-                                                {cat.products.map((p, pi) => (
-                                                    <div key={pi} className="flex items-center justify-between px-3 py-1.5 border-t border-gray-700/50">
-                                                        <div className="min-w-0 flex-1">
-                                                            <p className="text-xs text-white truncate">{p.name}</p>
-                                                            {p.description && <p className="text-[10px] text-gray-500 truncate">{p.description}</p>}
-                                                        </div>
-                                                        <span className="text-xs font-semibold text-emerald-400 ml-2 flex-shrink-0">₺{p.price}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="flex gap-2 mt-4">
-                                        <button onClick={handleAiMenuImport} disabled={aiMenuImporting} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-                                            {aiMenuImporting ? <><Loader2 size={15} className="animate-spin" />İçe Aktarılıyor...</> : "✓ Menüyü İçe Aktar"}
-                                        </button>
-                                        <button onClick={() => { setAiMenuResult(null); setAiMenuError(""); }} className="px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm transition-colors">Yeniden</button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Import Done */}
-                            {aiMenuImportDone && (
-                                <div className="mt-5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
-                                    <p className="text-emerald-400 font-semibold text-sm">✓ Menü başarıyla oluşturuldu!</p>
-                                    <p className="text-gray-500 text-xs mt-1">{aiMenuResult?.categories.reduce((a, c) => a + c.products.length, 0)} ürün eklendi</p>
-                                    <button onClick={() => setShowAiMenuModal(false)} className="mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition-colors">Kapat</button>
-                                </div>
-                            )}
-
-                            {/* Generate Button */}
-                            {!aiMenuResult && !aiMenuImportDone && (
-                                <button
-                                    onClick={handleAiMenuGenerate}
-                                    disabled={aiMenuLoading || (aiMenuTab === "prompt" ? !aiMenuPrompt.trim() : aiMenuFiles.length === 0)}
-                                    className="w-full mt-5 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 flex items-center justify-center gap-2"
-                                    style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', color: 'white' }}
-                                >
-                                    {aiMenuLoading
-                                        ? <><Loader2 size={16} className="animate-spin" />Menü Oluşturuluyor...</>
-                                        : <><Wand2 size={16} />Menü Oluştur ({aiMenuTab === "image" ? "5" : "3"} Kredi)</>}
+                                <button onClick={handleAiMenuGenerate} disabled={aiMenuLoading || (aiMenuTab === "prompt" ? !aiMenuPrompt.trim() : aiMenuFiles.length === 0)} className="w-full mt-5 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', color: 'white' }}>
+                                    {aiMenuLoading ? <><Loader2 size={16} className="animate-spin" />Menü Oluşturuluyor...</> : <><Wand2 size={16} />Menü Oluştur ({aiMenuTab === "image" ? "5" : "3"} Kredi)</>}
                                 </button>
+                            </>)}
+
+                            {/* STEP 2: Preview + image option */}
+                            {aiMenuStep === 2 && aiMenuResult && (
+                                <div className="space-y-4">
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <p className="text-sm font-semibold text-white">✓ Menü Hazır</p>
+                                            <span className="text-[11px] text-gray-500">{aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0)} ürün / {aiMenuResult.categories.length} kategori</span>
+                                        </div>
+                                        <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                                            {aiMenuResult.categories.map((cat,ci) => (
+                                                <div key={ci} className="bg-gray-800 rounded-xl overflow-hidden">
+                                                    <div className="px-3 py-2"><p className="text-xs font-bold text-violet-300">{cat.name}</p></div>
+                                                    {cat.products.map((p,pi) => (
+                                                        <div key={pi} className="flex items-center justify-between px-3 py-1.5 border-t border-gray-700/50">
+                                                            <div className="min-w-0 flex-1"><p className="text-xs text-white truncate">{p.name}</p>{p.description && <p className="text-[10px] text-gray-500 truncate">{p.description}</p>}</div>
+                                                            <span className="text-xs font-semibold text-emerald-400 ml-2 flex-shrink-0">₺{p.price}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="bg-violet-500/5 border border-violet-500/20 rounded-xl p-4">
+                                        <label className="flex items-start gap-3 cursor-pointer">
+                                            <input type="checkbox" checked={aiMenuAddImages} onChange={e => setAiMenuAddImages(e.target.checked)} className="mt-0.5 accent-violet-500 w-4 h-4 flex-shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-semibold text-white">Ürünlere AI resim ekle</p>
+                                                <p className="text-[11px] text-gray-400 mt-0.5">{Math.min(aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0),20)} ürün × 5 kredi = <span className="text-violet-300 font-semibold">{Math.min(aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0),20)*5} kredi</span>{aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0)>20 && <span className="text-amber-400 ml-2">⚠ İlk 20</span>}</p>
+                                            </div>
+                                        </label>
+                                        {aiMenuAddImages && (
+                                            <div className="mt-3 pl-7">
+                                                <label className="text-xs text-gray-400 mb-1 block">Fotoğraf stili (opsiyonel)</label>
+                                                <input value={aiMenuImageStyle} onChange={e => setAiMenuImageStyle(e.target.value)} placeholder="Örn: sıcak ışık, ahşap zemin, rustik" className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500" />
+                                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                                    {["sıcak ışık, ahşap zemin","beyaz zemin, modern","üstten çekim, rustik","koyu zemin, fine dining"].map(s => (
+                                                        <button key={s} onClick={() => setAiMenuImageStyle(s)} className="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg text-[10px] transition-colors">{s}</button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {aiMenuAddImages ? (
+                                            <button onClick={generateImagesForMenu} className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 text-white" style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)' }}>
+                                                <Sparkles size={15} /> Resimleri Üret ve Devam Et
+                                            </button>
+                                        ) : (
+                                            <button onClick={handleAiMenuImport} disabled={aiMenuImporting} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+                                                {aiMenuImporting ? <><Loader2 size={15} className="animate-spin" />Yayınlanıyor...</> : "✓ Hemen Yayınla"}
+                                            </button>
+                                        )}
+                                        <button onClick={() => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); }} className="px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm transition-colors">Geri</button>
+                                    </div>
+                                    {aiMenuImportDone && (
+                                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+                                            <p className="text-emerald-400 font-semibold text-sm">✓ Menü yayınlandı!</p>
+                                            <button onClick={() => setShowAiMenuModal(false)} className="mt-2 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-medium">Kapat</button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* STEP 3: Image generation progress */}
+                            {aiMenuStep === 3 && (
+                                <div className="space-y-5 py-2">
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 rounded-2xl bg-violet-500/20 flex items-center justify-center mx-auto mb-3">
+                                            <Sparkles size={28} className="text-violet-400 animate-pulse" />
+                                        </div>
+                                        <p className="text-white font-bold text-base">Resimler Oluşturuluyor</p>
+                                        <p className="text-gray-400 text-sm mt-1">{aiMenuImageProgress.current} / {aiMenuImageProgress.total} tamamlandı</p>
+                                    </div>
+                                    <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+                                        <div className="h-3 rounded-full transition-all duration-700" style={{ width: `${aiMenuImageProgress.total>0?(aiMenuImageProgress.current/aiMenuImageProgress.total)*100:0}%`, background: 'linear-gradient(90deg,#7c3aed,#a855f7)' }} />
+                                    </div>
+                                    {Object.keys(aiMenuImageResults).length > 0 && (
+                                        <div className="grid grid-cols-4 gap-1.5">
+                                            {Object.entries(aiMenuImageResults).slice(-8).map(([k,url]) => {
+                                                const allProds = aiMenuResult?.categories.flatMap(c=>c.products)||[];
+                                                return <div key={k}><img src={url} alt="" className="w-full h-16 object-cover rounded-lg border border-violet-500/30" /><p className="text-[8px] text-gray-500 truncate mt-0.5">{allProds[parseInt(k)]?.name}</p></div>;
+                                            })}
+                                        </div>
+                                    )}
+                                    <p className="text-[11px] text-gray-500 text-center">Rate limit koruması: istekler arasında 4s bekleniyor</p>
+                                    <button onClick={() => { aiMenuAbortRef.current = true; }} disabled={!aiMenuGeneratingImages} className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl text-sm transition-colors disabled:opacity-40">İptal Et (oluşturulanlar korunur)</button>
+                                </div>
+                            )}
+
+                            {/* STEP 4: Summary + publish */}
+                            {aiMenuStep === 4 && aiMenuResult && (
+                                <div className="space-y-4">
+                                    <div className="text-center py-2">
+                                        <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+                                            <Sparkles size={24} className="text-emerald-400" />
+                                        </div>
+                                        <p className="text-white font-bold">Hazır!</p>
+                                        <p className="text-gray-400 text-sm mt-1">{aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0)} ürün, {aiMenuResult.categories.length} kategori{Object.keys(aiMenuImageResults).length>0&&`, ${Object.keys(aiMenuImageResults).length} resim`} oluşturuldu</p>
+                                    </div>
+                                    {Object.keys(aiMenuImageResults).length > 0 && (
+                                        <div className="grid grid-cols-4 gap-1.5 max-h-32 overflow-hidden">
+                                            {Object.entries(aiMenuImageResults).map(([k,url]) => <img key={k} src={url} alt="" className="w-full h-16 object-cover rounded-lg border border-gray-700" />)}
+                                        </div>
+                                    )}
+                                    {aiMenuImportDone ? (
+                                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+                                            <p className="text-emerald-400 font-semibold">✓ Menü yayınlandı!</p>
+                                            <button onClick={() => setShowAiMenuModal(false)} className="mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium">Kapat</button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <button onClick={handleAiMenuImport} disabled={aiMenuImporting} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+                                                {aiMenuImporting ? <><Loader2 size={15} className="animate-spin" />Yayınlanıyor...</> : "✓ Menüyü Yayınla"}
+                                            </button>
+                                            <button onClick={() => setAiMenuStep(2)} className="px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm transition-colors">Geri</button>
+                                        </div>
+                                    )}
+                                    {aiMenuError && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400">{aiMenuError}</div>}
+                                </div>
                             )}
                         </div>
                     </div>
                 </div>
             )}
+
 
             {/* Product Modal */}
             {showModal && (
