@@ -5,11 +5,23 @@ const prisma = new PrismaClient();
 export const maxDuration = 60;
 
 const MENU_COST_PROMPT = 3;
-const MENU_COST_IMAGE = 5;
+const MENU_COST_IMAGE = 7; // increased: extraction + verification
 
-const SYSTEM_PROMPT = `Sen bir restoran menüsü analiz uzmanısın. Görevi menüdeki HER ÜRÜNÜ eksiksiz çıkartmak.
+const SYSTEM_PROMPT = `Sen bir restoran menüsü analiz uzmanısın. Görevin menüdeki HER TEK ÜRÜNü eksiksiz ve sıralı olarak çıkartmak.
 
-SADECE aşağıdaki JSON formatında çıktı ver, başka hiçbir şey yazma:
+KRİTİK OKUMA KURALLARI:
+- Eğer menü ÇOKLU SÜTUN (sol/sağ) içeriyorsa, ÖNCELİKLE ilk sütunun tamamını oku, sonra ikinci sütuna geç.
+- Sayfanın EN ALT kısmını KESİNLİKLE kontrol et — genelde "İçecekler", "Tatlılar" gibi küçük bölümler altta kalır.
+- Eğer fotoğraf/taranmış görüntüde bulanık metin varsa, görünebildiğin kadarını oku — atla DEĞİL.
+- Menü başlıkları, alt başlıklar, dekoratif yazılar ürün DEĞİLDİR — bunları dahil etme.
+- Porsiyon/boyut varyantları (küçük/büyük) AYRI ürün olarak eklenmeli.
+
+ÇIKARIM TÜRASIYLA:
+1. Önce menüdeki tüm kategori başlıklarını tespit et
+2. Sonra her kategori altındaki ürünleri sırasıyla listele
+3. Eksik ürün olmadığından emin ol — menüde gördüğün her fiyatlı satır bir üründür
+
+SADECE aşağıdaki JSON formatında çıktı ver:
 {
   "categories": [
     {
@@ -26,17 +38,56 @@ SADECE aşağıdaki JSON formatında çıktı ver, başka hiçbir şey yazma:
 }
 
 KESİN KURALLAR:
-1. HİÇBİR ürünü atlama — menüdeki TÜM ürünleri ekle
+1. HİÇBİR ürünü atlama — menüdeki TÜM ürünleri ekle, hiçbir istisna yok
 2. Açıklama ASLA boş bırakma — eğer menüde açıklama yoksa sen bir tane üret (malzeme, pişirme yöntemi, lezzet)
-3. Fiyat görünmüyorsa veya okunamıyorsa makul bir rakam tahmin et (Türk Lirası)
+3. Fiyat görünmüyorsa veya okunamıyorsa makul bir TL fiyatı tahmin et
 4. Kategori isimlerini menüdeki gibi kullan, yoksa mantıklı isim belirle
-5. JSON dışında HİÇBİR şey yazma — markdown, açıklama, yorum yok`;
+5. JSON dışında HİÇBİR şey yazma — markdown, açıklama, yorum yok
+6. Ürünleri menüdeki SIRAYA göre ekle`;
 
 type Product = { name: string; description: string; price: number };
 type Category = { name: string; products: Product[] };
 type MenuData = { categories: Category[] };
 
-async function processWithGemini(apiKey: string, parts: object[]): Promise<MenuData | null> {
+const RESPONSE_SCHEMA = {
+    type: "OBJECT",
+    properties: {
+        categories: {
+            type: "ARRAY",
+            items: {
+                type: "OBJECT",
+                properties: {
+                    name: { type: "STRING" },
+                    products: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                name: { type: "STRING" },
+                                description: { type: "STRING" },
+                                price: { type: "NUMBER" },
+                            },
+                            required: ["name", "description", "price"],
+                        },
+                    },
+                },
+                required: ["name", "products"],
+            },
+        },
+    },
+    required: ["categories"],
+};
+
+async function processWithGemini(apiKey: string, parts: object[], useSchema = true): Promise<MenuData | null> {
+    const genConfig: Record<string, unknown> = {
+        temperature: 0.1,
+        maxOutputTokens: 32768,
+    };
+    if (useSchema) {
+        genConfig.responseMimeType = "application/json";
+        genConfig.responseSchema = RESPONSE_SCHEMA;
+    }
+
     const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         {
@@ -44,25 +95,57 @@ async function processWithGemini(apiKey: string, parts: object[]): Promise<MenuD
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 contents: [{ parts }],
-                generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
+                generationConfig: genConfig,
             }),
         }
     );
     if (!res.ok) return null;
     const data = await res.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, rawText];
-    const jsonStr = (jsonMatch[1] || rawText).trim();
+
+    // With schema mode, response is always JSON
     try {
-        return JSON.parse(jsonStr);
+        return JSON.parse(rawText);
     } catch {
-        // Try to extract JSON object directly
-        const objMatch = rawText.match(/\{[\s\S]*\}/);
-        if (objMatch) {
-            try { return JSON.parse(objMatch[0]); } catch { return null; }
+        const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, rawText];
+        const jsonStr = (jsonMatch[1] || rawText).trim();
+        try {
+            return JSON.parse(jsonStr);
+        } catch {
+            const objMatch = rawText.match(/\{[\s\S]*\}/);
+            if (objMatch) {
+                try { return JSON.parse(objMatch[0]); } catch { return null; }
+            }
+            return null;
         }
-        return null;
     }
+}
+
+async function verifyExtraction(apiKey: string, original: MenuData, imageParts: object[]): Promise<MenuData> {
+    const productCount = original.categories.reduce((a, c) => a + c.products.length, 0);
+    const categoryNames = original.categories.map(c => `${c.name} (${c.products.length} ürün)`).join(", ");
+
+    const verifyPrompt = `Önceki taramada bu menüden ${productCount} ürün ve ${original.categories.length} kategori çıkarıldı:
+${categoryNames}
+
+Menü görselini TEKRAR kontrol et. Atlanmış ürün var mı? Eksik kategori var mı?
+Eğer her şey tamamsa AYNI veriyi döndür.
+Eğer eksik varsa TÜM ürünleri (eski + yeni) dahil ederek KOMPLE listeyi döndür.
+
+SADECE JSON formatında cevap ver, aynı schema:
+{"categories": [{"name": "...", "products": [{"name": "...", "description": "...", "price": 0}]}]}`;
+
+    const parts = [
+        { text: verifyPrompt },
+        ...imageParts,
+    ];
+
+    const verified = await processWithGemini(apiKey, parts, true);
+    if (!verified || !verified.categories?.length) return original;
+
+    // Use whichever has more products
+    const verifiedCount = verified.categories.reduce((a, c) => a + c.products.length, 0);
+    return verifiedCount >= productCount ? verified : original;
 }
 
 function mergeMenus(menus: MenuData[]): MenuData {
@@ -72,7 +155,6 @@ function mergeMenus(menus: MenuData[]): MenuData {
             const key = cat.name.trim().toLowerCase();
             const existing = catMap.get(key);
             if (existing) {
-                // Merge products, avoid duplicates by name
                 const existingNames = new Set(existing.map(p => p.name.toLowerCase()));
                 for (const p of cat.products || []) {
                     if (!existingNames.has(p.name.toLowerCase())) {
@@ -85,7 +167,6 @@ function mergeMenus(menus: MenuData[]): MenuData {
             }
         }
     }
-    // Rebuild categories preserving original casing from first occurrence
     const result: Category[] = [];
     const seenKeys = new Set<string>();
     for (const menu of menus) {
@@ -146,16 +227,24 @@ export async function POST(req: NextRequest) {
         if (mode === "image") {
             // Process each file separately
             const results: MenuData[] = [];
+            const allImageParts: object[] = [];
+
             for (const file of files) {
+                const imagePart = { inlineData: { mimeType: file.mimeType, data: file.base64 } };
+                allImageParts.push(imagePart);
                 const parts = [
                     { text: SYSTEM_PROMPT + (promptText ? `\n\nEk not: ${promptText}` : "") },
-                    { inlineData: { mimeType: file.mimeType, data: file.base64 } },
+                    imagePart,
                 ];
                 const result = await processWithGemini(apiKey, parts);
                 if (result) results.push(result);
             }
+
             if (results.length === 0) return NextResponse.json({ error: "Hiçbir dosyadan menü çıkarılamadı" }, { status: 500 });
-            finalMenu = results.length === 1 ? results[0] : mergeMenus(results);
+            const merged = results.length === 1 ? results[0] : mergeMenus(results);
+
+            // Verification pass — AI double-checks its own extraction
+            finalMenu = await verifyExtraction(apiKey, merged, allImageParts);
         } else {
             const parts = [{
                 text: SYSTEM_PROMPT + `\n\nKullanıcı isteği: "${promptText}"\n\nBu tarife göre eksiksiz bir restoran menüsü oluştur. Her kategoride en az 5 ürün olsun.`
