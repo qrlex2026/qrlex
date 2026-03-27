@@ -38,8 +38,9 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     const R2_PUBLIC = "https://pub-5b35497dfb5b4103971895d42f4b4222.r2.dev";
     const toProxy = (url: string | null) => url ? url.replace(R2_PUBLIC, "/media") : "";
 
+    const hasPopular = restaurant.products.some((p) => p.isPopular && p.isActive);
     const categories = [
-        { id: "populer", name: "Popüler", image: "" },
+        ...(hasPopular ? [{ id: "populer", name: "Popüler", image: "" }] : []),
         ...restaurant.categories.map((c) => ({ id: c.id, name: c.name, image: toProxy(c.image) })),
     ];
 

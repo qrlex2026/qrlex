@@ -1854,7 +1854,7 @@ export default function MenuClient({
                         />
                         {/* Drawer */}
                         <div
-                            className="absolute top-0 left-0 bottom-0 w-[300px] shadow-2xl flex flex-col overflow-y-auto"
+                            className="absolute top-0 left-0 bottom-0 w-[270px] shadow-2xl flex flex-col overflow-y-auto"
                             style={{ backgroundColor: T.sidebarBg || '#ffffff', animation: 'slideInLeft 0.3s ease-out' }}
                         >
                             {/* ── Logo + Name + Description ── */}
@@ -1937,18 +1937,9 @@ export default function MenuClient({
                             {BUSINESS_INFO.features && BUSINESS_INFO.features.length > 0 && (
                                 <div className="px-5 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
                                     <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: T.sidebarLabelColor || '#9ca3af' }}>{selectedLang === 'tr' ? 'İşletme Özellikleri' : 'Amenities'}</p>
-                                    <div className="space-y-1">
-                                        {BUSINESS_INFO.features.map((f: string) => {
-                                            const feat = FEATURE_MAP[f];
-                                            if (!feat) return null;
-                                            return (
-                                                <div key={f} className="flex items-center gap-2.5 py-1.5 text-sm" style={{ color: T.sidebarItemColor || '#374151' }}>
-                                                    <feat.Icon size={16} style={{ color: T.sidebarItemIconColor || '#9ca3af' }} />
-                                                    <span className="font-medium">{selectedLang === 'tr' ? feat.tr : feat.en}</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                    <p className="text-sm leading-relaxed" style={{ color: T.sidebarItemColor || '#374151' }}>
+                                        {BUSINESS_INFO.features.map((f: string) => FEATURE_MAP[f] ? (selectedLang === 'tr' ? FEATURE_MAP[f].tr : FEATURE_MAP[f].en) : null).filter(Boolean).join(' · ')}
+                                    </p>
                                 </div>
                             )}
 
@@ -1986,20 +1977,6 @@ export default function MenuClient({
                                 </div>
                             )}
 
-                            {/* ── Çalışma Saatleri ── */}
-                            {BUSINESS_INFO.workingHours && BUSINESS_INFO.workingHours.length > 0 && (
-                                <div className="px-5 py-3" style={{ borderBottom: `1px solid ${T.sidebarBorder || '#f3f4f6'}` }}>
-                                    <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: T.sidebarLabelColor || '#9ca3af' }}>{t('workingHours')}</p>
-                                    <div className="space-y-1">
-                                        {BUSINESS_INFO.workingHours.map((wh: { day: string; hours: string }) => (
-                                            <div key={wh.day} className="flex items-center justify-between py-1 text-xs" style={{ color: T.sidebarItemColor || '#374151' }}>
-                                                <span className="font-medium">{wh.day}</span>
-                                                <span style={{ color: wh.hours === 'Kapalı' ? '#ef4444' : (T.sidebarDescColor || '#9ca3af') }}>{wh.hours}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
 
                             {/* ── Powered by ── */}
                             <div className="px-5 py-4 text-center mt-auto">
@@ -2197,9 +2174,9 @@ export default function MenuClient({
             {showScrollTop && (
                 <button
                     onClick={() => {
-                        smoothScrollTo(0);
-                        setActiveCategory("");
-                        categoryNavRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        setActiveCategory('');
+                        categoryNavRef.current?.scrollTo({ left: 0, behavior: 'smooth' });
                     }}
                     className="fixed z-30 w-[50px] h-[50px] rounded-full bg-black text-white flex items-center justify-center shadow-lg hover:bg-gray-800 transition-all"
                     style={{ bottom: 20, right: 10 }}
