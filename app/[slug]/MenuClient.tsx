@@ -1199,7 +1199,7 @@ export default function MenuClient({
                 </div>
             )}
 
-            <div className="min-h-screen pb-4" style={{ ...(T.pageBg?.includes('gradient') || T.pageBg?.startsWith('url(') ? { background: T.pageBg } : { backgroundColor: T.pageBg }), fontFamily: T.fontFamily }}>
+            <div className="" style={{ ...(T.pageBg?.includes('gradient') || T.pageBg?.startsWith('url(') ? { background: T.pageBg } : { backgroundColor: T.pageBg }), fontFamily: T.fontFamily, minHeight: '100dvh', paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 {/* Sticky Header + Category Nav */}
                 <div
                     className="sticky top-0 z-10"
@@ -2027,10 +2027,10 @@ export default function MenuClient({
 
                     {/* Detail Card - scrolls with page */}
                     <div
-                        className="relative -mt-6 min-h-[60vh]"
-                        style={{ borderRadius: '25px 25px 0 0', backgroundColor: T.detailBg || '#ffffff' }}
+                        className="relative -mt-6"
+                        style={{ borderRadius: '25px 25px 0 0', backgroundColor: T.detailBg || '#ffffff', minHeight: 'calc(100dvh - 260px)' }}
                     >
-                        <div className="px-5 pt-7 pb-10">
+                        <div className="px-5 pt-7" style={{ paddingBottom: 'max(40px, env(safe-area-inset-bottom))' }}>
                             {/* Product Name */}
                             <h2 className="text-2xl font-bold leading-tight mb-1" style={{ color: T.detailNameColor || '#111827' }}>{selectedProduct.name}</h2>
 
