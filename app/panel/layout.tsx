@@ -26,7 +26,6 @@ const PRIMARY_NAV = [
     { href: "/panel/menu", label: "Menü", icon: UtensilsCrossed },
     { href: "/panel/design", label: "Stil", icon: Paintbrush },
     { href: "/panel/qr-code", label: "QR Kod", icon: QrCode },
-    { href: "/panel/ai", label: "Yapay Zeka", icon: Brain },
 ];
 
 const SECONDARY_NAV = [
@@ -251,7 +250,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                     }`}
                                     style={!isActive ? { backgroundColor: 'var(--p-nav-inactive-bg)' } : {}}
                                 >
-                                    <item.icon size={20} style={{ color: isActive ? '#ffffff' : 'var(--p-icon)' }} />
+                                    <item.icon size={20} style={{ color: isActive ? '#ffffff' : '#9ca3af' }} />
                                 </div>
                                 <span className={`text-[11px] font-medium transition-colors
                                     ${isActive ? "text-violet-400" : ""
@@ -270,18 +269,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
 
                 {/* Secondary Navigation - Profile photo only */}
                 <nav className="flex flex-col items-center gap-3 px-2 pb-3">
-                    {/* Logout */}
-                    <button
-                        onClick={() => { handleLogout(); }}
-                        className="flex flex-col items-center gap-1 group"
-                        title="Çıkış Yap"
-                    >
-                        <div className="w-12 h-12 flex items-center justify-center rounded-xl group-hover:bg-red-500/20 transition-all" style={{ backgroundColor: 'var(--p-nav-inactive-bg)' }}>
-                            <ArrowRight size={20} className="group-hover:text-red-400 transition-colors" style={{ color: 'var(--p-icon-inactive)' }} />
-                        </div>
-                        <span className="text-[11px] font-medium group-hover:text-red-400 transition-colors" style={{ color: 'var(--p-nav-inactive-text)' }}>Çıkış</span>
-                    </button>
-                    {/* Profile photo */}
+                    {/* Profile photo — above logout */}
                     <Link
                         href="/panel/profile"
                         onClick={() => setIsSidebarOpen(false)}
@@ -293,6 +281,17 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         </div>
                         <span className="text-[11px] font-medium" style={{ color: 'var(--p-nav-inactive-text)' }}>Profil</span>
                     </Link>
+                    {/* Logout */}
+                    <button
+                        onClick={() => { handleLogout(); }}
+                        className="flex flex-col items-center gap-1 group"
+                        title="Çıkış Yap"
+                    >
+                        <div className="w-12 h-12 flex items-center justify-center rounded-xl group-hover:bg-red-500/20 transition-all" style={{ backgroundColor: 'var(--p-nav-inactive-bg)' }}>
+                            <ArrowRight size={20} className="group-hover:text-red-400 transition-colors" style={{ color: '#9ca3af' }} />
+                        </div>
+                        <span className="text-[11px] font-medium group-hover:text-red-400 transition-colors" style={{ color: 'var(--p-nav-inactive-text)' }}>Çıkış</span>
+                    </button>
                 </nav>
             </div>
         );
@@ -473,7 +472,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                             </button>
 
                             {showProfileDropdown && (
-                                <div className="absolute right-0 top-14 w-[280px] rounded-2xl shadow-2xl z-50 overflow-hidden transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
+                                <div className="absolute right-0 top-14 w-[300px] rounded-2xl shadow-2xl z-50 overflow-hidden transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)`, maxHeight: '80vh', overflowY: 'auto' }}>
 
                                     {/* Profile info header */}
                                     <div className="flex items-center gap-3 px-4 pt-4 pb-3">
@@ -489,103 +488,84 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                         </button>
                                     </div>
 
-                                    {/* Tabs */}
-                                    <div className="flex items-center gap-0 px-2 pb-1">
-                                        {([{ id: 'general', label: 'Genel' }, { id: 'notif', label: '🔔 Bildirim' }, { id: 'inbox', label: '📥 Gelen' }] as const).map(tab => (
-                                            <button key={tab.id} onClick={() => setProfileTab(tab.id)}
-                                                className={`flex-1 py-1.5 text-[11px] font-medium rounded-lg transition-all ${
-                                                    profileTab === tab.id ? 'bg-white/[0.08] text-white' : 'text-gray-500 hover:text-gray-300'
-                                                }`}>{tab.label}</button>
+                                    <div className="mx-3 h-px bg-white/[0.06]" />
+
+                                    {/* 🔔 BİLDİRİMLER */}
+                                    <div className="px-4 pt-3 pb-1 flex items-center justify-between">
+                                        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">🔔 Bildirimler</span>
+                                        <button onClick={markAllRead} className="text-[10px] text-violet-400 hover:text-violet-300 transition-colors">Okundu</button>
+                                    </div>
+                                    <div className="px-1.5 pb-1">
+                                        {fakeNotifications.map((n) => (
+                                            <div key={n.id} className="flex items-start gap-3 px-3 py-2 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer">
+                                                <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
+                                                    {n.icon === 'settings' && <Settings size={13} strokeWidth={1.5} className="text-gray-400" />}
+                                                    {n.icon === 'bell' && <Bell size={13} strokeWidth={1.5} className="text-gray-400" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-[12px] font-medium text-gray-200">{n.title}</span>
+                                                        {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
+                                                    </div>
+                                                    <p className="text-[11px] text-gray-500 line-clamp-1">{n.desc}</p>
+                                                </div>
+                                                <span className="text-[10px] text-gray-600 shrink-0 mt-0.5">{n.time}</span>
+                                            </div>
                                         ))}
                                     </div>
 
-                                    <div className="mx-3 h-px bg-white/[0.06] mb-1" />
+                                    <div className="mx-3 h-px bg-white/[0.06] my-1" />
 
-                                    {/* GENEL TAB */}
-                                    {profileTab === 'general' && (
-                                        <div className="px-1.5 py-1">
-                                            <Link href="/panel/profile" onClick={() => setShowProfileDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors">
-                                                <UserCircle size={18} strokeWidth={1.5} className="text-gray-400" /><span>Profil</span>
-                                            </Link>
-                                            <Link href="/panel/settings" onClick={() => setShowProfileDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors">
-                                                <Settings size={18} strokeWidth={1.5} className="text-gray-400" /><span>Ayarlar</span>
-                                            </Link>
-                                            <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 w-full">
-                                                {isDarkMode ? <Moon size={18} strokeWidth={1.5} className="text-gray-400" /> : <Sun size={18} strokeWidth={1.5} className="text-gray-400" />}
-                                                <span className="flex-1 text-left">Tema</span>
-                                                <div className="flex items-center rounded-full p-0.5" style={{ backgroundColor: 'var(--p-surface3)' }}>
-                                                    <button onClick={() => setIsDarkMode(true)} className="w-7 h-7 rounded-full flex items-center justify-center transition-all" style={isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}><Moon size={13} /></button>
-                                                    <button onClick={() => setIsDarkMode(false)} className="w-7 h-7 rounded-full flex items-center justify-center transition-all" style={!isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}><Sun size={13} /></button>
+                                    {/* 📥 GELEN KUTUSU */}
+                                    <div className="px-4 pt-2 pb-1 flex items-center justify-between">
+                                        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">📥 Gelen Kutusu</span>
+                                        <Link href="/panel/inbox" onClick={() => setShowProfileDropdown(false)} className="text-[10px] text-violet-400 hover:text-violet-300 transition-colors">Tümü</Link>
+                                    </div>
+                                    <div className="px-1.5 pb-1">
+                                        {fakeInboxMessages.map((m) => (
+                                            <div key={m.id} className="flex items-start gap-3 px-3 py-2 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer">
+                                                <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
+                                                    {m.icon === 'info' && <Info size={13} strokeWidth={1.5} className="text-gray-400" />}
+                                                    {m.icon === 'rocket' && <Rocket size={13} strokeWidth={1.5} className="text-gray-400" />}
+                                                    {m.icon === 'settings' && <Settings size={13} strokeWidth={1.5} className="text-gray-400" />}
                                                 </div>
-                                            </div>
-                                            <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors w-full">
-                                                <Rocket size={18} strokeWidth={1.5} className="text-gray-400" /><span>Yükselt</span>
-                                            </button>
-                                            <div className="mx-2 my-1 h-px bg-white/[0.06]" />
-                                            <button onClick={() => { setShowProfileDropdown(false); handleLogout(); }} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors w-full">
-                                                <LogOut size={18} strokeWidth={1.5} className="text-gray-400" /><span>Çıkış yap</span>
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* BILDIRIMLER TAB */}
-                                    {profileTab === 'notif' && (
-                                        <div>
-                                            <div className="flex items-center justify-between px-4 py-2">
-                                                <span className="text-[11px] text-gray-500">{unreadCount} okunmamış</span>
-                                                <button onClick={markAllRead} className="text-[11px] text-violet-400 hover:text-violet-300 transition-colors">Tamamını okundu yap</button>
-                                            </div>
-                                            <div className="py-1 px-1.5 max-h-[260px] overflow-y-auto">
-                                                {fakeNotifications.map((n) => (
-                                                    <div key={n.id} className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer">
-                                                        <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
-                                                            {n.icon === 'settings' && <Settings size={14} strokeWidth={1.5} className="text-gray-400" />}
-                                                            {n.icon === 'bell' && <Bell size={14} strokeWidth={1.5} className="text-gray-400" />}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-[13px] font-medium text-gray-200">{n.title}</span>
-                                                                {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
-                                                            </div>
-                                                            <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-1">{n.desc}</p>
-                                                        </div>
-                                                        <span className="text-[10px] text-gray-600 shrink-0">{n.time}</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-[12px] font-medium text-gray-200">{m.sender}</span>
+                                                        {m.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
                                                     </div>
-                                                ))}
+                                                    <p className="text-[11px] text-gray-500 line-clamp-1">{m.message}</p>
+                                                </div>
+                                                <span className="text-[10px] text-gray-600 shrink-0 mt-0.5">{m.time}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="mx-3 h-px bg-white/[0.06] my-1" />
+
+                                    {/* Genel seçenekler */}
+                                    <div className="px-1.5 py-1">
+                                        <Link href="/panel/profile" onClick={() => setShowProfileDropdown(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors">
+                                            <UserCircle size={16} strokeWidth={1.5} className="text-gray-400" /><span>Profil</span>
+                                        </Link>
+                                        <Link href="/panel/settings" onClick={() => setShowProfileDropdown(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors">
+                                            <Settings size={16} strokeWidth={1.5} className="text-gray-400" /><span>Ayarlar</span>
+                                        </Link>
+                                        <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-gray-200 w-full">
+                                            {isDarkMode ? <Moon size={16} strokeWidth={1.5} className="text-gray-400" /> : <Sun size={16} strokeWidth={1.5} className="text-gray-400" />}
+                                            <span className="flex-1 text-left">Tema</span>
+                                            <div className="flex items-center rounded-full p-0.5" style={{ backgroundColor: 'var(--p-surface3)' }}>
+                                                <button onClick={() => setIsDarkMode(true)} className="w-6 h-6 rounded-full flex items-center justify-center transition-all" style={isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}><Moon size={11} /></button>
+                                                <button onClick={() => setIsDarkMode(false)} className="w-6 h-6 rounded-full flex items-center justify-center transition-all" style={!isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}><Sun size={11} /></button>
                                             </div>
                                         </div>
-                                    )}
+                                        <div className="mx-2 my-1 h-px bg-white/[0.06]" />
+                                        <button onClick={() => { setShowProfileDropdown(false); handleLogout(); }} className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors w-full">
+                                            <LogOut size={16} strokeWidth={1.5} className="text-gray-400" /><span>Çıkış yap</span>
+                                        </button>
+                                    </div>
 
-                                    {/* GELEN KUTUSU TAB */}
-                                    {profileTab === 'inbox' && (
-                                        <div>
-                                            <div className="flex items-center justify-between px-4 py-2">
-                                                <span className="text-[11px] text-gray-500">2 okunmamış</span>
-                                                <Link href="/panel/inbox" onClick={() => setShowProfileDropdown(false)} className="text-[11px] text-violet-400 hover:text-violet-300 transition-colors">Tümünü gör</Link>
-                                            </div>
-                                            <div className="py-1 px-1.5 max-h-[260px] overflow-y-auto">
-                                                {fakeInboxMessages.map((m) => (
-                                                    <div key={m.id} className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer">
-                                                        <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
-                                                            {m.icon === 'info' && <Info size={14} strokeWidth={1.5} className="text-gray-400" />}
-                                                            {m.icon === 'rocket' && <Rocket size={14} strokeWidth={1.5} className="text-gray-400" />}
-                                                            {m.icon === 'settings' && <Settings size={14} strokeWidth={1.5} className="text-gray-400" />}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-[13px] font-medium text-gray-200">{m.sender}</span>
-                                                                {m.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
-                                                            </div>
-                                                            <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-1">{m.message}</p>
-                                                        </div>
-                                                        <span className="text-[10px] text-gray-600 shrink-0">{m.time}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="pb-2" />
+                                    <div className="pb-1" />
                                 </div>
                             )}
                         </div>
