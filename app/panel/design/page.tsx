@@ -1023,6 +1023,16 @@ export default function PanelDesign() {
         }
     }, [theme.fontFamily]);
 
+    // Listen for device toggle from panel header
+    useEffect(() => {
+        const handler = (e: Event) => {
+            const mode = (e as CustomEvent).detail;
+            setPreviewWidth(mode === 'tablet' ? 630 : 360);
+        };
+        window.addEventListener('panel-device-change', handler);
+        return () => window.removeEventListener('panel-device-change', handler);
+    }, []);
+
     const doSave = useCallback(async (themeData: ThemeType) => {
         setSaving(true);
         await fetch(`/api/admin/theme?restaurantId=${restaurantId}`, {
@@ -1154,31 +1164,6 @@ export default function PanelDesign() {
 
                 {/* CENTER: Phone/Tablet preview */}
                 <div className="flex-1 flex flex-col items-center py-4 min-w-0">
-                    {/* Device toggle */}
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="flex items-center gap-1 bg-[#111] border border-white/[0.06] rounded-xl p-1">
-                            <button
-                                onClick={() => { setPreviewWidth(360); }}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${previewDevice === 'phone'
-                                    ? 'bg-white/[0.1] text-white shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-300'
-                                    }`}
-                            >
-                                <Smartphone size={14} />
-                                Telefon
-                            </button>
-                            <button
-                                onClick={() => { setPreviewWidth(630); }}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${previewDevice === 'tablet'
-                                    ? 'bg-white/[0.1] text-white shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-300'
-                                    }`}
-                            >
-                                <Tablet size={14} />
-                                Tablet
-                            </button>
-                        </div>
-                    </div>
                     {/* Preview frame */}
                     <div className="flex-1 flex flex-col items-center overflow-hidden min-h-0">
                         <div

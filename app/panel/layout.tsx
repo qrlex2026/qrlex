@@ -423,42 +423,10 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         </div>
                     )}
 
-                    {/* Right: Gift + Profile */}
+                    {/* Right: Profile only */}
                     <div className="flex items-center gap-2">
-                        {/* Gift - Referral Dropdown */}
-                        <div className="relative" ref={giftRef}>
-                            <button
-                                onClick={() => { setShowGiftDropdown(!showGiftDropdown); setShowProfileDropdown(false); }}
-                                className="w-[52px] h-[52px] rounded-full transition-colors flex items-center justify-center"
-                                style={{ backgroundColor: 'var(--p-surface2)', color: 'var(--p-text)' }}
-                            >
-                                <Gift size={20} />
-                            </button>
-                            {showGiftDropdown && (
-                                <div className="absolute right-0 top-[60px] w-[280px] rounded-2xl shadow-2xl z-50 p-4 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center">
-                                            <Gift size={16} className="text-violet-400" />
-                                        </div>
-                                        <h3 className="text-[13px] font-semibold text-gray-100">Referans Programı</h3>
-                                    </div>
-                                    <p className="text-[12px] text-gray-400 leading-relaxed mb-3">Arkadaşlarınızı davet edin, her kayıt olan kişi için <span className="text-violet-400 font-medium">50 puan</span> kazanın! Puanlarınızı premium özelliklere dönüştürebilirsiniz.</p>
-                                    <div className="bg-[#1e1e1e] rounded-xl p-3 mb-3">
-                                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Referans Linkiniz</p>
-                                        <div className="flex items-center gap-2">
-                                            <code className="flex-1 text-[12px] text-violet-400 bg-[#0c0c0c] rounded-lg px-2 py-1.5 font-mono truncate">qrlex.com/ref/yavuz</code>
-                                            <button className="text-[11px] text-gray-400 hover:text-white bg-[#0c0c0c] rounded-lg px-2 py-1.5 transition-colors">Kopyala</button>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center justify-between text-[11px]">
-                                        <span className="text-gray-500">Toplam davet: <span className="text-gray-300">3</span></span>
-                                        <span className="text-gray-500">Kazanılan puan: <span className="text-violet-400">150</span></span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
 
-                        {/* Profile with Dropdown — Tabbed */}
+                        {/* Profile with Dropdown — Flat List */}
                         <div className="relative" ref={profileRef}>
                             <button
                                 onClick={() => { setShowProfileDropdown(!showProfileDropdown); setShowGiftDropdown(false); }}
@@ -497,7 +465,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                     </div>
                                     <div className="px-1.5 pb-1">
                                         {fakeNotifications.map((n) => (
-                                            <div key={n.id} className="flex items-start gap-3 px-3 py-2 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer">
+                                            <Link key={n.id} href="/panel/notifications" onClick={() => setShowProfileDropdown(false)} className="flex items-start gap-3 px-3 py-2 rounded-xl hover:bg-white/[0.06] transition-colors">
                                                 <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
                                                     {n.icon === 'settings' && <Settings size={13} strokeWidth={1.5} className="text-gray-400" />}
                                                     {n.icon === 'bell' && <Bell size={13} strokeWidth={1.5} className="text-gray-400" />}
@@ -510,7 +478,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                                     <p className="text-[11px] text-gray-500 line-clamp-1">{n.desc}</p>
                                                 </div>
                                                 <span className="text-[10px] text-gray-600 shrink-0 mt-0.5">{n.time}</span>
-                                            </div>
+                                            </Link>
                                         ))}
                                     </div>
 
@@ -523,7 +491,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                     </div>
                                     <div className="px-1.5 pb-1">
                                         {fakeInboxMessages.map((m) => (
-                                            <div key={m.id} className="flex items-start gap-3 px-3 py-2 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer">
+                                            <Link key={m.id} href="/panel/inbox" onClick={() => setShowProfileDropdown(false)} className="flex items-start gap-3 px-3 py-2 rounded-xl hover:bg-white/[0.06] transition-colors">
                                                 <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
                                                     {m.icon === 'info' && <Info size={13} strokeWidth={1.5} className="text-gray-400" />}
                                                     {m.icon === 'rocket' && <Rocket size={13} strokeWidth={1.5} className="text-gray-400" />}
@@ -537,7 +505,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                                     <p className="text-[11px] text-gray-500 line-clamp-1">{m.message}</p>
                                                 </div>
                                                 <span className="text-[10px] text-gray-600 shrink-0 mt-0.5">{m.time}</span>
-                                            </div>
+                                            </Link>
                                         ))}
                                     </div>
 
@@ -550,6 +518,9 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                         </Link>
                                         <Link href="/panel/settings" onClick={() => setShowProfileDropdown(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors">
                                             <Settings size={16} strokeWidth={1.5} className="text-gray-400" /><span>Ayarlar</span>
+                                        </Link>
+                                        <Link href="/panel/referral" onClick={() => setShowProfileDropdown(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors">
+                                            <Gift size={16} strokeWidth={1.5} className="text-gray-400" /><span>Referans Programı</span>
                                         </Link>
                                         <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-gray-200 w-full">
                                             {isDarkMode ? <Moon size={16} strokeWidth={1.5} className="text-gray-400" /> : <Sun size={16} strokeWidth={1.5} className="text-gray-400" />}
