@@ -456,65 +456,12 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                                         </button>
                                     </div>
 
-                                    <div className="mx-3 h-px bg-white/[0.06]" />
-
-                                    {/* 🔔 BİLDİRİMLER */}
-                                    <div className="px-4 pt-3 pb-1 flex items-center justify-between">
-                                        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">🔔 Bildirimler</span>
-                                        <button onClick={markAllRead} className="text-[10px] text-violet-400 hover:text-violet-300 transition-colors">Okundu</button>
-                                    </div>
-                                    <div className="px-1.5 pb-1">
-                                        {fakeNotifications.map((n) => (
-                                            <Link key={n.id} href="/panel/notifications" onClick={() => setShowProfileDropdown(false)} className="flex items-start gap-3 px-3 py-2 rounded-xl hover:bg-white/[0.06] transition-colors">
-                                                <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
-                                                    {n.icon === 'settings' && <Settings size={13} strokeWidth={1.5} className="text-gray-400" />}
-                                                    {n.icon === 'bell' && <Bell size={13} strokeWidth={1.5} className="text-gray-400" />}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="text-[12px] font-medium text-gray-200">{n.title}</span>
-                                                        {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
-                                                    </div>
-                                                    <p className="text-[11px] text-gray-500 line-clamp-1">{n.desc}</p>
-                                                </div>
-                                                <span className="text-[10px] text-gray-600 shrink-0 mt-0.5">{n.time}</span>
-                                            </Link>
-                                        ))}
-                                    </div>
-
-                                    <div className="mx-3 h-px bg-white/[0.06] my-1" />
-
-                                    {/* 📥 GELEN KUTUSU */}
-                                    <div className="px-4 pt-2 pb-1 flex items-center justify-between">
-                                        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">📥 Gelen Kutusu</span>
-                                        <Link href="/panel/inbox" onClick={() => setShowProfileDropdown(false)} className="text-[10px] text-violet-400 hover:text-violet-300 transition-colors">Tümü</Link>
-                                    </div>
-                                    <div className="px-1.5 pb-1">
-                                        {fakeInboxMessages.map((m) => (
-                                            <Link key={m.id} href="/panel/inbox" onClick={() => setShowProfileDropdown(false)} className="flex items-start gap-3 px-3 py-2 rounded-xl hover:bg-white/[0.06] transition-colors">
-                                                <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
-                                                    {m.icon === 'info' && <Info size={13} strokeWidth={1.5} className="text-gray-400" />}
-                                                    {m.icon === 'rocket' && <Rocket size={13} strokeWidth={1.5} className="text-gray-400" />}
-                                                    {m.icon === 'settings' && <Settings size={13} strokeWidth={1.5} className="text-gray-400" />}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="text-[12px] font-medium text-gray-200">{m.sender}</span>
-                                                        {m.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
-                                                    </div>
-                                                    <p className="text-[11px] text-gray-500 line-clamp-1">{m.message}</p>
-                                                </div>
-                                                <span className="text-[10px] text-gray-600 shrink-0 mt-0.5">{m.time}</span>
-                                            </Link>
-                                        ))}
-                                    </div>
-
-                                    <div className="mx-3 h-px bg-white/[0.06] my-1" />
-
-                                    {/* Genel seçenekler */}
                                     <div className="px-1.5 py-1">
                                         <Link href="/panel/profile" onClick={() => setShowProfileDropdown(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors">
                                             <UserCircle size={16} strokeWidth={1.5} className="text-gray-400" /><span>Profil</span>
+                                        </Link>
+                                        <Link href="/panel/inbox" onClick={() => setShowProfileDropdown(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors">
+                                            <Inbox size={16} strokeWidth={1.5} className="text-gray-400" /><span>Gelen Kutusu</span>
                                         </Link>
                                         <Link href="/panel/settings" onClick={() => setShowProfileDropdown(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors">
                                             <Settings size={16} strokeWidth={1.5} className="text-gray-400" /><span>Ayarlar</span>
