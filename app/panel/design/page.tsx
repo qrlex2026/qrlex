@@ -1083,6 +1083,12 @@ export default function PanelDesign() {
             } else if (merged.pageBg && merged.pageBg !== theme.pageBg) {
                 merged.globalThemeBg = merged.pageBg;
             }
+            // Strip variant keys — AI should only change colors/fonts, not layout
+            delete (merged as any).cardVariant;
+            delete (merged as any).detailVariant;
+            delete (merged as any).welcomeVariant;
+            delete (merged as any).headerVariant;
+            delete (merged as any).layoutVariant;
             const newTheme = merged;
             setTheme(newTheme);
             doSave(newTheme);
