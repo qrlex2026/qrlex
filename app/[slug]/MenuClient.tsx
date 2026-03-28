@@ -1249,7 +1249,7 @@ export default function MenuClient({
                         const accentColor = (T as any).accentColor || '#000000';
                         const titleStyle = { color: hText, fontSize: hFontSize + 'px', fontWeight: hFontWeight } as React.CSSProperties;
                         const titleSpan = (
-                            <div className="flex-1 min-w-0 mx-[5px]" style={{ textAlign: hTextAlign as any }}>
+                            <div className="flex-1 min-w-0 mx-[5px] flex items-center" style={{ justifyContent: hTextAlign === 'center' ? 'center' : hTextAlign === 'right' ? 'flex-end' : 'flex-start' }}>
                                 <span className="truncate inline-block max-w-full" style={titleStyle}>{bName}</span>
                             </div>
                         );
