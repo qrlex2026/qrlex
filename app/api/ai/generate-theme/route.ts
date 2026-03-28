@@ -137,20 +137,17 @@ SADECE JSON. Başka hiçbir şey YAZMA.`;
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { restaurantId, prompt, section, imageBase64, imageMimeType } = body;
+    const { restaurantId, prompt, section } = body;
 
     if (!restaurantId || !prompt) {
       return NextResponse.json({ error: "restaurantId ve prompt gerekli" }, { status: 400 });
     }
 
-    const hasImage = !!(imageBase64 && imageMimeType);
-    const totalCost = hasImage ? THEME_COST + 1 : THEME_COST;
-
     let credit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
     if (!credit) {
       credit = await (prisma as any).aiCredit.create({ data: { restaurantId, balance: 500 } });
     }
-    if (credit.balance < totalCost) {
+    if (credit.balance < THEME_COST) {
       return NextResponse.json({ error: "Yetersiz kredi", balance: credit.balance }, { status: 403 });
     }
 
@@ -175,32 +172,21 @@ export async function POST(req: NextRequest) {
       sectionInstruction = `\n\nNOT: Kullanıcı sadece "${section}" bölümünü güncellemek istiyor. Sadece şu key'leri döndür: ${sectionKeyMap[section].join(', ')}`;
     }
 
-    const imageInstruction = hasImage
-      ? 'Ek görsel verildi: Görselin renklerini, atmosferini, hissini TAMAMEN analiz et. Bu görselden ilham alarak TON, RENK PALETİ ve STİL belirle.'
-      : '';
+    const imageInstruction = '';
 
-    const textPart = {
-      text: `Kullanıcı isteği: "${prompt}"${sectionInstruction}
+    const textContent = `Kullanıcı isteği: "${prompt}"${sectionInstruction}
 
-${imageInstruction}
-
-ZORUNLU HATIRLATMA:
+ZORUNLU HATIRLAMMA:
 - classic cardVariant/welcomeVariant/headerVariant/layoutVariant KULLANMA (sade demediyse)
 - Her bölüm tutarlı ama pageBg'den belirgin farklı tonlarda olsun
 - headerGradientFrom ≠ headerGradientTo (en az 60 ton fark)
 - cardBg, pageBg'den %20 farklı olsun
 - pageBg = globalThemeBg
-- cardVariant, detailVariant, welcomeVariant, headerVariant, layoutVariant MUTLAKA seç`,
-    };
-
-    type GeminiPart = { text: string } | { inlineData: { mimeType: string; data: string } };
-    const parts: GeminiPart[] = hasImage
-      ? [{ inlineData: { mimeType: imageMimeType, data: imageBase64 } }, textPart]
-      : [textPart];
+- cardVariant, detailVariant, welcomeVariant, headerVariant, layoutVariant MUTLAKA seç`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: [{ role: "user", parts }],
+      contents: [{ role: "user", parts: [{ text: textContent }] }],
       config: {
         systemInstruction: SYSTEM_PROMPT,
         temperature: 1.4,
@@ -224,10 +210,10 @@ ZORUNLU HATIRLATMA:
     await prisma.$transaction([
       (prisma as any).aiCredit.update({
         where: { restaurantId },
-        data: { balance: { decrement: totalCost } },
+        data: { balance: { decrement: THEME_COST } },
       }),
       (prisma as any).aiUsageLog.create({
-        data: { creditId: credit.id, type: hasImage ? "theme_generate_vision" : "theme_generate", cost: totalCost, prompt },
+        data: { creditId: credit.id, type: "theme_generate", cost: THEME_COST, prompt },
       }),
     ]);
 

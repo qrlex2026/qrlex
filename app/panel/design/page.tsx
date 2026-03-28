@@ -975,10 +975,6 @@ export default function PanelDesign() {
     type SavedTheme = { id: string; name: string; ts: number; data: ThemeType; cardVariant?: string; detailVariant?: string };
     const [savedThemes, setSavedThemes] = useState<SavedTheme[]>([]);
     // Image upload for AI
-    const [imageBase64, setImageBase64] = useState<string>('');
-    const [imagePreview, setImagePreview] = useState<string>('');
-    const [imageMimeType, setImageMimeType] = useState<string>('');
-    const imageInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (!restaurantId) return;
@@ -1068,43 +1064,6 @@ export default function PanelDesign() {
         });
     }, [doSave]);
 
-    // Canvas image compressor — resizes to max 800px and returns base64
-    const compressImage = (file: File): Promise<{ base64: string; mimeType: string; preview: string }> =>
-        new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const MAX = 800;
-                    const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
-                    const w = Math.round(img.width * ratio);
-                    const h = Math.round(img.height * ratio);
-                    const canvas = document.createElement('canvas');
-                    canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
-                    const preview = canvas.toDataURL('image/jpeg', 0.7);
-                    const base64 = preview.split(',')[1];
-                    resolve({ base64, mimeType: 'image/jpeg', preview });
-                };
-                img.onerror = reject;
-                img.src = e.target?.result as string;
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-
-    const handleImageSelect = async (file: File) => {
-        try {
-            const result = await compressImage(file);
-            setImageBase64(result.base64);
-            setImageMimeType(result.mimeType);
-            setImagePreview(result.preview);
-        } catch {
-            setAiError('Görsel yüklenemedi.');
-        }
-    };
-
-    const clearImage = () => { setImageBase64(''); setImagePreview(''); setImageMimeType(''); if (imageInputRef.current) imageInputRef.current.value = ''; };
 
     const handleAiGenerate = useCallback(async () => {
         if (!aiPrompt.trim() || aiLoading || !restaurantId) return;
@@ -1113,7 +1072,7 @@ export default function PanelDesign() {
             const res = await fetch('/api/ai/generate-theme', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ restaurantId, prompt: aiPrompt, ...(imageBase64 ? { imageBase64, imageMimeType } : {}) }),
+                body: JSON.stringify({ restaurantId, prompt: aiPrompt }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Hata');
@@ -1130,8 +1089,6 @@ export default function PanelDesign() {
             saveAiThemePreset(newTheme as ThemeType, aiPrompt);
             setAiCredits(data.balance);
             setAiSuccess(true);
-            setAiError('');
-            clearImage(); // Clear image after successful generation
             setTimeout(() => setAiSuccess(false), 3000);
         } catch (e: any) {
             setAiError(e.message || 'Hata');
@@ -1261,14 +1218,6 @@ export default function PanelDesign() {
                         {aiError && (<div className="max-w-2xl mx-auto mb-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl"><p className="text-[12px] text-red-400">{aiError}</p></div>)}
                         {aiSuccess && (<div className="max-w-2xl mx-auto mb-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2"><Check size={14} className="text-emerald-400" /><p className="text-[12px] text-emerald-400">Tema oluşturuldu!</p></div>)}
                         <div className="max-w-2xl mx-auto relative">
-                            {/* Hidden file input */}
-                            <input
-                                ref={imageInputRef}
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageSelect(f); }}
-                            />
                             {/* Suggestions popup */}
                             {showSuggestions && (
                                 <div className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-50 bg-[#111] border border-white/[0.1] rounded-2xl shadow-2xl shadow-black/40 p-3 max-h-[380px] overflow-y-auto">
@@ -1314,38 +1263,16 @@ export default function PanelDesign() {
                                     </div>
                                 </div>
                             )}
-                            <div className="flex flex-col gap-2">
-                                {/* Image preview strip */}
-                                {imagePreview && (
-                                    <div className="flex items-center gap-2 px-3 py-2 bg-[#111] border border-white/[0.06] rounded-xl">
-                                        <img src={imagePreview} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-white/10" />
-                                        <p className="text-[11px] text-gray-400 flex-1">Görsel analiz edilecek</p>
-                                        <button onClick={clearImage} className="w-5 h-5 rounded-full bg-white/10 hover:bg-red-500/20 text-gray-500 hover:text-red-400 flex items-center justify-center transition-colors text-[10px]">✕</button>
-                                    </div>
-                                )}
-                                <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-violet-500/40 transition-all shadow-lg shadow-black/20">
-                                    <Sparkles size={18} className="text-violet-400 flex-shrink-0" />
-                                    <input type="text" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAiGenerate(); } }} placeholder="Nasıl bir tasarım istiyorsun?" className="flex-1 bg-transparent text-[14px] text-gray-200 placeholder:text-gray-500 focus:outline-none" />
-                                    {/* + Image button */}
-                                    <button
-                                        onClick={() => imageInputRef.current?.click()}
-                                        title="Görsel ekle"
-                                        className={`flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-                                            imagePreview
-                                                ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                                                : 'bg-white/[0.04] text-gray-500 hover:text-gray-300 hover:bg-white/[0.08] border border-white/[0.06]'
-                                        }`}
-                                    >
-                                        <ImageIcon size={14} />
-                                    </button>
-                                    <span className="text-[10px] text-gray-500 flex-shrink-0 whitespace-nowrap">{aiCredits !== null ? aiCredits : '...'} kredi</span>
-                                    <button onClick={handleAiGenerate} disabled={aiLoading || !aiPrompt.trim() || (aiCredits !== null && aiCredits < 2)} className="px-4 py-2 rounded-xl text-[12px] font-semibold transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white flex-shrink-0 flex items-center gap-2">
-                                        {aiLoading ? <><Loader2 size={14} className="animate-spin" /> Üretiyor...</> : <>Oluştur</>}
-                                    </button>
-                                    <button onClick={() => setShowSuggestions((v) => !v)} className="flex-shrink-0 px-3 py-2 rounded-xl text-[12px] font-medium border border-white/[0.1] text-gray-400 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5">
-                                        <Sparkles size={13} className="text-violet-400" /> Öneri
-                                    </button>
-                                </div>
+                            <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/[0.08] rounded-2xl px-4 py-3 focus-within:border-violet-500/40 transition-all shadow-lg shadow-black/20">
+                                <Sparkles size={18} className="text-violet-400 flex-shrink-0" />
+                                <input type="text" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAiGenerate(); } }} placeholder="Nasıl bir tasarım istiyorsun?" className="flex-1 bg-transparent text-[14px] text-gray-200 placeholder:text-gray-500 focus:outline-none" />
+                                <span className="text-[10px] text-gray-500 flex-shrink-0 whitespace-nowrap">{aiCredits !== null ? aiCredits : '...'} kredi</span>
+                                <button onClick={handleAiGenerate} disabled={aiLoading || !aiPrompt.trim() || (aiCredits !== null && aiCredits < 2)} className="px-4 py-2 rounded-xl text-[12px] font-semibold transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white flex-shrink-0 flex items-center gap-2">
+                                    {aiLoading ? <><Loader2 size={14} className="animate-spin" /> Üretiyor...</> : <>Oluştur</>}
+                                </button>
+                                <button onClick={() => setShowSuggestions((v) => !v)} className="flex-shrink-0 px-3 py-2 rounded-xl text-[12px] font-medium border border-white/[0.1] text-gray-400 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5">
+                                    <Sparkles size={13} className="text-violet-400" /> Öneri
+                                </button>
                             </div>
                         </div>
                     </div>
