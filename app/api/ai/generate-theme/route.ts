@@ -128,8 +128,7 @@ searchBg, searchBorder, searchText, searchOverlayBg, searchOverlayInputColor, se
 detailBg, detailNameColor, detailPriceColor, detailDescColor, detailLabelColor, detailInfoBg, detailInfoBorder,
 sidebarBg, sidebarNameColor, sidebarItemColor, sidebarActiveItemBg, sidebarActiveItemColor,
 bottomNavBg, bottomNavActive, bottomNavInactive,
-welcomeBg, welcomeTextColor, welcomeSubtextColor, welcomeBtnBg, welcomeBtnText, welcomeGradientFrom,
-cardVariant, detailVariant, welcomeVariant, headerVariant, layoutVariant
+welcomeBg, welcomeTextColor, welcomeSubtextColor, welcomeBtnBg, welcomeBtnText, welcomeGradientFrom
 
 SADECE JSON. Başka hiçbir şey YAZMA.`;
 
@@ -172,17 +171,14 @@ export async function POST(req: NextRequest) {
       sectionInstruction = `\n\nNOT: Kullanıcı sadece "${section}" bölümünü güncellemek istiyor. Sadece şu key'leri döndür: ${sectionKeyMap[section].join(', ')}`;
     }
 
-    const imageInstruction = '';
-
     const textContent = `Kullanıcı isteği: "${prompt}"${sectionInstruction}
 
-ZORUNLU HATIRLAMMA:
-- classic cardVariant/welcomeVariant/headerVariant/layoutVariant KULLANMA (sade demediyse)
-- Her bölüm tutarlı ama pageBg'den belirgin farklı tonlarda olsun
+ZORUNLU HATIRLATMA:
+- Sadece renkler, fontlar ve gölgeler değişecek. Layout ve varyantlara dokunma.
+- Her bölüm tutarlı aynı renk ailesinden olsun
 - headerGradientFrom ≠ headerGradientTo (en az 60 ton fark)
-- cardBg, pageBg'den %20 farklı olsun
-- pageBg = globalThemeBg
-- cardVariant, detailVariant, welcomeVariant, headerVariant, layoutVariant MUTLAKA seç`;
+- cardBg, pageBg'den %15-20 farklı olsun
+- pageBg = globalThemeBg`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
