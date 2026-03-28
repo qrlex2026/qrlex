@@ -7,7 +7,7 @@ import {
     UtensilsCrossed, Settings,
     ArrowRight, Menu, X, QrCode, Paintbrush, ChartNoAxesColumn,
     UserCircle, Inbox, Bell, Brain, Search, Gift, Sun, Moon,
-    Rocket, Command, Info, LogOut,
+    Rocket, Command, Info, LogOut, Smartphone, Tablet, RefreshCw,
 } from "lucide-react";
 
 interface Notification {
@@ -54,16 +54,23 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
     // Notifications state
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
-    const [showNotifDropdown, setShowNotifDropdown] = useState(false);
-    const notifRef = useRef<HTMLDivElement>(null);
 
-    // Inbox state
-    const [showInboxDropdown, setShowInboxDropdown] = useState(false);
-    const inboxRef = useRef<HTMLDivElement>(null);
+    // Profile dropdown tab
+    const [profileTab, setProfileTab] = useState<'general' | 'notif' | 'inbox'>('general');
 
-    // Gift state
+    // Gift dropdown
     const [showGiftDropdown, setShowGiftDropdown] = useState(false);
     const giftRef = useRef<HTMLDivElement>(null);
+
+    // Device toggle (for design page)
+    const [deviceMode, setDeviceMode] = useState<'phone' | 'tablet'>('phone');
+    const isDesignPage = pathname === '/panel/design';
+
+    const handleDeviceChange = (mode: 'phone' | 'tablet') => {
+        setDeviceMode(mode);
+        localStorage.setItem('panelDevice', mode);
+        window.dispatchEvent(new CustomEvent('panel-device-change', { detail: mode }));
+    };
 
     // Dark/Light mode toggle — persisted in localStorage
     const [isDarkMode, setIsDarkMode] = useState(true);
@@ -168,16 +175,6 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
     // Close dropdowns on outside click
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
-            if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-                setShowNotifDropdown(false);
-            }
-            if (inboxRef.current && !inboxRef.current.contains(e.target as Node)) {
-                setShowInboxDropdown(false);
-            }
-            if (giftRef.current && !giftRef.current.contains(e.target as Node)) {
-                setShowGiftDropdown(false);
-            }
-
             if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
                 setShowProfileDropdown(false);
             }
@@ -271,37 +268,8 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                 {/* Spacer */}
                 <div className="flex-1" />
 
-                {/* Secondary Navigation - Icon + Label below */}
+                {/* Secondary Navigation - Profile photo only */}
                 <nav className="flex flex-col items-center gap-3 px-2 pb-3">
-                    {SECONDARY_NAV.map((item) => {
-                        const isActive = pathname === item.href;
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={() => setIsSidebarOpen(false)}
-                                className="flex flex-col items-center gap-1 group"
-                                title={item.label}
-                            >
-                                <div className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all
-                                    ${isActive
-                                        ? "bg-violet-600"
-                                        : ""
-                                    }`}
-                                    style={!isActive ? { backgroundColor: 'var(--p-nav-inactive-bg)' } : {}}
-                                >
-                                    <item.icon size={20} style={{ color: isActive ? '#ffffff' : 'var(--p-icon)' }} />
-                                </div>
-                                <span className={`text-[11px] font-medium transition-colors
-                                    ${isActive ? "text-violet-400" : ""
-                                    }`}
-                                    style={!isActive ? { color: 'var(--p-nav-inactive-text)' } : {}}
-                                >
-                                    {item.label}
-                                </span>
-                            </Link>
-                        );
-                    })}
                     {/* Logout */}
                     <button
                         onClick={() => { handleLogout(); }}
@@ -313,6 +281,18 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         </div>
                         <span className="text-[11px] font-medium group-hover:text-red-400 transition-colors" style={{ color: 'var(--p-nav-inactive-text)' }}>Çıkış</span>
                     </button>
+                    {/* Profile photo */}
+                    <Link
+                        href="/panel/profile"
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="flex flex-col items-center gap-1 group"
+                        title="Profil"
+                    >
+                        <div className="w-12 h-12 rounded-xl overflow-hidden border-2 transition-all group-hover:border-violet-500" style={{ borderColor: 'var(--p-border2)' }}>
+                            <img src="https://plus.unsplash.com/premium_photo-1689568126014-06fea9d5d341?q=80&w=120&auto=format&fit=crop" alt="Profil" className="w-full h-full object-cover" />
+                        </div>
+                        <span className="text-[11px] font-medium" style={{ color: 'var(--p-nav-inactive-text)' }}>Profil</span>
+                    </Link>
                 </nav>
             </div>
         );
@@ -422,12 +402,34 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                         </h1>
                     </div>
 
-                    {/* Right: Gift + Theme Toggle + Bildirim + Inbox + Profile */}
+                    {/* Center: Device toggle (only on /panel/design) */}
+                    {isDesignPage && (
+                        <div className="flex items-center gap-1 rounded-xl p-1" style={{ backgroundColor: 'var(--p-surface2)', border: '1px solid var(--p-border)' }}>
+                            <button
+                                onClick={() => handleDeviceChange('phone')}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                    deviceMode === 'phone' ? 'bg-violet-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'
+                                }`}
+                            >
+                                <Smartphone size={14} /> Telefon
+                            </button>
+                            <button
+                                onClick={() => handleDeviceChange('tablet')}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                    deviceMode === 'tablet' ? 'bg-violet-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'
+                                }`}
+                            >
+                                <Tablet size={14} /> Tablet
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Right: Gift + Profile */}
                     <div className="flex items-center gap-2">
                         {/* Gift - Referral Dropdown */}
                         <div className="relative" ref={giftRef}>
                             <button
-                                onClick={() => { setShowGiftDropdown(!showGiftDropdown); setShowNotifDropdown(false); setShowInboxDropdown(false); setShowProfileDropdown(false); }}
+                                onClick={() => { setShowGiftDropdown(!showGiftDropdown); setShowProfileDropdown(false); }}
                                 className="w-[52px] h-[52px] rounded-full transition-colors flex items-center justify-center"
                                 style={{ backgroundColor: 'var(--p-surface2)', color: 'var(--p-text)' }}
                             >
@@ -457,182 +459,133 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
                             )}
                         </div>
 
-
-                        {/* Bildirim */}
-                        <div className="relative" ref={notifRef}>
-                            <button
-                                onClick={() => { setShowNotifDropdown(!showNotifDropdown); setShowInboxDropdown(false); setShowProfileDropdown(false); setShowGiftDropdown(false); }}
-                                className="relative w-[52px] h-[52px] rounded-full transition-colors flex items-center justify-center"
-                                style={{ backgroundColor: 'var(--p-surface2)', color: 'var(--p-text)' }}
-                            >
-                                <Bell size={20} />
-                            </button>
-
-                            {/* Notification Dropdown */}
-                            {showNotifDropdown && (
-                                <div className="absolute right-0 top-[60px] w-[320px] rounded-2xl shadow-2xl z-50 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
-                                    <div className="flex items-center justify-between px-4 py-3">
-                                        <h3 className="text-[13px] font-semibold text-gray-100">Bildirimler</h3>
-                                        <button className="text-[11px] text-violet-400 hover:text-violet-300 font-medium transition-colors">Tümünü Okundu Yap</button>
-                                    </div>
-                                    <div className="mx-3 h-px bg-white/[0.06]" />
-                                    <div className="py-1 px-1.5 max-h-[320px] overflow-y-auto">
-                                        {fakeNotifications.map((n) => (
-                                            <div key={n.id} className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer">
-                                                <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
-                                                    {n.icon === 'settings' && <Settings size={14} strokeWidth={1.5} className="text-gray-400" />}
-                                                    {n.icon === 'bell' && <Bell size={14} strokeWidth={1.5} className="text-gray-400" />}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[13px] font-medium text-gray-200">{n.title}</span>
-                                                        {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
-                                                    </div>
-                                                    <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-1">{n.desc}</p>
-                                                </div>
-                                                <span className="text-[10px] text-gray-600 mt-1 shrink-0">{n.time}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="mx-3 h-px bg-white/[0.06]" />
-                                    <Link
-                                        href="/panel/inbox"
-                                        onClick={() => setShowNotifDropdown(false)}
-                                        className="block text-center text-[12px] font-medium text-violet-400 hover:text-violet-300 py-2.5 transition-colors"
-                                    >
-                                        Tümünü Gör →
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Gelen Kutusu */}
-                        <div className="relative" ref={inboxRef}>
-                            <button
-                                onClick={() => { setShowInboxDropdown(!showInboxDropdown); setShowNotifDropdown(false); setShowProfileDropdown(false); setShowGiftDropdown(false); }}
-                                className="relative w-[52px] h-[52px] rounded-full transition-colors flex items-center justify-center"
-                                style={{ backgroundColor: 'var(--p-surface2)', color: 'var(--p-text)' }}
-                            >
-                                <Inbox size={20} />
-                            </button>
-
-                            {/* Inbox Dropdown */}
-                            {showInboxDropdown && (
-                                <div className="absolute right-0 top-[60px] w-[320px] rounded-2xl shadow-2xl z-50 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
-                                    <div className="flex items-center justify-between px-4 py-3">
-                                        <h3 className="text-[13px] font-semibold text-gray-100">Gelen Kutusu</h3>
-                                        <span className="text-[11px] text-gray-500">2 okunmamış</span>
-                                    </div>
-                                    <div className="mx-3 h-px bg-white/[0.06]" />
-                                    <div className="py-1 px-1.5 max-h-[320px] overflow-y-auto">
-                                        {fakeInboxMessages.map((m) => (
-                                            <div key={m.id} className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer">
-                                                <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
-                                                    {m.icon === 'info' && <Info size={14} strokeWidth={1.5} className="text-gray-400" />}
-                                                    {m.icon === 'rocket' && <Rocket size={14} strokeWidth={1.5} className="text-gray-400" />}
-                                                    {m.icon === 'settings' && <Settings size={14} strokeWidth={1.5} className="text-gray-400" />}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[13px] font-medium text-gray-200">{m.sender}</span>
-                                                        {m.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
-                                                    </div>
-                                                    <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-1">{m.message}</p>
-                                                </div>
-                                                <span className="text-[10px] text-gray-600 mt-1 shrink-0">{m.time}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="mx-3 h-px bg-white/[0.06]" />
-                                    <Link
-                                        href="/panel/inbox"
-                                        onClick={() => setShowInboxDropdown(false)}
-                                        className="block text-center text-[12px] font-medium text-violet-400 hover:text-violet-300 py-2.5 transition-colors"
-                                    >
-                                        Tümünü Gör →
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-
-
-                        {/* Profile with Dropdown */}
+                        {/* Profile with Dropdown — Tabbed */}
                         <div className="relative" ref={profileRef}>
                             <button
-                                onClick={() => { setShowProfileDropdown(!showProfileDropdown); setShowNotifDropdown(false); setShowInboxDropdown(false); setShowGiftDropdown(false); }}
-                                className="flex items-center gap-2 h-[52px] pl-2 pr-3.5 rounded-full transition-colors"
+                                onClick={() => { setShowProfileDropdown(!showProfileDropdown); setShowGiftDropdown(false); }}
+                                className="flex items-center gap-2 h-[52px] pl-1.5 pr-3.5 rounded-full transition-colors"
                                 style={{ backgroundColor: 'var(--p-surface2)' }}
                             >
-                                <div className="w-8 h-8 rounded-full bg-gray-600 shrink-0" />
+                                <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border-2" style={{ borderColor: 'var(--p-border2)' }}>
+                                    <img src="https://plus.unsplash.com/premium_photo-1689568126014-06fea9d5d341?q=80&w=120&auto=format&fit=crop" alt="Profil" className="w-full h-full object-cover" />
+                                </div>
                                 <span className="text-sm font-medium hidden sm:inline" style={{ color: 'var(--p-text2)' }}>Yavuz Türkoğlu</span>
                             </button>
 
-                            {/* Profile Dropdown */}
                             {showProfileDropdown && (
-                                <div className="absolute right-0 top-14 w-[220px] rounded-2xl shadow-2xl z-50 py-1.5 transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
-                                    {/* Üst grup */}
-                                    <div className="px-1.5 py-1">
-                                        <Link
-                                            href="/panel/profile"
-                                            onClick={() => setShowProfileDropdown(false)}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors"
-                                        >
-                                            <UserCircle size={18} strokeWidth={1.5} className="text-gray-400" />
-                                            <span>Profil</span>
-                                        </Link>
-                                        <Link
-                                            href="/panel/settings"
-                                            onClick={() => setShowProfileDropdown(false)}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors"
-                                        >
-                                            <Settings size={18} strokeWidth={1.5} className="text-gray-400" />
-                                            <span>Ayarlar</span>
-                                        </Link>
-                                        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 w-full">
-                                            {isDarkMode ? <Moon size={18} strokeWidth={1.5} className="text-gray-400" /> : <Sun size={18} strokeWidth={1.5} className="text-gray-400" />}
-                                            <span className="flex-1 text-left">Tema</span>
-                                            <div className="flex items-center rounded-full p-0.5 transition-colors duration-300" style={{ backgroundColor: 'var(--p-surface3)' }}>
-                                                <button
-                                                    onClick={() => setIsDarkMode(true)}
-                                                    className="w-7 h-7 rounded-full flex items-center justify-center transition-all"
-                                                    style={isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}
-                                                >
-                                                    <Moon size={13} />
-                                                </button>
-                                                <button
-                                                    onClick={() => setIsDarkMode(false)}
-                                                    className="w-7 h-7 rounded-full flex items-center justify-center transition-all"
-                                                    style={!isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}
-                                                >
-                                                    <Sun size={13} />
-                                                </button>
+                                <div className="absolute right-0 top-14 w-[280px] rounded-2xl shadow-2xl z-50 overflow-hidden transition-colors duration-300" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', backgroundColor: 'var(--p-surface)', border: '1px solid var(--p-border2)', boxShadow: `0 25px 50px -12px var(--p-shadow)` }}>
+
+                                    {/* Profile info header */}
+                                    <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+                                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                                            <img src="https://plus.unsplash.com/premium_photo-1689568126014-06fea9d5d341?q=80&w=120&auto=format&fit=crop" alt="" className="w-full h-full object-cover" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[13px] font-semibold text-gray-100 truncate">Yavuz Türkoğlu</p>
+                                            <p className="text-[11px] text-gray-500 truncate">{restaurantName}</p>
+                                        </div>
+                                        <button onClick={() => { fetchNotifications(); }} title="Yenile" className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/[0.08] transition-colors" style={{ color: 'var(--p-text3)' }}>
+                                            <RefreshCw size={14} />
+                                        </button>
+                                    </div>
+
+                                    {/* Tabs */}
+                                    <div className="flex items-center gap-0 px-2 pb-1">
+                                        {([{ id: 'general', label: 'Genel' }, { id: 'notif', label: '🔔 Bildirim' }, { id: 'inbox', label: '📥 Gelen' }] as const).map(tab => (
+                                            <button key={tab.id} onClick={() => setProfileTab(tab.id)}
+                                                className={`flex-1 py-1.5 text-[11px] font-medium rounded-lg transition-all ${
+                                                    profileTab === tab.id ? 'bg-white/[0.08] text-white' : 'text-gray-500 hover:text-gray-300'
+                                                }`}>{tab.label}</button>
+                                        ))}
+                                    </div>
+
+                                    <div className="mx-3 h-px bg-white/[0.06] mb-1" />
+
+                                    {/* GENEL TAB */}
+                                    {profileTab === 'general' && (
+                                        <div className="px-1.5 py-1">
+                                            <Link href="/panel/profile" onClick={() => setShowProfileDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors">
+                                                <UserCircle size={18} strokeWidth={1.5} className="text-gray-400" /><span>Profil</span>
+                                            </Link>
+                                            <Link href="/panel/settings" onClick={() => setShowProfileDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors">
+                                                <Settings size={18} strokeWidth={1.5} className="text-gray-400" /><span>Ayarlar</span>
+                                            </Link>
+                                            <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 w-full">
+                                                {isDarkMode ? <Moon size={18} strokeWidth={1.5} className="text-gray-400" /> : <Sun size={18} strokeWidth={1.5} className="text-gray-400" />}
+                                                <span className="flex-1 text-left">Tema</span>
+                                                <div className="flex items-center rounded-full p-0.5" style={{ backgroundColor: 'var(--p-surface3)' }}>
+                                                    <button onClick={() => setIsDarkMode(true)} className="w-7 h-7 rounded-full flex items-center justify-center transition-all" style={isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}><Moon size={13} /></button>
+                                                    <button onClick={() => setIsDarkMode(false)} className="w-7 h-7 rounded-full flex items-center justify-center transition-all" style={!isDarkMode ? { backgroundColor: 'var(--p-toggle-active)', color: 'var(--p-text)' } : { color: 'var(--p-text4)' }}><Sun size={13} /></button>
+                                                </div>
+                                            </div>
+                                            <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors w-full">
+                                                <Rocket size={18} strokeWidth={1.5} className="text-gray-400" /><span>Yükselt</span>
+                                            </button>
+                                            <div className="mx-2 my-1 h-px bg-white/[0.06]" />
+                                            <button onClick={() => { setShowProfileDropdown(false); handleLogout(); }} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors w-full">
+                                                <LogOut size={18} strokeWidth={1.5} className="text-gray-400" /><span>Çıkış yap</span>
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* BILDIRIMLER TAB */}
+                                    {profileTab === 'notif' && (
+                                        <div>
+                                            <div className="flex items-center justify-between px-4 py-2">
+                                                <span className="text-[11px] text-gray-500">{unreadCount} okunmamış</span>
+                                                <button onClick={markAllRead} className="text-[11px] text-violet-400 hover:text-violet-300 transition-colors">Tamamını okundu yap</button>
+                                            </div>
+                                            <div className="py-1 px-1.5 max-h-[260px] overflow-y-auto">
+                                                {fakeNotifications.map((n) => (
+                                                    <div key={n.id} className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer">
+                                                        <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
+                                                            {n.icon === 'settings' && <Settings size={14} strokeWidth={1.5} className="text-gray-400" />}
+                                                            {n.icon === 'bell' && <Bell size={14} strokeWidth={1.5} className="text-gray-400" />}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[13px] font-medium text-gray-200">{n.title}</span>
+                                                                {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
+                                                            </div>
+                                                            <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-1">{n.desc}</p>
+                                                        </div>
+                                                        <span className="text-[10px] text-gray-600 shrink-0">{n.time}</span>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
-                                        <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors w-full">
-                                            <Rocket size={18} strokeWidth={1.5} className="text-gray-400" />
-                                            <span>Yükselt</span>
-                                        </button>
-                                    </div>
-                                    {/* Ayırıcı */}
-                                    <div className="mx-3 my-1 h-px bg-white/[0.06]" />
-                                    {/* Alt grup */}
-                                    <div className="px-1.5 py-1">
-                                        <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors w-full">
-                                            <Command size={18} strokeWidth={1.5} className="text-gray-400" />
-                                            <span>Klavye kısayolları</span>
-                                        </button>
-                                        <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors w-full">
-                                            <Info size={18} strokeWidth={1.5} className="text-gray-400" />
-                                            <span>Yardım merkezi</span>
-                                        </button>
-                                        <button
-                                            onClick={() => { setShowProfileDropdown(false); handleLogout(); }}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-gray-200 hover:bg-white/[0.06] transition-colors w-full"
-                                        >
-                                            <LogOut size={18} strokeWidth={1.5} className="text-gray-400" />
-                                            <span>Çıkış yap</span>
-                                        </button>
-                                    </div>
+                                    )}
+
+                                    {/* GELEN KUTUSU TAB */}
+                                    {profileTab === 'inbox' && (
+                                        <div>
+                                            <div className="flex items-center justify-between px-4 py-2">
+                                                <span className="text-[11px] text-gray-500">2 okunmamış</span>
+                                                <Link href="/panel/inbox" onClick={() => setShowProfileDropdown(false)} className="text-[11px] text-violet-400 hover:text-violet-300 transition-colors">Tümünü gör</Link>
+                                            </div>
+                                            <div className="py-1 px-1.5 max-h-[260px] overflow-y-auto">
+                                                {fakeInboxMessages.map((m) => (
+                                                    <div key={m.id} className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer">
+                                                        <div className="w-7 h-7 rounded-full bg-[#1e1e1e] flex items-center justify-center shrink-0 mt-0.5">
+                                                            {m.icon === 'info' && <Info size={14} strokeWidth={1.5} className="text-gray-400" />}
+                                                            {m.icon === 'rocket' && <Rocket size={14} strokeWidth={1.5} className="text-gray-400" />}
+                                                            {m.icon === 'settings' && <Settings size={14} strokeWidth={1.5} className="text-gray-400" />}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[13px] font-medium text-gray-200">{m.sender}</span>
+                                                                {m.unread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600 shrink-0" />}
+                                                            </div>
+                                                            <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-1">{m.message}</p>
+                                                        </div>
+                                                        <span className="text-[10px] text-gray-600 shrink-0">{m.time}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="pb-2" />
                                 </div>
                             )}
                         </div>
