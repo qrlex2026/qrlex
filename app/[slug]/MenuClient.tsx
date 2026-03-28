@@ -137,6 +137,18 @@ export default function MenuClient({
     // T is just the live theme — AI now generates all keys so no overrides needed
     const T = liveTheme;
 
+    // Listen for real-time theme updates from the design panel iframe parent
+    useEffect(() => {
+        const handler = (e: MessageEvent) => {
+            if (e.data?.type === 'theme-update' && e.data.theme && typeof e.data.theme === 'object') {
+                setLiveTheme((prev) => ({ ...prev, ...e.data.theme }));
+            }
+        };
+        window.addEventListener('message', handler);
+        return () => window.removeEventListener('message', handler);
+    }, []);
+
+
     // Search Logic
     const searchResults = searchQuery
         ? PRODUCTS.filter(
