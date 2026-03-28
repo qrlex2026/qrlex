@@ -114,24 +114,52 @@ pageBg:#150800 | menuHeaderBg:#1c0c00 | cardBg:#211000 | gradient:#7a2800→#cc5
 ☀️ Kahvaltı / Aydınlık:
 pageBg:#fffbf5 | menuHeaderBg:#fff8f0 | cardBg:#ffffff | gradient:#ff9a3c→#ff6b35 | accent:#e85d04 | price:#dc2626
 
-━━━ KART VE DETAY VARYANTLARı ━━━
+━━━ TÜM VARYANTLAR ━━━
 
 cardVariant — Ürün kartı düzeni:
 • "classic" → Yatay: solda resim, sağda metin/fiyat. Nötr, sade.
-• "centered" → 2 sütun grid: resim üstte tam genişlik, altında isim/açıklama/fiyat. Modern, minimalist.
-• "magazine-overlay" → Büyük resim hero, gradient overlay, metin resmIN üzerinde. Bold, dramatik.
+• "centered" → 2 sütun grid: resim üstte tam genişlik. Modern, minimalist.
+• "magazine-overlay" → Büyük resim hero, gradient overlay, metin resim üzerinde. Bold.
 
 detailVariant — Ürün detay sayfası:
-• "classic" → Yukarıda resim, aşağı kayan beyaz kart. Temiz.
-• "sheet" → Full-ekran resim/video + alttan yukarı çıkan saydam sheet. İmmersive, premium.
+• "classic" → Yukarıda resim, aşağı kayan kart. Temiz.
+• "sheet" → Full-ekran resim/video + alttan yukarı slide sheet. İmmersive, premium.
 
-Stile göre seç:
-- Sade/minimal → classic + classic
-- Modern/dark → centered + sheet
-- Bold/dramatik → magazine-overlay + sheet
-- Aydınlık/organik → centered + classic
+welcomeVariant — Hoşgeldin sayfası layout'u:
+• "classic" → Logo ortada, alt butonlar. Evrensel.
+• "cinema" → Tam ekran karanlık, sinematik, büyük başlık.
+• "split" → Sol yarı resim, sağ yarı içerik.
+• "minimal-center" → Minimalist, net beyaz alan, sade butonlar.
+• "story" → Dikey story formatı, büyük resim, alttan içerik.
+• "dark-hero" → Tam koyu, hero gradient, büyük CTA.
+• "vibrant-grid" → Renkli card grid layout.
 
-Bu iki alanı mutlaka JSON'a ekle: cardVariant ve detailVariant
+headerVariant — Header stili:
+• "classic" → Standart, menü-başlık-arama sırası.
+• "glass" → Cam (backdrop-blur) efekti.
+• "gradient" → Renkli gradient arkaplan.
+• "minimal" → Minimal, ince çizgi.
+• "tall" → Yüksek header, 2 satır.
+• "center-logo" → Logo ortada.
+• "accent-bar" → Üstte vurgu çizgisi.
+
+layoutVariant — Ürün liste düzeni:
+• "list" → Standart listeleme.
+• "grid-2" → 2 sütun kart grid.
+• "grid-3" → 3 sütun küçük kart.
+• "full-card" → Tam genişlik büyük kart.
+• "magazine" → İlk büyük, geri 2 sütun.
+• "horizontal" → Yatay kaydırma.
+• "compact" → Küçük satır listesi.
+
+Stile göre seç — tutarlı olsun:
+- Lüks/premium koyu: magazine-overlay + sheet + cinema + glass + magazine
+- Modern/minimal aydınlık: centered + classic + minimal-center + minimal + grid-2
+- Bold/dramatik: magazine-overlay + sheet + dark-hero + gradient + full-card
+- Sıcak/organik: classic + classic + story + classic + list
+- Teknolojik/futuristik: centered + sheet + cinema + glass + grid-2
+
+Bu 5 alanı mutlaka JSON'a ekle: cardVariant, detailVariant, welcomeVariant, headerVariant, layoutVariant
 
 ━━━ DÖNDÜR ━━━
 pageBg, globalThemeBg, globalThemeText, globalThemeIcon, globalThemeSearchBg, fontFamily, accentColor,
@@ -144,25 +172,31 @@ searchBg, searchBorder, searchText, searchOverlayBg, searchOverlayInputColor, se
 detailBg, detailNameColor, detailPriceColor, detailDescColor, detailLabelColor, detailInfoBg, detailInfoBorder,
 sidebarBg, sidebarNameColor, sidebarItemColor, sidebarActiveItemBg, sidebarActiveItemColor,
 bottomNavBg, bottomNavActive, bottomNavInactive,
-cardVariant, detailVariant
+welcomeBg, welcomeTextColor, welcomeSubtextColor, welcomeBtnBg, welcomeBtnText, welcomeGradientFrom,
+cardVariant, detailVariant, welcomeVariant, headerVariant, layoutVariant
 
 SADECE JSON. Başka hiçbir şey YAZMA.`;
 
 
 export async function POST(req: NextRequest) {
   try {
-    const { restaurantId, prompt, section } = await req.json();
+    const body = await req.json();
+    const { restaurantId, prompt, section, imageBase64, imageMimeType } = body;
 
     if (!restaurantId || !prompt) {
       return NextResponse.json({ error: "restaurantId ve prompt gerekli" }, { status: 400 });
     }
 
+    // Image cost: +1 kredi if image provided
+    const hasImage = !!(imageBase64 && imageMimeType);
+
     // Kredi kontrolü
+    const totalCost = hasImage ? THEME_COST + 1 : THEME_COST;
     let credit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
     if (!credit) {
       credit = await (prisma as any).aiCredit.create({ data: { restaurantId, balance: 500 } });
     }
-    if (credit.balance < THEME_COST) {
+    if (credit.balance < totalCost) {
       return NextResponse.json({ error: "Yetersiz kredi", balance: credit.balance }, { status: 403 });
     }
 
@@ -188,20 +222,22 @@ export async function POST(req: NextRequest) {
       sectionInstruction = `\n\nNOT: Kullanıcı sadece "${section}" bölümünü güncellemek istiyor. Sadece şu key'leri döndür: ${sectionKeyMap[section].join(', ')}`;
     }
 
-    const userContent = `Kullanıcı isteği: "${prompt}"${sectionInstruction}
+    // Build contents — multimodal if image provided
+    const textPart = {
+      text: `Kullanıcı isteği: "${prompt}"${sectionInstruction}\n\n${hasImage ? 'Ek görsel analizi: Yüklenen görselin renklerini, havasını, stilini analiz et. Bu görselden ilham alarak tema oluştur.' : ''}\n\nÖNEMLİ HATIRLATMA:\n- Tüm bölümler tutarlı aynı renk ailesinden olmalı\n- Gradient kullan: headerGradientFrom ≠ headerGradientTo (en az 40 ton fark)\n- Kart (cardBg) sayfa zemininden (pageBg) biraz farklı olsun\n- pageBg = globalThemeBg olmalı\n- welcomeVariant, headerVariant, layoutVariant, cardVariant, detailVariant hepsini seç`,
+    };
 
-ÖNEMLİ HATIRLATMA:
-- Tüm bölümler (sayfa, header, kart, arama, detay, sidebar) tutarlı aynı renk ailesinden olmalı
-- Gradient kullan: headerGradientFrom ≠ headerGradientTo (en az 40 ton fark)
-- Kart (cardBg) sayfa zemininden (pageBg) biraz farklı olsun
-- pageBg = globalThemeBg olmalı`;
+    type GeminiPart = { text: string } | { inlineData: { mimeType: string; data: string } };
+    const parts: GeminiPart[] = hasImage
+      ? [{ inlineData: { mimeType: imageMimeType, data: imageBase64 } }, textPart]
+      : [textPart];
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: userContent,
+      contents: [{ role: "user", parts }],
       config: {
         systemInstruction: SYSTEM_PROMPT,
-        temperature: 1.1,
+        temperature: 1.0,
       },
     });
 
@@ -224,10 +260,10 @@ export async function POST(req: NextRequest) {
     await prisma.$transaction([
       (prisma as any).aiCredit.update({
         where: { restaurantId },
-        data: { balance: { decrement: THEME_COST } },
+        data: { balance: { decrement: totalCost } },
       }),
       (prisma as any).aiUsageLog.create({
-        data: { creditId: credit.id, type: "theme_generate", cost: THEME_COST, prompt },
+        data: { creditId: credit.id, type: hasImage ? "theme_generate_vision" : "theme_generate", cost: totalCost, prompt },
       }),
     ]);
 
