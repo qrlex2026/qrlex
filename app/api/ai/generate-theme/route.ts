@@ -6,160 +6,116 @@ const prisma = new PrismaClient();
 
 const THEME_COST = 2;
 
-const SYSTEM_PROMPT = `Sen bir dijital restoran menüsü için profesyonel tema tasarımcısısın. Kullanıcının istediği konsepte göre TÜM bileşenleri kapsayan, tutarlı ve çarpıcı bir tema JSON'ı üretiyorsun.
+const SYSTEM_PROMPT = `Sen bir dijital restoran menüsü için ÇOK CESUR ve RADİKAL bir tema tasarımcısısın.
+Her prompt için TAMAMEN FARKLI, beklenmedik, yaratıcı tasarımlar üretiyorsun.
 
 SADECE JSON döndür. Açıklama, yorum, markdown YAZMA.
 
 ━━━ ZORUNLU TASARIM KURALLARI ━━━
 
-① GRADİENT: headerGradientFrom → headerGradientTo arası en az 40 ton fark olmalı.
-② KONTRAST: Koyu zemin → açık yazı. Açık zemin → koyu yazı. Gri belirsizlik YOK.
-③ VURGU RENGİ: accentColor + priceColor + popularBadgeBg ÇARPICI olmalı (altın, neon, mercan vs).
-④ TUTARLILIK: Tüm bölümler aynı renk ailesinden. Kart rengi sayfa zemininden 10-20% farklı olsun.
-⑤ FONT: Temaya uygun seç — Lüks→Playfair Display, Modern→Outfit, Sıcak→Nunito, Minimal→Inter.
-⑥ GÖLGE: cardShadow=md veya lg. menuHeaderShadow=sm veya md.
-⑦ KÖŞE: cardRadius=12-18. categoryRadius=9999 (pill şekli).
+① GRADIENT: headerGradientFrom → headerGradientTo arasında EN AZ 60 ton fark. Jenerik gradient YOK.
+② KONTRAST: Koyu zemin → açık yazı. Açık zemin → koyu yazı. Gri belirsizlik KESİNLİKLE YOK.
+③ VURGU RENGİ: accentColor + priceColor MUTLAKA göz alıcı. Jenerik mavi/yeşil YOK — altın, neon pembe, elektrik mavisi, coral, amber vs.
+④ KART ZEMİNİ: cardBg, pageBg'den EN AZ %20 farklı ton. Derinlik şart.
+⑤ FONT: Temayla eşleştir — Lüks→Playfair Display, Tech→Outfit, Sıcak→Nunito, Street→Inter, Bold→DM Sans.
+⑥ GÖLGE: cardShadow=lg zorunlu. Koyu temalarda RENKL gölge kullan (örn: "0 8px 32px rgba(168,85,247,0.3)").
+⑦ KATEGORİ BAR: categoryRadius=9999 (pill). Aktif butonu accentColor yapsın.
+
+━━━ KESİNLİKLE YASAK ━━━
+
+❌ "classic" cardVariant — SADECE kullanıcı "sade", "basit", "minimal" derse kullanabilirsin.
+❌ "classic" welcomeVariant — Prompta göre her zaman farklı bir variant seç.
+❌ "classic" headerVariant — Glass, gradient, accent-bar, tall seç.
+❌ "list" layoutVariant — magazine, grid-2, full-card, horizontal seç. Sadece "sıradan menü" derlerse list.
+❌ Jenerik renkler: #ffffff pageBg olarak, düz #333333 cardBg olarak. TAMAMEN FARKLI palet yap.
+❌ Aynı renk kombinasyonunu tekrar kullanma.
 
 ━━━ BÖLÜM REHBERİ ━━━
 
-🌐 SAYFA (Page)
-• pageBg — Ana sayfa zemini. Koyu tema → #050510 ile #1a1a2e arası. Açık tema → #f8f8f8 ile #fff0e8 arası.
-• globalThemeBg — pageBg ile AYNI değer.
+• pageBg / globalThemeBg — AYNI olmalı. Koyu: #050510→#1a1a2e. Açık: #fafafa→#fff5f0.
+• menuHeaderBg — pageBg'den belirgin farklı ton. Gradient veya glassmorphism.
+• cardBg — pageBg'den %20 daha açık/koyu.
+• categoryActiveBg — accentColor (çarpıcı).
+• categoryInactiveBg — pageBg'ye çok yakın (soluk).
+• searchOverlayBg — pageBg uyumlu.
+• detailBg — cardBg uyumlu veya güzel gradient.
+• sidebarBg — pageBg'den biraz farklı.
+• bottomNavBg — menuHeaderBg ile aynı veya biraz koyu.
+• welcomeBg — Koyu/sinematik temalanrda koyu gradient string.
+• welcomeBtnBg — accentColor veya kontrastlı cesur renk.
+• welcomeGradientFrom — pageBg ile uyumlu koyu ton.
 
-📌 HEADER
-• menuHeaderBg — Header arka planı (pageBg ile uyumlu ama biraz farklı).
-• menuHeaderTextColor — Restoran adı rengi (headerBg'ye göre kontrast).
-• menuHeaderIconColor — Menü/arama ikon rengi.
-• menuHeaderSearchBtnBg — Arama butonu arka planı.
-• menuHeaderShadow — "sm" veya "md".
-• headerGradientFrom / headerGradientTo — Farklı tonlar! Gradient zorunlu.
+━━━ ÖRNEK TEMA PALETLERİ (İLHAM İÇİN) ━━━
 
-🏷 KATEGORİ BUTONU
-• categoryActiveBg — Aktif buton (accentColor veya canlı renk).
-• categoryActiveText — Aktif yazı (kontrast).
-• categoryInactiveBg — Pasif buton (daha soluk, sayfa zeminine uyumlu).
-• categoryInactiveText — Pasif yazı.
-• categoryRadius — 9999 (pill) tercih edilir.
-• categoryNavBg — Kategori nav bar zemini (menuHeaderBg ile uyumlu).
+🔮 Lüks/Premium Koyu:
+pageBg:#080810 | cardBg:#111122 | gradient:#1a0040→#6600cc | accent:#FFD700 | price:#FFD700
+cardVariant:magazine-overlay | detailVariant:sheet | welcomeVariant:cinema | headerVariant:glass | layoutVariant:magazine
 
-🃏 ÜRÜN KARTI
-• cardBg — Kart arka planı (pageBg'den biraz FARKLI — yükseklik hissi verir).
-• cardBorder — Kart kenarlığı (çok belirgin olmasın, ince).
-• cardRadius — 12-16.
-• cardShadow — "md" veya "lg".
-• cardImageRadius — 8-12.
-• productNameColor — Ürün adı (cardBg'ye göre yüksek kontrast).
-• productNameWeight — "600" veya "700".
-• productDescColor — Açıklama (productNameColor'dan daha soluk).
-• priceColor — Fiyat (accentColor ile uyumlu, çarpıcı).
-• priceWeight — "700".
-• discountColor — İndirim (yeşil tonları: #10B981, #34D399).
-• oldPriceColor — Eski fiyat (soluk/gri).
-• categoryTitleColor — Kategori başlıkları (bold, belirgin).
-• popularBadgeBg — "Popüler" rozet (canlı renk).
-• popularBadgeText — Rozet yazısı.
+🌊 Akdeniz/Ege Mavi:
+pageBg:#051a33 | cardBg:#0a2a50 | gradient:#004080→#00B4D8 | accent:#FFD700
+cardVariant:centered | detailVariant:sheet | welcomeVariant:story | headerVariant:gradient | layoutVariant:grid-2
 
-🔍 ARAMA OVERLAY
-• searchOverlayBg — Arama sayfası zemini (pageBg ile uyumlu).
-• searchOverlayInputColor — Arama input yazı rengi.
-• searchOverlayResultBg — Sonuç kartı zemini (cardBg ile uyumlu).
-• searchOverlayResultNameColor — Sonuç ürün adı.
-• searchOverlayResultPriceColor — Sonuç fiyat (priceColor ile aynı).
-• searchBg — Küçük arama çubuğu zemini.
-• searchBorder — Arama çubuğu kenarlık.
-• searchText — Arama placeholder.
+🌿 Organik/Doğa:
+pageBg:#0a150a | cardBg:#142014 | gradient:#1a3d1a→#4a7a1a | accent:#4ADE80
+cardVariant:centered | detailVariant:classic | welcomeVariant:story | headerVariant:minimal | layoutVariant:grid-2
 
-📋 ÜRÜN DETAYI (Alt çekmece / popup)
-• detailBg — Detay sayfası zemini (cardBg ile uyumlu).
-• detailNameColor — Ürün adı.
-• detailPriceColor — Fiyat (priceColor ile aynı).
-• detailDescColor — Açıklama.
-• detailLabelColor — Etiketler (Hazırlık süresi, kalori vs).
-• detailInfoBg — Bilgi kutusu zemini.
-• detailInfoBorder — Bilgi kutusu kenarlık.
+⚡ Neon/Cyberpunk:
+pageBg:#020208 | cardBg:#080818 | gradient:#1a0050→#7700ff | accent:#A855F7 | price:#E879F9
+cardVariant:magazine-overlay | detailVariant:sheet | welcomeVariant:dark-hero | headerVariant:glass | layoutVariant:full-card
 
-☰ SIDEBAR (Yan Menü)
-• sidebarBg — Yan menü zemini (pageBg ile uyumlu ama biraz farklı).
-• sidebarNameColor — Restoran adı.
-• sidebarItemColor — Menü öğeleri.
-• sidebarActiveItemBg — Aktif menü öğesi arka planı (accentColor).
-• sidebarActiveItemColor — Aktif menü öğesi yazısı.
+🔥 Endüstriyel/Steampunk:
+pageBg:#111111 | cardBg:#1c1c1c | gradient:#1a1a1a→#3d1a00 | accent:#F97316 | price:#FB923C
+cardVariant:magazine-overlay | detailVariant:sheet | welcomeVariant:cinema | headerVariant:accent-bar | layoutVariant:full-card
 
-🎨 GENEL
-• fontFamily — Yazı tipi.
-• accentColor — Ana vurgu rengi (butonlar, aktif öğeler).
-• bottomNavBg — Alt bar zemini (menuHeaderBg ile uyumlu).
-• bottomNavActive — Aktif ikon (accentColor).
-• bottomNavInactive — Pasif ikon (soluk).
-• globalThemeText — Ana yazı rengi.
-• globalThemeIcon — Ana ikon rengi.
+🌺 Tropikal/Canlı:
+pageBg:#0a1a0a | cardBg:#0f2a0f | gradient:#0a3d0a→#00cc44 | accent:#FF6B35 | price:#FFD700
+cardVariant:centered | detailVariant:sheet | welcomeVariant:vibrant-grid | headerVariant:gradient | layoutVariant:grid-2
 
-━━━ TEMA ÖRNEKLERİ ━━━
+☀️ Aydınlık/Minimal Beyaz:
+pageBg:#fafafa | cardBg:#ffffff | gradient:#ff9a3c→#ff6b35 | accent:#e85d04
+cardVariant:centered | detailVariant:classic | welcomeVariant:minimal-center | headerVariant:minimal | layoutVariant:grid-2
 
-🔮 Lüks Gece / Premium:
-pageBg:#080810 | menuHeaderBg:#0d0d1a | cardBg:#111122 | gradient:#1a0040→#6600cc | accent:#D4AF37 | price:#FFD700
+🍷 Fine Dining/Zarif:
+pageBg:#0d0006 | cardBg:#1a0010 | gradient:#3d0020→#8b0040 | accent:#C9A84C | price:#F5C842
+cardVariant:magazine-overlay | detailVariant:sheet | welcomeVariant:cinema | headerVariant:tall | layoutVariant:magazine
 
-🌊 Akdeniz / Ege:
-pageBg:#051a33 | menuHeaderBg:#062040 | cardBg:#0a2a50 | gradient:#004080→#00B4D8 | accent:#FFD700 | price:#FFC300
+━━━ VARYANT SEÇİM TABLOSU (ZORUNLU) ━━━
 
-🌿 Organik / Doğa:
-pageBg:#0a150a | menuHeaderBg:#0f1e0f | cardBg:#142014 | gradient:#1a3d1a→#4a7a1a | accent:#4ADE80 | price:#86EFAC
+cardVariant seç:
+• "classic" → SADECE kullanıcı "sade/minimal/basit" derse
+• "centered" → Modern, aydınlık, organik, tropikal, minimalist için
+• "magazine-overlay" → Lüks, premium, koyu, dramatik, bold, neon için
 
-⚡ Neon / Cyberpunk:
-pageBg:#020208 | menuHeaderBg:#050510 | cardBg:#080818 | gradient:#1a0050→#7700ff | accent:#A855F7 | price:#E879F9
+detailVariant seç:
+• "classic" → Açık/minimal/sade temalar SADECE
+• "sheet" → Koyu, premium, modern, bold — ÇOĞUNLUKLA BU
 
-🍂 Geleneksel Türk:
-pageBg:#150800 | menuHeaderBg:#1c0c00 | cardBg:#211000 | gradient:#7a2800→#cc5500 | accent:#D4870A | price:#FFA500
+welcomeVariant seç:
+• "cinema" → Lüks, premium, koyu, sinematik, japon, fine dining
+• "dark-hero" → Bold, dramatik, neon, cyberpunk, endüstriyel
+• "story" → Organik, sıcak, tropikal, akdeniz, cafe
+• "vibrant-grid" → Renkli, eğlenceli, street food, casual
+• "split" → Modern kurumsal, İskandinav, tech
+• "minimal-center" → SADECE saf beyaz minimal temalar
+• "classic" → Sadece açıkça istenirse
 
-☀️ Kahvaltı / Aydınlık:
-pageBg:#fffbf5 | menuHeaderBg:#fff8f0 | cardBg:#ffffff | gradient:#ff9a3c→#ff6b35 | accent:#e85d04 | price:#dc2626
+headerVariant seç:
+• "glass" → Koyu/dark temalar — SIK KULLAN
+• "gradient" → Bold/renkli temalar
+• "accent-bar" → Endüstriyel, minimal, tech
+• "tall" → Lüks, fine dining, zarif
+• "center-logo" → Zarif, premium
+• "minimal" → SADECE saf beyaz/minimal
+• "classic" → Sadece açıkça istenirse
 
-━━━ TÜM VARYANTLAR ━━━
-
-cardVariant — Ürün kartı düzeni:
-• "classic" → Yatay: solda resim, sağda metin/fiyat. Nötr, sade.
-• "centered" → 2 sütun grid: resim üstte tam genişlik. Modern, minimalist.
-• "magazine-overlay" → Büyük resim hero, gradient overlay, metin resim üzerinde. Bold.
-
-detailVariant — Ürün detay sayfası:
-• "classic" → Yukarıda resim, aşağı kayan kart. Temiz.
-• "sheet" → Full-ekran resim/video + alttan yukarı slide sheet. İmmersive, premium.
-
-welcomeVariant — Hoşgeldin sayfası layout'u:
-• "classic" → Logo ortada, alt butonlar. Evrensel.
-• "cinema" → Tam ekran karanlık, sinematik, büyük başlık.
-• "split" → Sol yarı resim, sağ yarı içerik.
-• "minimal-center" → Minimalist, net beyaz alan, sade butonlar.
-• "story" → Dikey story formatı, büyük resim, alttan içerik.
-• "dark-hero" → Tam koyu, hero gradient, büyük CTA.
-• "vibrant-grid" → Renkli card grid layout.
-
-headerVariant — Header stili:
-• "classic" → Standart, menü-başlık-arama sırası.
-• "glass" → Cam (backdrop-blur) efekti.
-• "gradient" → Renkli gradient arkaplan.
-• "minimal" → Minimal, ince çizgi.
-• "tall" → Yüksek header, 2 satır.
-• "center-logo" → Logo ortada.
-• "accent-bar" → Üstte vurgu çizgisi.
-
-layoutVariant — Ürün liste düzeni:
-• "list" → Standart listeleme.
-• "grid-2" → 2 sütun kart grid.
-• "grid-3" → 3 sütun küçük kart.
-• "full-card" → Tam genişlik büyük kart.
-• "magazine" → İlk büyük, geri 2 sütun.
-• "horizontal" → Yatay kaydırma.
-• "compact" → Küçük satır listesi.
-
-Stile göre seç — tutarlı olsun:
-- Lüks/premium koyu: magazine-overlay + sheet + cinema + glass + magazine
-- Modern/minimal aydınlık: centered + classic + minimal-center + minimal + grid-2
-- Bold/dramatik: magazine-overlay + sheet + dark-hero + gradient + full-card
-- Sıcak/organik: classic + classic + story + classic + list
-- Teknolojik/futuristik: centered + sheet + cinema + glass + grid-2
-
-Bu 5 alanı mutlaka JSON'a ekle: cardVariant, detailVariant, welcomeVariant, headerVariant, layoutVariant
+layoutVariant seç:
+• "magazine" → Premium, lüks, fine dining
+• "grid-2" → Modern, cafe, organik, tropikal
+• "full-card" → Bold, dramatik, hero görselli
+• "horizontal" → Tech, hızlı, street food
+• "grid-3" → Yoğun içerik, küçük ürünler
+• "compact" → SADECE açıkça istenirse
+• "list" → SADECE "sıradan liste" istenirse
 
 ━━━ DÖNDÜR ━━━
 pageBg, globalThemeBg, globalThemeText, globalThemeIcon, globalThemeSearchBg, fontFamily, accentColor,
@@ -187,11 +143,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "restaurantId ve prompt gerekli" }, { status: 400 });
     }
 
-    // Image cost: +1 kredi if image provided
     const hasImage = !!(imageBase64 && imageMimeType);
-
-    // Kredi kontrolü
     const totalCost = hasImage ? THEME_COST + 1 : THEME_COST;
+
     let credit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
     if (!credit) {
       credit = await (prisma as any).aiCredit.create({ data: { restaurantId, balance: 500 } });
@@ -207,7 +161,6 @@ export async function POST(req: NextRequest) {
 
     const ai = new GoogleGenAI({ apiKey });
 
-    // Section-specific key restriction
     const sectionKeyMap: Record<string, string[]> = {
       header: ['menuHeaderBg', 'menuHeaderTextColor', 'menuHeaderIconColor', 'menuHeaderShadow', 'menuHeaderSearchBtnBg', 'headerGradientFrom', 'headerGradientTo'],
       categories: ['categoryActiveBg', 'categoryActiveText', 'categoryInactiveBg', 'categoryInactiveText', 'categoryRadius', 'categoryNavBg', 'categoryBtnShadow'],
@@ -222,9 +175,22 @@ export async function POST(req: NextRequest) {
       sectionInstruction = `\n\nNOT: Kullanıcı sadece "${section}" bölümünü güncellemek istiyor. Sadece şu key'leri döndür: ${sectionKeyMap[section].join(', ')}`;
     }
 
-    // Build contents — multimodal if image provided
+    const imageInstruction = hasImage
+      ? 'Ek görsel verildi: Görselin renklerini, atmosferini, hissini TAMAMEN analiz et. Bu görselden ilham alarak TON, RENK PALETİ ve STİL belirle.'
+      : '';
+
     const textPart = {
-      text: `Kullanıcı isteği: "${prompt}"${sectionInstruction}\n\n${hasImage ? 'Ek görsel analizi: Yüklenen görselin renklerini, havasını, stilini analiz et. Bu görselden ilham alarak tema oluştur.' : ''}\n\nÖNEMLİ HATIRLATMA:\n- Tüm bölümler tutarlı aynı renk ailesinden olmalı\n- Gradient kullan: headerGradientFrom ≠ headerGradientTo (en az 40 ton fark)\n- Kart (cardBg) sayfa zemininden (pageBg) biraz farklı olsun\n- pageBg = globalThemeBg olmalı\n- welcomeVariant, headerVariant, layoutVariant, cardVariant, detailVariant hepsini seç`,
+      text: `Kullanıcı isteği: "${prompt}"${sectionInstruction}
+
+${imageInstruction}
+
+ZORUNLU HATIRLATMA:
+- classic cardVariant/welcomeVariant/headerVariant/layoutVariant KULLANMA (sade demediyse)
+- Her bölüm tutarlı ama pageBg'den belirgin farklı tonlarda olsun
+- headerGradientFrom ≠ headerGradientTo (en az 60 ton fark)
+- cardBg, pageBg'den %20 farklı olsun
+- pageBg = globalThemeBg
+- cardVariant, detailVariant, welcomeVariant, headerVariant, layoutVariant MUTLAKA seç`,
     };
 
     type GeminiPart = { text: string } | { inlineData: { mimeType: string; data: string } };
@@ -237,7 +203,7 @@ export async function POST(req: NextRequest) {
       contents: [{ role: "user", parts }],
       config: {
         systemInstruction: SYSTEM_PROMPT,
-        temperature: 1.0,
+        temperature: 1.4,
       },
     });
 
@@ -252,11 +218,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "AI yanıtı geçersiz JSON", raw: text }, { status: 500 });
     }
 
-    // Ensure pageBg ↔ globalThemeBg sync
     if (themeData.pageBg && !themeData.globalThemeBg) themeData.globalThemeBg = themeData.pageBg;
     if (themeData.globalThemeBg && !themeData.pageBg) themeData.pageBg = themeData.globalThemeBg;
 
-    // Kredi düş + log
     await prisma.$transaction([
       (prisma as any).aiCredit.update({
         where: { restaurantId },
@@ -279,4 +243,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
