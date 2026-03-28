@@ -1300,16 +1300,10 @@ export default function PanelDesign() {
                                 { id: 'classic', name: 'Klasik' },
                                 { id: 'tall', name: 'Yüksek' },
                                 { id: 'center-logo', name: 'Logo' },
-                                { id: 'left-logo', name: 'Sol Logo' },
-                                { id: 'lang', name: 'Dil' },
-                                { id: 'banner', name: 'Banner' },
-                                { id: 'minimal', name: 'Minimal' },
-
                                 { id: 'accent-bar', name: 'Çizgi' },
                                 { id: 'glass', name: 'Cam' },
                                 { id: 'overlay', name: 'Saydam' },
                                 { id: 'gradient', name: 'Gradient' },
-
                             ] as { id: string; name: string }[]).map((v) => {
                                 const isActive = theme.headerVariant === v.id;
                                 // Fixed neutral colors for preview thumbnails — only show layout, not live colors
