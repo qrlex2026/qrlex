@@ -83,6 +83,7 @@ export default function PanelMenu() {
     const [showAiImageModal, setShowAiImageModal] = useState(false);
     const [showAiStep, setShowAiStep] = useState(false);
     const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
     const [aiImagePrompt, setAiImagePrompt] = useState("");
     const [aiImageLoading, setAiImageLoading] = useState(false);
     const [aiImageCooldown, setAiImageCooldown] = useState(false);
@@ -871,10 +872,46 @@ export default function PanelMenu() {
 
                 {loading ? (<div className="text-center py-20 text-gray-500">Yükleniyor...</div>) : (
                     <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                        {categories.map(cat => {
-                            const catProducts = productsByCategory(cat.id);
-                            const expanded = expandedCats.has(cat.id);
+                        {/* Search bar */}
+                        <div className="relative mb-3">
+                            <input
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                placeholder="Ürün ara..."
+                                className="w-full pl-9 pr-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                            />
+                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                            {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs">✕</button>}
+                        </div>
+
+                        {/* Filtered flat list when searching */}
+                        {searchQuery.trim() ? (() => {
+                            const q = searchQuery.toLowerCase();
+                            const matched = products.filter(p => p.name.toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+                            if (matched.length === 0) return <div className="text-center py-12 text-gray-500 text-sm">🔍 &quot;{searchQuery}&quot; için sonuç bulunamadı</div>;
                             return (
+                                <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+                                    {matched.map(product => (
+                                        <div key={product.id} className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-800/50 last:border-b-0 hover:bg-gray-800/30 transition-colors ${!product.isActive ? "opacity-40" : ""}`}>
+                                            {product.image ? <img src={product.image} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-xs text-gray-600">🍽️</div>}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm text-white truncate">{product.name}</p>
+                                                <p className="text-[11px] text-gray-500">{categories.find(c => c.id === product.categoryId)?.name} · ₺{Number(product.price).toFixed(0)}</p>
+                                            </div>
+                                            <div className="flex items-center gap-1 flex-shrink-0">
+                                                <button onClick={() => openEditModal(product)} className="p-1.5 rounded hover:bg-gray-800"><Pencil size={14} className="text-gray-500" /></button>
+                                                <button onClick={() => deleteProduct(product.id)} className="p-1.5 rounded hover:bg-red-500/10"><Trash2 size={14} className="text-red-400/60" /></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })() : (
+                            <>
+                            {categories.map(cat => {
+                             const catProducts = productsByCategory(cat.id);
+                             const expanded = expandedCats.has(cat.id);
+                             return (
                                 <div key={cat.id}
                                     className={`bg-gray-900 border rounded-xl overflow-hidden transition-colors ${dragOverId === cat.id && dragType === "category" ? "border-emerald-500/50 bg-emerald-500/5" : "border-gray-800"}`}
                                     draggable onDragStart={() => handleCatDragStart(cat.id)} onDragOver={e => handleCatDragOver(e, cat.id)} onDrop={() => handleCatDrop(cat.id)} onDragEnd={() => { setDragId(null); setDragOverId(null); setDragType(null); }}
@@ -931,6 +968,8 @@ export default function PanelMenu() {
                             );
                         })}
                         {categories.length === 0 && <div className="text-center py-16 text-gray-500"><p className="mb-3">Henüz kategori yok</p><button onClick={openAddCatModal} className="text-emerald-400 text-sm font-medium">+ İlk kategoriyi ekle</button></div>}
+                        </>
+                        )}
                     </div>
                 )}
             </div>
