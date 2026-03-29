@@ -14,7 +14,7 @@ export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
     try {
-        const { restaurantId, productName, productDescription, prompt, backgroundImageBase64, backgroundImageMimeType, productImageBase64, productImageMimeType } = await req.json();
+        const { restaurantId, productName, productDescription, prompt, backgroundImageBase64, backgroundImageMimeType } = await req.json();
 
         if (!restaurantId || !prompt) {
             return NextResponse.json({ error: "restaurantId ve prompt gerekli" }, { status: 400 });
@@ -36,45 +36,25 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Yetersiz kredi", balance: credit.balance }, { status: 403 });
         }
 
-        // 2. Build detailed food photography prompt
-        let fullPrompt: string;
-        if (productImageBase64 && backgroundImageBase64) {
-            // Composite mode — user provided actual product photo + background
-            // IMPORTANT: Do NOT include productName — it confuses Gemini into generating by name
-            const styleNote = prompt ? `Lighting/style: ${prompt}.` : "Use warm, appetizing lighting that matches the background environment.";
-            fullPrompt = [
-                "You are a professional food photographer and image compositor.",
-                "STEP 1: Look at IMAGE 1 — this is the food item you will use. Remember its appearance exactly.",
-                "STEP 2: Look at IMAGE 2 — this is the background scene (table, plate, surface). Remove ALL existing food items or dishes from this background completely.",
-                "STEP 3: Place the food item from IMAGE 1 naturally onto the clean surface from IMAGE 2. It should look like a professional restaurant photo.",
-                styleNote,
-                "The background environment (table, cloth, props) must remain intact. Only the food item from IMAGE 1 should appear on it. No text, no watermarks, no people.",
-            ].join(" ");
-        } else {
-            fullPrompt = [
-                "Professional food photography.",
-                productName ? `Dish: ${productName}.` : "",
-                productDescription ? `Description: ${productDescription}.` : "",
-                `Style: ${prompt}.`,
-                backgroundImageBase64
-                    ? "Place the food naturally on this background. Keep the background intact, only add the food item with realistic lighting and shadows."
-                    : "High resolution, appetizing presentation, perfect studio lighting, photorealistic.",
-                "No text, no watermarks, no people.",
-            ].filter(Boolean).join(" ");
-        }
+        const fullPrompt = [
+            "Professional food photography.",
+            productName ? `Dish: ${productName}.` : "",
+            productDescription ? `Description: ${productDescription}.` : "",
+            `Style: ${prompt}.`,
+            backgroundImageBase64
+                ? "Place the food naturally on this background. Keep the background intact, only add the food item with realistic lighting and shadows."
+                : "High resolution, appetizing presentation, perfect studio lighting, photorealistic.",
+            "No text, no watermarks, no people.",
+        ].filter(Boolean).join(" ");
 
         // --- PATH A: Background image provided → gemini-2.5-flash-image (img+text→img) ---
         if (backgroundImageBase64) {
             const bgMime = backgroundImageMimeType || "image/jpeg";
-            const prodMime = productImageMimeType || "image/jpeg";
+            const requestParts = [
+                { text: fullPrompt },
+                { inlineData: { mimeType: bgMime, data: backgroundImageBase64 } },
+            ];
 
-            // Build parts: text always first, then product image (if any), then background
-            type GeminiPart = { text?: string; inlineData?: { mimeType: string; data: string } };
-            const requestParts: GeminiPart[] = [{ text: fullPrompt }];
-            if (productImageBase64) {
-                requestParts.push({ inlineData: { mimeType: prodMime, data: productImageBase64 } });
-            }
-            requestParts.push({ inlineData: { mimeType: bgMime, data: backgroundImageBase64 } });
 
             const geminiRes = await fetch(
                 `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
@@ -103,7 +83,7 @@ export async function POST(req: NextRequest) {
                     const buf = Buffer.from(part.inlineData.data, "base64");
                     const key = `ai-generated/${restaurantId}/${Date.now()}.${ext}`;
                     const imageUrl = await uploadToR2(buf, key, mime);
-                    await deductCredit(prisma, restaurantId, credit, IMAGE_COST, fullPrompt);
+                    await deductCredit(prisma, restaurantId, credit, IMAGE_COST, "composite");
                     const updatedCredit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
                     return NextResponse.json({ success: true, imageUrl, balance: updatedCredit?.balance ?? credit.balance - IMAGE_COST });
                 }

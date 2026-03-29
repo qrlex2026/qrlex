@@ -87,6 +87,9 @@ export default function PanelMenu() {
     const [aiImageBg, setAiImageBg] = useState<File | null>(null);
     const [aiImageBgPreview, setAiImageBgPreview] = useState("");
     const aiImageBgRef = useRef<HTMLInputElement>(null);
+    const [aiImageProduct, setAiImageProduct] = useState<File | null>(null);
+    const [aiImageProductPreview, setAiImageProductPreview] = useState("");
+    const aiImageProductRef = useRef<HTMLInputElement>(null);
 
     // AI Menu Creator
     const [showAiMenuModal, setShowAiMenuModal] = useState(false);
@@ -207,12 +210,12 @@ export default function PanelMenu() {
     }, [showModal, showCatModal, showAiMenuModal, showAiImageModal]);
 
     const handleAiImageGenerate = async () => {
-        if (!aiImagePrompt.trim() || aiImageLoading || !restaurantId) return;
+        if ((!aiImagePrompt.trim() && !aiImageBg) || aiImageLoading || !restaurantId) return;
         setAiImageLoading(true);
         setAiImageError("");
         setAiImageResult("");
         try {
-            // If background image provided, convert to base64
+            // Convert background to base64 if provided
             let backgroundImageBase64: string | undefined;
             let backgroundImageMimeType: string | undefined;
             if (aiImageBg) {
@@ -224,16 +227,47 @@ export default function PanelMenu() {
                 backgroundImageMimeType = aiImageBg.type || "image/jpeg";
             }
 
-            const res = await fetch("/api/ai/generate-image", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
+            // Convert product image to base64 if provided
+            let productImageBase64: string | undefined;
+            let productImageMimeType: string | undefined;
+            if (aiImageProduct) {
+                const buf = await aiImageProduct.arrayBuffer();
+                const bytes = new Uint8Array(buf);
+                let binary = "";
+                bytes.forEach(b => binary += String.fromCharCode(b));
+                productImageBase64 = btoa(binary);
+                productImageMimeType = aiImageProduct.type || "image/jpeg";
+            }
+
+            let endpoint = "/api/ai/generate-image";
+            let body: Record<string, unknown>;
+
+            if (productImageBase64 && backgroundImageBase64) {
+                // Both product + background → composite-image API
+                endpoint = "/api/ai/composite-image";
+                body = {
+                    restaurantId,
+                    productImageBase64,
+                    productImageMimeType,
+                    backgroundImageBase64,
+                    backgroundImageMimeType,
+                    style: aiImagePrompt,
+                };
+            } else {
+                // Generate-image API (standard path)
+                body = {
                     restaurantId,
                     productName: form.name,
                     productDescription: form.description,
-                    prompt: aiImagePrompt,
+                    prompt: aiImagePrompt || "professional food photography, studio lighting",
                     ...(backgroundImageBase64 ? { backgroundImageBase64, backgroundImageMimeType } : {}),
-                }),
+                };
+            }
+
+            const res = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
             });
             const data = await res.json();
             if (data.imageUrl) {
@@ -368,35 +402,42 @@ export default function PanelMenu() {
                         if (data.success && data.url) results[String(i)] = data.url;
                     } catch { /* skip */ }
                 } else {
-                    // Background provided → img2img via generate-image API
+                    // Background provided → composite-image API (multi-turn Gemini)
                     const buf = await userFile.arrayBuffer();
                     const bytes = new Uint8Array(buf);
                     let binary = "";
                     bytes.forEach(b => binary += String.fromCharCode(b));
                     const prodImgBase64 = btoa(binary);
+                    let compositeSuccess = false;
                     for (let attempt = 0; attempt < 3; attempt++) {
                         try {
-                            const res = await fetch('/api/ai/generate-image', {
+                            const res = await fetch('/api/ai/composite-image', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                     restaurantId,
-                                    productName: prod.name,
-                                    productDescription: prod.description,
-                                    prompt: aiMenuImageStyle || "professional food photography, natural lighting",
-                                    backgroundImageBase64: bgBase64,
-                                    backgroundImageMimeType: bgMime,
                                     productImageBase64: prodImgBase64,
                                     productImageMimeType: userFile.type || "image/jpeg",
+                                    backgroundImageBase64: bgBase64,
+                                    backgroundImageMimeType: bgMime,
+                                    style: aiMenuImageStyle || "",
                                 }),
                             });
-                            if (res.status === 429) { await delay(10000); continue; }
+                            if (res.status === 429 || res.status >= 500) {
+                                // Rate limited or server error — wait and retry
+                                await delay(res.status === 429 ? 15000 : 8000);
+                                continue;
+                            }
                             const data = await res.json();
-                            if (data.success && data.imageUrl) results[String(i)] = data.imageUrl;
+                            if (data.success && data.imageUrl) {
+                                results[String(i)] = data.imageUrl;
+                                compositeSuccess = true;
+                            }
                             break;
-                        } catch { if (attempt === 2) break; await delay(5000); }
+                        } catch { if (attempt === 2) break; await delay(8000); }
                     }
-                    if (i < total - 1 && !aiMenuAbortRef.current) await delay(4000);
+                    // Always wait between composite calls — Gemini img2img is rate-limited
+                    if (i < total - 1 && !aiMenuAbortRef.current) await delay(compositeSuccess ? 10000 : 5000);
                 }
             } else {
                 // --- Mode A: AI generates via Imagen 4 ---
@@ -1248,17 +1289,17 @@ export default function PanelMenu() {
                                                     {/* Instruction prompt — only relevant when bg is set */}
                                                     {aiMenuUserBg && (
                                                         <div>
-                                                            <label className="text-xs text-gray-400 mb-1 block">💬 Yapay zekaya talimat <span className="text-gray-600">(isteğe bağlı)</span></label>
+                                                            <label className="text-xs text-gray-400 mb-1 block">💬 Talimat <span className="text-gray-600">(isteğe bağlı — boş bırakırsan otomatik talimat gider)</span></label>
                                                             <textarea
                                                                 value={aiMenuImageStyle}
                                                                 onChange={e => setAiMenuImageStyle(e.target.value)}
                                                                 rows={2}
-                                                                placeholder="Örn: Yemeği masanın üzerine yatay olarak koy, sıcak ışık, fine dining tarzı"
+                                                                placeholder="Örn: Ürün görselindeki yemeği arka plan görselindeki yemek ile yer değiştir"
                                                                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-violet-500 resize-none"
                                                             />
                                                             <div className="flex flex-wrap gap-1 mt-1">
-                                                                {["Masanın üzerinde sun","Arka planı koru","Rustik sunum","Profesyonel ışık","Sıcak renkler","Üstten çekim"].map(s => (
-                                                                    <button key={s} onClick={() => setAiMenuImageStyle(s)} className="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-500 hover:text-white rounded text-[10px] transition-colors">{s}</button>
+                                                                {["Ürün görselindeki yemeği arka plan görselindeki yemek ile yer değiştir","Tabaktaki yemeği verdiğim ürünle değiştir, başka hiçbir şeyi değiştirme"].map(s => (
+                                                                    <button key={s} onClick={() => setAiMenuImageStyle(s)} className="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-500 hover:text-white rounded text-[10px] transition-colors">{s.length > 40 ? s.substring(0, 40) + '...' : s}</button>
                                                                 ))}
                                                             </div>
                                                         </div>
@@ -1470,6 +1511,40 @@ export default function PanelMenu() {
                             </div>
                         )}
 
+                        {/* Ürün Görseli Yükleme */}
+                        <div className="mb-4">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label className="text-xs text-gray-400">Ürün Görseli <span className="text-gray-600">(isteğe bağlı)</span></label>
+                                {aiImageProduct && (
+                                    <button onClick={() => { setAiImageProduct(null); setAiImageProductPreview(""); }} className="text-[11px] text-red-400 hover:text-red-300 transition-colors">Kaldır</button>
+                                )}
+                            </div>
+                            {aiImageProductPreview ? (
+                                <div className="relative h-20 rounded-xl overflow-hidden border border-gray-700">
+                                    <img src={aiImageProductPreview} alt="Ürün" className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                        <span className="text-[11px] text-white/70 bg-black/50 px-2 py-0.5 rounded-full">{aiImageProduct?.name}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button onClick={() => aiImageProductRef.current?.click()} className="w-full h-16 border border-dashed border-gray-700 rounded-xl flex items-center justify-center gap-2 text-xs text-gray-500 hover:border-violet-500/50 hover:text-gray-400 transition-colors">
+                                    <Upload size={14} /> Ürün fotoğrafı yükle (JPG, PNG)
+                                </button>
+                            )}
+                            <input ref={aiImageProductRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setAiImageProduct(file);
+                                const reader = new FileReader();
+                                reader.onload = ev => setAiImageProductPreview(ev.target?.result as string);
+                                reader.readAsDataURL(file);
+                                e.target.value = "";
+                            }} />
+                            {aiImageProduct && aiImageBg && (
+                                <p className="text-[10px] text-violet-400 mt-1">✨ Ürün görseli + arka plan → Composite mod aktif</p>
+                            )}
+                        </div>
+
                         {/* Arka Plan Yükleme */}
                         <div className="mb-4">
                             <div className="flex items-center justify-between mb-1.5">
@@ -1545,7 +1620,7 @@ export default function PanelMenu() {
                         ) : (
                             <button
                                 onClick={handleAiImageGenerate}
-                                disabled={aiImageLoading || !aiImagePrompt.trim()}
+                                disabled={aiImageLoading || (!aiImagePrompt.trim() && !aiImageBg)}
                                 className="w-full py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 flex items-center justify-center gap-2"
                                 style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', color: 'white' }}
                             >
