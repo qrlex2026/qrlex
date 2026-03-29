@@ -39,7 +39,9 @@ export async function POST(req: NextRequest) {
 
         const prodMime = productImageMimeType || "image/jpeg";
         const bgMime = backgroundImageMimeType || "image/jpeg";
-        const styleNote = style ? ` ${style}.` : "";
+        const styleNote = style?.trim()
+            ? style.trim()
+            : "Arka plan fotoğrafındaki tabaktaki mevcut yiyeceği kaldır ve birinci fotoğraftaki ürünü aynı tabağa, aynı konuma yerleştir. Tabağı, masayı ve diğer tüm eşyaları olduğu gibi bırak. Sadece tabaktaki yiyeceği değiştir. Lütfen sonuçta sadece görseli döndür.";
 
         const contents = [
             {
@@ -56,7 +58,7 @@ export async function POST(req: NextRequest) {
             {
                 role: "user",
                 parts: [
-                    { text: `Bu da arka plan fotoğrafım. Arka plan fotoğrafındaki tabaktaki mevcut yiyeceği kaldır ve birinci fotoğraftaki ürünü aynı tabağa, aynı konuma yerleştir. Tabağı, masayı ve diğer tüm eşyaları olduğu gibi bırak. Sadece tabaktaki yiyeceği değiştir.${styleNote} Lütfen sonuçta sadece görseli döndür.` },
+                    { text: `Bu da arka plan fotoğrafım. ${styleNote}` },
                     { inlineData: { mimeType: bgMime, data: backgroundImageBase64 } },
                 ],
             },
