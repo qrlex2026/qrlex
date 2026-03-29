@@ -117,7 +117,30 @@ export default function PanelMenu() {
     const [aiFieldLoading, setAiFieldLoading] = useState<{ ci: number; pi: number; field: string } | null>(null);
     const [bulkRefineLoading, setBulkRefineLoading] = useState<'name'|'description'|'price'|null>(null);
     const [bulkRefineProgress, setBulkRefineProgress] = useState({ current: 0, total: 0 });
-    const aiMenuReset = () => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); setAiMenuImageResults({}); setAiMenuImageProgress({ current: 0, total: 0 }); setAiMenuGeneratingImages(false); setAiMenuImageMode('A'); setAiMenuUserImages({}); setAiMenuUserBg(null); setAiFieldLoading(null); };
+    const [editingField, setEditingField] = useState<{ ci: number; pi: number; field: 'name'|'description'|'price' } | null>(null);
+    const [editingValue, setEditingValue] = useState('');
+    const commitEdit = () => {
+        if (!editingField || !aiMenuResult) { setEditingField(null); return; }
+        const { ci, pi, field } = editingField;
+        setAiMenuResult(prev => {
+            if (!prev) return prev;
+            const next = JSON.parse(JSON.stringify(prev));
+            next.categories[ci].products[pi][field] = field === 'price' ? (parseFloat(editingValue) || next.categories[ci].products[pi][field]) : editingValue;
+            return next;
+        });
+        setEditingField(null);
+    };
+    const removeProduct = (ci: number, pi: number) => {
+        setAiMenuResult(prev => {
+            if (!prev) return prev;
+            const next = JSON.parse(JSON.stringify(prev));
+            next.categories[ci].products.splice(pi, 1);
+            // Remove empty categories
+            next.categories = next.categories.filter((c: any) => c.products.length > 0);
+            return next;
+        });
+    };
+    const aiMenuReset = () => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); setAiMenuImageResults({}); setAiMenuImageProgress({ current: 0, total: 0 }); setAiMenuGeneratingImages(false); setAiMenuImageMode('A'); setAiMenuUserImages({}); setAiMenuUserBg(null); setAiFieldLoading(null); setEditingField(null); };
 
     const refineField = async (ci: number, pi: number, field: 'name' | 'description' | 'price') => {
         if (!aiMenuResult) return;
@@ -1033,43 +1056,40 @@ export default function PanelMenu() {
                                                     {cat.products.map((p,pi) => {
                                                         const isLoading = (f: string) => aiFieldLoading?.ci === ci && aiFieldLoading?.pi === pi && aiFieldLoading?.field === f;
                                                         return (
-                                                            <div key={pi} className="flex items-start gap-2 px-3 py-2 border-t border-gray-700/50">
+                                                            <div key={pi} className="flex items-start gap-2 px-3 py-2 border-t border-gray-700/50 group/row">
                                                                 <div className="min-w-0 flex-1">
                                                                     {/* Name row */}
-                                                                    <div className="flex items-center gap-1 group/name">
-                                                                        <p className="text-xs text-white truncate flex-1">{p.name}</p>
-                                                                        <button
-                                                                            onClick={() => refineField(ci, pi, 'name')}
-                                                                            disabled={aiFieldLoading !== null}
-                                                                            title="AI ile isim iyileştir"
-                                                                            className="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-colors"
-                                                                        >
-                                                                            {isLoading('name') ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                                                                    <div className="flex items-center gap-1">
+                                                                        {editingField?.ci===ci && editingField?.pi===pi && editingField?.field==='name'
+                                                                            ? <input autoFocus value={editingValue} onChange={e=>setEditingValue(e.target.value)} onBlur={commitEdit} onKeyDown={e=>{if(e.key==='Enter')commitEdit();if(e.key==='Escape')setEditingField(null);}} className="flex-1 text-xs bg-gray-700 text-white px-1.5 py-0.5 rounded outline-none border border-violet-500" />
+                                                                            : <p onClick={()=>{setEditingField({ci,pi,field:'name'});setEditingValue(p.name);}} className="text-xs text-white truncate flex-1 cursor-text hover:text-violet-300 transition-colors" title="Düzenlemek için tıkla">{p.name}</p>
+                                                                        }
+                                                                        <button onClick={()=>refineField(ci,pi,'name')} disabled={aiFieldLoading!==null} title="AI ile isim iyileştir" className="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30">
+                                                                            {isLoading('name')?<Loader2 size={10} className="animate-spin"/>:<Sparkles size={10}/>}
                                                                         </button>
                                                                     </div>
                                                                     {/* Description row */}
-                                                                    <div className="flex items-center gap-1 group/desc mt-0.5">
-                                                                        <p className="text-[10px] text-gray-500 truncate flex-1">{p.description || <span className="italic text-gray-700">açıklama yok</span>}</p>
-                                                                        <button
-                                                                            onClick={() => refineField(ci, pi, 'description')}
-                                                                            disabled={aiFieldLoading !== null}
-                                                                            title="AI ile açıklama iyileştir"
-                                                                            className="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-colors"
-                                                                        >
-                                                                            {isLoading('description') ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                                                                    <div className="flex items-center gap-1 mt-0.5">
+                                                                        {editingField?.ci===ci && editingField?.pi===pi && editingField?.field==='description'
+                                                                            ? <input autoFocus value={editingValue} onChange={e=>setEditingValue(e.target.value)} onBlur={commitEdit} onKeyDown={e=>{if(e.key==='Enter')commitEdit();if(e.key==='Escape')setEditingField(null);}} className="flex-1 text-[10px] bg-gray-700 text-white px-1.5 py-0.5 rounded outline-none border border-violet-500" />
+                                                                            : <p onClick={()=>{setEditingField({ci,pi,field:'description'});setEditingValue(p.description||'');}} className="text-[10px] text-gray-500 truncate flex-1 cursor-text hover:text-gray-300 transition-colors" title="Düzenlemek için tıkla">{p.description||<span className="italic text-gray-700">açıklama yok — tıkla</span>}</p>
+                                                                        }
+                                                                        <button onClick={()=>refineField(ci,pi,'description')} disabled={aiFieldLoading!==null} title="AI ile açıklama iyileştir" className="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30">
+                                                                            {isLoading('description')?<Loader2 size={10} className="animate-spin"/>:<Sparkles size={10}/>}
                                                                         </button>
                                                                     </div>
                                                                 </div>
-                                                                {/* Price + AI button */}
-                                                                <div className="flex items-center gap-1 flex-shrink-0 group/price">
-                                                                    <span className="text-xs font-semibold text-emerald-400">₺{p.price}</span>
-                                                                    <button
-                                                                        onClick={() => refineField(ci, pi, 'price')}
-                                                                        disabled={aiFieldLoading !== null}
-                                                                        title="AI ile fiyat öner"
-                                                                        className="w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-colors"
-                                                                    >
-                                                                        {isLoading('price') ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                                                                {/* Price + AI + Delete */}
+                                                                <div className="flex items-center gap-1 flex-shrink-0">
+                                                                    {editingField?.ci===ci && editingField?.pi===pi && editingField?.field==='price'
+                                                                        ? <input autoFocus type="number" value={editingValue} onChange={e=>setEditingValue(e.target.value)} onBlur={commitEdit} onKeyDown={e=>{if(e.key==='Enter')commitEdit();if(e.key==='Escape')setEditingField(null);}} className="w-14 text-xs bg-gray-700 text-emerald-400 font-semibold px-1.5 py-0.5 rounded outline-none border border-violet-500" />
+                                                                        : <span onClick={()=>{setEditingField({ci,pi,field:'price'});setEditingValue(String(p.price));}} className="text-xs font-semibold text-emerald-400 cursor-text hover:text-emerald-300 transition-colors" title="Düzenlemek için tıkla">₺{p.price}</span>
+                                                                    }
+                                                                    <button onClick={()=>refineField(ci,pi,'price')} disabled={aiFieldLoading!==null} title="AI ile fiyat öner" className="w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30">
+                                                                        {isLoading('price')?<Loader2 size={10} className="animate-spin"/>:<Sparkles size={10}/>}
+                                                                    </button>
+                                                                    <button onClick={()=>removeProduct(ci,pi)} title="Ürünü sil" className="w-4 h-4 rounded flex items-center justify-center text-gray-600 hover:text-red-400 transition-colors opacity-0 group-hover/row:opacity-100">
+                                                                        <X size={10}/>
                                                                     </button>
                                                                 </div>
                                                             </div>
