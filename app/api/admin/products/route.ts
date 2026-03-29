@@ -21,20 +21,34 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/products
 export async function POST(req: NextRequest) {
-    const restaurantId = req.nextUrl.searchParams.get("restaurantId") || (await prisma.restaurant.findFirst())?.id || "";
-    const body = await req.json();
-    const maxOrder = await prisma.product.findFirst({
-        where: { categoryId: body.categoryId },
-        orderBy: { sortOrder: "desc" },
-    });
-    const product = await prisma.product.create({
-        data: {
-            ...body,
-            restaurantId,
-            price: parseFloat(body.price),
-            discountPrice: body.discountPrice ? parseFloat(body.discountPrice) : null,
-            sortOrder: (maxOrder?.sortOrder ?? -1) + 1,
-        },
-    });
-    return NextResponse.json(product, { status: 201 });
+    try {
+        const restaurantId = req.nextUrl.searchParams.get("restaurantId") || (await prisma.restaurant.findFirst())?.id || "";
+        const body = await req.json();
+        const maxOrder = await prisma.product.findFirst({
+            where: { categoryId: body.categoryId },
+            orderBy: { sortOrder: "desc" },
+        });
+        const product = await prisma.product.create({
+            data: {
+                restaurantId,
+                categoryId: body.categoryId,
+                name: body.name,
+                description: body.description || null,
+                price: parseFloat(body.price),
+                discountPrice: body.discountPrice ? parseFloat(body.discountPrice) : null,
+                image: body.image || null,
+                video: body.video || null,
+                prepTime: body.prepTime || null,
+                calories: body.calories || null,
+                isPopular: body.isPopular ?? false,
+                isActive: body.isActive ?? true,
+                sortOrder: (maxOrder?.sortOrder ?? -1) + 1,
+            },
+        });
+        return NextResponse.json(product, { status: 201 });
+    } catch (err: unknown) {
+        console.error("POST /api/admin/products error:", err);
+        const msg = err instanceof Error ? err.message : "Bilinmeyen hata";
+        return NextResponse.json({ error: msg }, { status: 500 });
+    }
 }
