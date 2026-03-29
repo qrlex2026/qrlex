@@ -984,7 +984,7 @@ export default function PanelMenu() {
                                                                             onClick={() => refineField(ci, pi, 'name')}
                                                                             disabled={aiFieldLoading !== null}
                                                                             title="AI ile isim iyileştir"
-                                                                            className="flex-shrink-0 opacity-0 group-hover/name:opacity-100 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-opacity"
+                                                                            className="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-colors"
                                                                         >
                                                                             {isLoading('name') ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
                                                                         </button>
@@ -996,7 +996,7 @@ export default function PanelMenu() {
                                                                             onClick={() => refineField(ci, pi, 'description')}
                                                                             disabled={aiFieldLoading !== null}
                                                                             title="AI ile açıklama iyileştir"
-                                                                            className="flex-shrink-0 opacity-0 group-hover/desc:opacity-100 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-opacity"
+                                                                            className="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-colors"
                                                                         >
                                                                             {isLoading('description') ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
                                                                         </button>
@@ -1009,7 +1009,7 @@ export default function PanelMenu() {
                                                                         onClick={() => refineField(ci, pi, 'price')}
                                                                         disabled={aiFieldLoading !== null}
                                                                         title="AI ile fiyat öner"
-                                                                        className="opacity-0 group-hover/price:opacity-100 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-opacity"
+                                                                        className="w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-colors"
                                                                     >
                                                                         {isLoading('price') ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
                                                                     </button>
