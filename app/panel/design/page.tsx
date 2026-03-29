@@ -1160,6 +1160,19 @@ export default function PanelDesign() {
                             <span className="text-[10px] font-medium leading-tight">Tema</span>
                         </button>
                     </div>
+                    <div className="mt-2">
+                        <button
+                            onClick={() => setActiveSection(activeSection === 'welcome' ? '' : 'welcome')}
+                            className={`w-full flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-center transition-all ${
+                                activeSection === 'welcome'
+                                    ? 'border-amber-500/40 bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/20'
+                                    : 'border-white/[0.04] bg-[#111] text-gray-400 hover:bg-[#161616] hover:text-gray-300'
+                            }`}
+                        >
+                            <Globe size={16} className={activeSection === 'welcome' ? 'text-amber-400' : 'text-gray-500'} />
+                            <span className="text-[10px] font-medium leading-tight">Hoşgeldiniz</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* CENTER: Phone/Tablet preview */}
@@ -1606,6 +1619,178 @@ export default function PanelDesign() {
                             </div>
                         </div>
 
+                        {/* ── Arka Plan ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Arka Plan</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <ColorPicker label="Arka Plan" value={theme.welcomeBg} onChange={(v) => updateTheme('welcomeBg', v)} />
+                                <ColorPicker label="Gradient Başlangıç" value={theme.welcomeGradientFrom} onChange={(v) => updateTheme('welcomeGradientFrom', v)} />
+                                <ColorPicker label="Gradient Bitiş" value={theme.welcomeGradientTo} onChange={(v) => updateTheme('welcomeGradientTo', v)} />
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Gradient Opaklık</span>
+                                    <div className="flex items-center gap-1">
+                                        <input type="range" min="0" max="100" value={theme.welcomeGradientOpacity || '85'}
+                                            onChange={(e) => updateTheme('welcomeGradientOpacity', e.target.value)}
+                                            className="w-20 accent-amber-500" />
+                                        <span className="text-[10px] text-gray-400 w-7 text-right">{theme.welcomeGradientOpacity || '85'}%</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Overlay Opaklık</span>
+                                    <div className="flex items-center gap-1">
+                                        <input type="range" min="0" max="100" value={theme.welcomeOverlayOpacity || '60'}
+                                            onChange={(e) => updateTheme('welcomeOverlayOpacity', e.target.value)}
+                                            className="w-20 accent-amber-500" />
+                                        <span className="text-[10px] text-gray-400 w-7 text-right">{theme.welcomeOverlayOpacity || '60'}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Renkler ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Renkler</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <ColorPicker label="Ana Metin" value={theme.welcomeTextColor} onChange={(v) => updateTheme('welcomeTextColor', v)} />
+                                <ColorPicker label="Alt Metin" value={theme.welcomeSubtextColor} onChange={(v) => updateTheme('welcomeSubtextColor', v)} />
+                                <ColorPicker label="Ayraç" value={theme.welcomeSeparatorColor} onChange={(v) => updateTheme('welcomeSeparatorColor', v)} />
+                            </div>
+                        </div>
+
+                        {/* ── Birincil Buton ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Birincil Buton</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <ColorPicker label="Arka Plan" value={theme.welcomeBtnBg} onChange={(v) => updateTheme('welcomeBtnBg', v)} />
+                                <ColorPicker label="Metin" value={theme.welcomeBtnText} onChange={(v) => updateTheme('welcomeBtnText', v)} />
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Radius</span>
+                                    <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-md px-2 h-7">
+                                        <input type="text" defaultValue={theme.welcomeBtnRadius || '12'}
+                                            onBlur={(e) => { const v = Math.min(999, Math.max(0, parseInt(e.target.value) || 12)); e.target.value = String(v); updateTheme('welcomeBtnRadius', String(v)); }}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                            className="w-8 bg-transparent text-[11px] text-gray-200 font-mono text-right focus:outline-none" />
+                                        <span className="text-[10px] text-gray-600">px</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Gölge</span>
+                                    <div className="flex gap-0.5">
+                                        {(['none','sm','md','lg','xl'] as const).map(s => (
+                                            <button key={s} onClick={() => updateTheme('welcomeBtnShadow', s)}
+                                                className={`px-1.5 h-6 rounded text-[9px] font-medium transition-colors ${(theme.welcomeBtnShadow || 'lg') === s ? 'bg-amber-500/20 text-amber-300' : 'text-gray-500 hover:text-gray-300 bg-white/[0.03]'}`}>
+                                                {s === 'none' ? 'Yok' : s}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── İkincil Buton ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">İkincil Buton</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <ColorPicker label="Arka Plan" value={theme.welcomeSecondaryBtnBg} onChange={(v) => updateTheme('welcomeSecondaryBtnBg', v)} />
+                                <ColorPicker label="Metin" value={theme.welcomeSecondaryBtnText} onChange={(v) => updateTheme('welcomeSecondaryBtnText', v)} />
+                                <ColorPicker label="Kenarlık" value={theme.welcomeSecondaryBtnBorder} onChange={(v) => updateTheme('welcomeSecondaryBtnBorder', v)} />
+                            </div>
+                        </div>
+
+                        {/* ── Logo ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Logo</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <ColorPicker label="Kenarlık" value={theme.welcomeLogoBorder} onChange={(v) => updateTheme('welcomeLogoBorder', v)} />
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Radius</span>
+                                    <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-md px-2 h-7">
+                                        <input type="text" defaultValue={theme.welcomeLogoRadius || '16'}
+                                            onBlur={(e) => { const v = Math.min(999, Math.max(0, parseInt(e.target.value) || 16)); e.target.value = String(v); updateTheme('welcomeLogoRadius', String(v)); }}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                            className="w-8 bg-transparent text-[11px] text-gray-200 font-mono text-right focus:outline-none" />
+                                        <span className="text-[10px] text-gray-600">px</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Boyut</span>
+                                    <div className="flex items-center gap-1">
+                                        <input type="range" min="48" max="160" value={theme.welcomeLogoSize || '96'}
+                                            onChange={(e) => updateTheme('welcomeLogoSize', e.target.value)}
+                                            className="w-20 accent-amber-500" />
+                                        <span className="text-[10px] text-gray-400 w-8 text-right">{theme.welcomeLogoSize || '96'}px</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Medya ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Arka Plan Medya</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-2">
+                                {/* Image upload */}
+                                <div>
+                                    <p className="text-[10px] text-gray-600 mb-1">Resim</p>
+                                    {theme.welcomeImage ? (
+                                        <div className="relative h-16 rounded-lg overflow-hidden border border-white/[0.06]">
+                                            <img src={theme.welcomeImage} alt="" className="w-full h-full object-cover" />
+                                            <button onClick={() => updateTheme('welcomeImage', '')} className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded flex items-center justify-center text-white hover:bg-red-500/80 transition-colors">
+                                                <X size={10} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="flex items-center justify-center h-10 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
+                                            <Upload size={12} /> Resim Yükle
+                                            <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                                const f = e.target.files?.[0]; if (!f) return;
+                                                const fd = new FormData(); fd.append('file', f); fd.append('folder', 'welcome');
+                                                const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
+                                                if (d.url) updateTheme('welcomeImage', d.url);
+                                            }} />
+                                        </label>
+                                    )}
+                                </div>
+                                {/* Video upload */}
+                                <div>
+                                    <p className="text-[10px] text-gray-600 mb-1">Video (öncelikli)</p>
+                                    {theme.welcomeVideo ? (
+                                        <div className="flex items-center gap-2 p-2 bg-[#111] rounded-lg border border-white/[0.06]">
+                                            <div className="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0" />
+                                            <span className="text-[10px] text-gray-400 flex-1 truncate">Video yüklendi</span>
+                                            <button onClick={() => updateTheme('welcomeVideo', '')} className="text-gray-600 hover:text-red-400 transition-colors"><X size={12} /></button>
+                                        </div>
+                                    ) : (
+                                        <label className="flex items-center justify-center h-10 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
+                                            <Upload size={12} /> Video Yükle
+                                            <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
+                                                const f = e.target.files?.[0]; if (!f) return;
+                                                const fd = new FormData(); fd.append('file', f); fd.append('folder', 'welcome');
+                                                const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
+                                                if (d.url) updateTheme('welcomeVideo', d.url);
+                                            }} />
+                                        </label>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </>)}
 
                     {activeSection === 'tema' && (<>
