@@ -492,6 +492,15 @@ function AdvancedColorPanel({ value, onChange, onClose, panelStyle }: { value: s
                 <button className={tBtn('image')} onClick={() => setActiveTab('image')} title="Resim">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
                 </button>
+                {/* Renk Yok */}
+                <div className="flex-1" />
+                <button
+                    onClick={() => { onChange('transparent'); onClose(); }}
+                    className="flex items-center gap-1 px-2 h-6 rounded-md text-[10px] text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all border border-white/[0.06] hover:border-red-500/20"
+                    title="Renk Yok">
+                    <X size={10} />
+                    <span>Yok</span>
+                </button>
             </div>
 
             {/* SOLID */}
@@ -2077,13 +2086,18 @@ export default function PanelDesign() {
                                             </button>
                                         </div>
                                     ) : (
-                                        <label className="flex items-center justify-center h-10 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
+                                        <label className="flex items-center justify-center h-10 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-sky-500/30 cursor-pointer transition-colors gap-1.5 relative">
                                             <Upload size={12} /> Resim Yükle
-                                            <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                            <input type="file" accept="image/*,image/webp,image/jpeg,image/png,image/gif" className="hidden" onChange={async (e) => {
                                                 const f = e.target.files?.[0]; if (!f) return;
-                                                const fd = new FormData(); fd.append('file', f); fd.append('folder', 'slider');
-                                                const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
-                                                if (d.url) updateTheme('sliderBgImage' as any, d.url);
+                                                const label = e.target.closest('label'); if (label) { label.textContent = 'Yükleniyor...'; }
+                                                try {
+                                                    const fd = new FormData(); fd.append('file', f); fd.append('folder', 'slider');
+                                                    const r = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                    const d = await r.json();
+                                                    if (d.url) { updateTheme('sliderBgImage' as any, d.url); }
+                                                    else { alert('Yükleme hatası: ' + (d.error || 'Bilinmeyen hata')); }
+                                                } catch (err) { alert('Yükleme başarısız'); console.error(err); }
                                             }} />
                                         </label>
                                     )}
@@ -2108,21 +2122,30 @@ export default function PanelDesign() {
                                                     Değiştir
                                                     <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
                                                         const f = e.target.files?.[0]; if (!f) return;
-                                                        const fd = new FormData(); fd.append('file', f); fd.append('folder', 'slider');
-                                                        const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
-                                                        if (d.url) updateTheme('sliderBgVideo' as any, d.url);
+                                                        try {
+                                                            const fd = new FormData(); fd.append('file', f); fd.append('folder', 'slider');
+                                                            const r = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                            const d = await r.json();
+                                                            if (d.url) updateTheme('sliderBgVideo' as any, d.url);
+                                                            else alert('Yükleme hatası: ' + (d.error || 'Hata'));
+                                                        } catch (err) { alert('Video yükleme başarısız'); console.error(err); }
                                                     }} />
                                                 </label>
                                             </div>
                                         </div>
                                     ) : (
-                                        <label className="flex items-center justify-center h-10 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
+                                        <label className="flex items-center justify-center h-10 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-sky-500/30 cursor-pointer transition-colors gap-1.5">
                                             <Upload size={12} /> Video Yükle
-                                            <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
+                                            <input type="file" accept="video/*,video/mp4,video/webm" className="hidden" onChange={async (e) => {
                                                 const f = e.target.files?.[0]; if (!f) return;
-                                                const fd = new FormData(); fd.append('file', f); fd.append('folder', 'slider');
-                                                const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
-                                                if (d.url) updateTheme('sliderBgVideo' as any, d.url);
+                                                const label = e.target.closest('label'); if (label) { label.textContent = 'Yükleniyor...'; }
+                                                try {
+                                                    const fd = new FormData(); fd.append('file', f); fd.append('folder', 'slider');
+                                                    const r = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                    const d = await r.json();
+                                                    if (d.url) updateTheme('sliderBgVideo' as any, d.url);
+                                                    else alert('Yükleme hatası: ' + (d.error || 'Hata'));
+                                                } catch (err) { alert('Video yükleme başarısız'); console.error(err); }
                                             }} />
                                         </label>
                                     )}
@@ -2143,6 +2166,7 @@ export default function PanelDesign() {
                                         onChange={(e) => updateTheme('sliderFontFamily' as any, e.target.value)}
                                         className="bg-[#1a1a1a] border border-white/[0.06] rounded-md text-[11px] text-gray-200 px-2 h-7 focus:outline-none">
                                         <option value="">Varsayılan</option>
+                                        <option value="'Plus Jakarta Sans', sans-serif">Plus Jakarta Sans</option>
                                         <option value="'Inter', sans-serif">Inter</option>
                                         <option value="'Roboto', sans-serif">Roboto</option>
                                         <option value="'Outfit', sans-serif">Outfit</option>
