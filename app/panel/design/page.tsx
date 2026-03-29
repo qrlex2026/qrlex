@@ -14,6 +14,11 @@ const DEFAULT_THEME = {
     // General
     pageBg: "#f9fafb",
     fontFamily: "Inter",
+    pageBgGradFrom: "",
+    pageBgGradTo: "",
+    pageBgGradAngle: "135",
+    pageBgImage: "",
+    pageBgVideo: "",
 
     // Header / Hero
     headerBg: "#ffffff",
@@ -1152,6 +1157,18 @@ export default function PanelDesign() {
                 {/* LEFT SIDEBAR: Section selector */}
                 <div className="w-[180px] border-r border-white/[0.06] overflow-y-auto py-4 px-2.5 flex-shrink-0 bg-[#080808]">
                     <p className="text-[10px] text-gray-600 uppercase font-semibold tracking-widest px-1 mb-3">Bileşenler</p>
+                    {/* Genel — full width */}
+                    <button
+                        onClick={() => setActiveSection(activeSection === 'genel' ? '' : 'genel')}
+                        className={`w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border text-center transition-all mb-2 ${
+                            activeSection === 'genel'
+                                ? 'border-rose-500/40 bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/20'
+                                : 'border-white/[0.04] bg-[#111] text-gray-400 hover:bg-[#161616] hover:text-gray-300'
+                        }`}
+                    >
+                        <Settings size={14} className={activeSection === 'genel' ? 'text-rose-400' : 'text-gray-500'} />
+                        <span className="text-[10px] font-semibold tracking-wide">Genel Ayarlar</span>
+                    </button>
                     <div className="grid grid-cols-2 gap-2">
                         <button
                             onClick={() => setActiveSection(activeSection === 'header' ? '' : 'header')}
@@ -1318,6 +1335,131 @@ export default function PanelDesign() {
                             {saved && <div className="flex items-center gap-2 text-sm text-emerald-400 bg-gray-800 border border-emerald-500/30 px-4 py-2.5 rounded-xl shadow-2xl"><Check size={14} /> Kaydedildi</div>}
                         </div>
                     )}
+
+                    {activeSection === 'genel' && (<>
+                        {/* ── Yazı Tipi ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Yazı Tipi</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <select value={theme.fontFamily || 'Inter'}
+                                onChange={(e) => updateTheme('fontFamily', e.target.value)}
+                                className="w-full bg-[#1a1a1a] border border-white/[0.06] rounded-xl text-[12px] text-gray-200 px-3 h-9 focus:outline-none focus:border-rose-500/40">
+                                {['Inter','Roboto','Outfit','Poppins','Lato','Raleway','Nunito','Playfair Display','Merriweather','Bebas Neue','Montserrat','Ubuntu','DM Sans','Plus Jakarta Sans','serif','sans-serif','monospace'].map(f => (
+                                    <option key={f} value={f}>{f}</option>
+                                ))}
+                            </select>
+                            <p className="text-[10px] text-gray-600 mt-1.5">Tüm menü yazılarını etkiler</p>
+                        </div>
+                        {/* ── Logo ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Logo</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            {(theme as any).headerLogo ? (
+                                <div className="relative h-20 rounded-xl overflow-hidden border border-white/[0.06] bg-[#111] flex items-center justify-center">
+                                    <img src={(theme as any).headerLogo} alt="" className="max-h-full max-w-full object-contain p-2" />
+                                    <button onClick={() => updateTheme('headerLogo' as any, '')}
+                                        className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/70 rounded-lg flex items-center justify-center text-white hover:bg-red-500/80 transition-colors">
+                                        <X size={11} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <label className="flex flex-col items-center justify-center h-20 rounded-xl border border-dashed border-white/[0.1] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
+                                    <Upload size={16} />
+                                    <span className="text-[11px]">Logo Yükle</span>
+                                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                        const f = e.target.files?.[0]; if (!f) return;
+                                        const fd = new FormData(); fd.append('file', f); fd.append('folder', 'logo');
+                                        const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
+                                        if (d.url) updateTheme('headerLogo' as any, d.url);
+                                    }} />
+                                </label>
+                            )}
+                            <p className="text-[10px] text-gray-600 mt-1.5">Header ve sidebar&apos;da kullanılır</p>
+                        </div>
+                        {/* ── Menü Arka Planı ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Menü Arka Planı</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-2.5">
+                                <ColorPicker label="Renk" value={theme.pageBg && !theme.pageBg.startsWith('linear') && !theme.pageBg.startsWith('url') ? theme.pageBg : '#f9fafb'}
+                                    onChange={(v) => { updateTheme('pageBg', v); updateTheme('pageBgGradFrom' as any, ''); updateTheme('pageBgImage' as any, ''); }} />
+                                <div className="bg-[#111] rounded-xl p-2.5 border border-white/[0.05] space-y-2">
+                                    <p className="text-[10px] text-gray-500 font-medium">Gradient</p>
+                                    <ColorPicker label="Başlangıç" value={(theme as any).pageBgGradFrom || '#f9fafb'} onChange={(v) => {
+                                        const to = (theme as any).pageBgGradTo || '#e0f2fe'; const angle = (theme as any).pageBgGradAngle || '135';
+                                        updateTheme('pageBgGradFrom' as any, v); updateTheme('pageBg', `linear-gradient(${angle}deg, ${v}, ${to})`);
+                                    }} />
+                                    <ColorPicker label="Bitiş" value={(theme as any).pageBgGradTo || '#e0f2fe'} onChange={(v) => {
+                                        const from = (theme as any).pageBgGradFrom || '#f9fafb'; const angle = (theme as any).pageBgGradAngle || '135';
+                                        updateTheme('pageBgGradTo' as any, v); updateTheme('pageBg', `linear-gradient(${angle}deg, ${from}, ${v})`);
+                                    }} />
+                                    <div className="flex items-center h-7">
+                                        <span className="text-[11px] text-gray-500 flex-1">Açı</span>
+                                        <div className="flex items-center gap-1">
+                                            <input type="range" min="0" max="360" value={(theme as any).pageBgGradAngle || '135'}
+                                                onChange={(e) => { const from = (theme as any).pageBgGradFrom || ''; const to = (theme as any).pageBgGradTo || ''; updateTheme('pageBgGradAngle' as any, e.target.value); if (from && to) updateTheme('pageBg', `linear-gradient(${e.target.value}deg, ${from}, ${to})`); }}
+                                                className="w-16 accent-rose-500" />
+                                            <span className="text-[10px] text-gray-400 w-8 text-right">{(theme as any).pageBgGradAngle || '135'}°</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-600 mb-1">Arka Plan Resmi</p>
+                                    {(theme as any).pageBgImage ? (
+                                        <div className="relative h-14 rounded-lg overflow-hidden border border-white/[0.06]">
+                                            <img src={(theme as any).pageBgImage} alt="" className="w-full h-full object-cover" />
+                                            <button onClick={() => { updateTheme('pageBgImage' as any, ''); if (theme.pageBg?.startsWith('url(')) updateTheme('pageBg', '#f9fafb'); }} className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded flex items-center justify-center text-white hover:bg-red-500/80 transition-colors"><X size={10} /></button>
+                                        </div>
+                                    ) : (
+                                        <label className="flex items-center justify-center h-9 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
+                                            <Upload size={12} /> Resim Yükle
+                                            <input type="file" accept="image/*" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const fd = new FormData(); fd.append('file', f); fd.append('folder', 'bg'); const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json(); if (d.url) { updateTheme('pageBgImage' as any, d.url); updateTheme('pageBg', `url(${d.url}) center/cover no-repeat`); } }} />
+                                        </label>
+                                    )}
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-600 mb-1">Arka Plan Videosu (öncelikli)</p>
+                                    {(theme as any).pageBgVideo ? (
+                                        <div className="rounded-lg overflow-hidden border border-white/[0.06] bg-[#111]">
+                                            <div className="relative">
+                                                <video src={(theme as any).pageBgVideo} className="w-full h-14 object-cover" muted playsInline preload="metadata" />
+                                                <button onClick={() => updateTheme('pageBgVideo' as any, '')} className="absolute top-1 right-1 w-5 h-5 bg-black/70 rounded flex items-center justify-center text-white hover:bg-red-500/80 transition-colors"><X size={10} /></button>
+                                            </div>
+                                            <div className="px-2 py-1 flex items-center justify-between">
+                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[10px] text-gray-400">Video aktif</span></div>
+                                                <label className="text-[9px] text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">Değiştir<input type="file" accept="video/*" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const fd = new FormData(); fd.append('file', f); fd.append('folder', 'bg'); const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json(); if (d.url) updateTheme('pageBgVideo' as any, d.url); }} /></label>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <label className="flex items-center justify-center h-9 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
+                                            <Upload size={12} /> Video Yükle
+                                            <input type="file" accept="video/*" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const fd = new FormData(); fd.append('file', f); fd.append('folder', 'bg'); const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json(); if (d.url) updateTheme('pageBgVideo' as any, d.url); }} />
+                                        </label>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        {/* ── Kategori Bar ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Kategori Bar</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <ColorPicker label="Arka Plan" value={(theme as any).categoryNavBg || theme.pageBg} onChange={(v) => updateTheme('categoryNavBg' as any, v)} />
+                                <ColorPicker label="Aktif Buton" value={theme.categoryActiveBg} onChange={(v) => updateTheme('categoryActiveBg', v)} />
+                                <ColorPicker label="Aktif Metin" value={theme.categoryActiveText} onChange={(v) => updateTheme('categoryActiveText', v)} />
+                                <ColorPicker label="Pasif Buton" value={theme.categoryInactiveBg} onChange={(v) => updateTheme('categoryInactiveBg', v)} />
+                                <ColorPicker label="Pasif Metin" value={theme.categoryInactiveText} onChange={(v) => updateTheme('categoryInactiveText', v)} />
+                            </div>
+                        </div>
+                    </>)}
 
                     {activeSection === 'header' && (<>
                         <div className="grid grid-cols-2 gap-2">

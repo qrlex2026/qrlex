@@ -1232,7 +1232,11 @@ export default function MenuClient({
                 </div>
             )}
 
-            <div className="" style={{ ...(T.pageBg?.includes('gradient') || T.pageBg?.startsWith('url(') ? { background: T.pageBg } : { backgroundColor: T.pageBg }), fontFamily: T.fontFamily, minHeight: '100dvh', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            {/* Page background video */}
+            {(T as any).pageBgVideo && (
+                <video src={(T as any).pageBgVideo} className="fixed inset-0 w-full h-full object-cover -z-10 pointer-events-none" autoPlay muted loop playsInline preload="auto" />
+            )}
+            <div className="" style={{ ...((T as any).pageBgVideo ? {} : T.pageBg?.includes('gradient') || T.pageBg?.startsWith('url(') ? { background: T.pageBg } : { backgroundColor: T.pageBg }), fontFamily: T.fontFamily, minHeight: '100dvh', paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 {/* Sticky Header + Category Nav */}
                 <div
                     className="sticky top-0 z-10"
