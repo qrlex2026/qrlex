@@ -113,7 +113,34 @@ export default function PanelMenu() {
     const [aiMenuUserImages, setAiMenuUserImages] = useState<Record<number, File>>({}); // index → File map
     const [aiMenuUserBg, setAiMenuUserBg] = useState<File | null>(null);  // shared background
     const aiMenuUserBgRef = useRef<HTMLInputElement>(null);
-    const aiMenuReset = () => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); setAiMenuImageResults({}); setAiMenuImageProgress({ current: 0, total: 0 }); setAiMenuGeneratingImages(false); setAiMenuImageMode('A'); setAiMenuUserImages({}); setAiMenuUserBg(null); };
+    // AI field refinement
+    const [aiFieldLoading, setAiFieldLoading] = useState<{ ci: number; pi: number; field: string } | null>(null);
+    const aiMenuReset = () => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); setAiMenuImageResults({}); setAiMenuImageProgress({ current: 0, total: 0 }); setAiMenuGeneratingImages(false); setAiMenuImageMode('A'); setAiMenuUserImages({}); setAiMenuUserBg(null); setAiFieldLoading(null); };
+
+    const refineField = async (ci: number, pi: number, field: 'name' | 'description' | 'price') => {
+        if (!aiMenuResult) return;
+        const prod = aiMenuResult.categories[ci].products[pi];
+        const cat = aiMenuResult.categories[ci].name;
+        setAiFieldLoading({ ci, pi, field });
+        try {
+            const res = await fetch('/api/ai/refine-field', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ field, productName: prod.name, currentValue: (prod as any)[field], categoryName: cat }),
+            });
+            const data = await res.json();
+            if (data.success && data.value !== null && data.value !== undefined) {
+                setAiMenuResult(prev => {
+                    if (!prev) return prev;
+                    const next = JSON.parse(JSON.stringify(prev));
+                    next.categories[ci].products[pi][field] = data.value;
+                    return next;
+                });
+            }
+        } catch { /* silent */ } finally {
+            setAiFieldLoading(null);
+        }
+    };
 
     // Body scroll lock — prevent background scroll when any modal is open
     useEffect(() => {
@@ -936,16 +963,58 @@ export default function PanelMenu() {
                                             <p className="text-sm font-semibold text-white">✓ Menü Hazır</p>
                                             <span className="text-[11px] text-gray-500">{aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0)} ürün / {aiMenuResult.categories.length} kategori</span>
                                         </div>
-                                        <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                                        <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
                                             {aiMenuResult.categories.map((cat,ci) => (
                                                 <div key={ci} className="bg-gray-800 rounded-xl overflow-hidden">
-                                                    <div className="px-3 py-2"><p className="text-xs font-bold text-violet-300">{cat.name}</p></div>
-                                                    {cat.products.map((p,pi) => (
-                                                        <div key={pi} className="flex items-center justify-between px-3 py-1.5 border-t border-gray-700/50">
-                                                            <div className="min-w-0 flex-1"><p className="text-xs text-white truncate">{p.name}</p>{p.description && <p className="text-[10px] text-gray-500 truncate">{p.description}</p>}</div>
-                                                            <span className="text-xs font-semibold text-emerald-400 ml-2 flex-shrink-0">₺{p.price}</span>
-                                                        </div>
-                                                    ))}
+                                                    {/* Category header with AI name button */}
+                                                    <div className="px-3 py-2 flex items-center justify-between">
+                                                        <p className="text-xs font-bold text-violet-300 flex-1 truncate">{cat.name}</p>
+                                                    </div>
+                                                    {cat.products.map((p,pi) => {
+                                                        const isLoading = (f: string) => aiFieldLoading?.ci === ci && aiFieldLoading?.pi === pi && aiFieldLoading?.field === f;
+                                                        return (
+                                                            <div key={pi} className="flex items-start gap-2 px-3 py-2 border-t border-gray-700/50">
+                                                                <div className="min-w-0 flex-1">
+                                                                    {/* Name row */}
+                                                                    <div className="flex items-center gap-1 group/name">
+                                                                        <p className="text-xs text-white truncate flex-1">{p.name}</p>
+                                                                        <button
+                                                                            onClick={() => refineField(ci, pi, 'name')}
+                                                                            disabled={aiFieldLoading !== null}
+                                                                            title="AI ile isim iyileştir"
+                                                                            className="flex-shrink-0 opacity-0 group-hover/name:opacity-100 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-opacity"
+                                                                        >
+                                                                            {isLoading('name') ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                                                                        </button>
+                                                                    </div>
+                                                                    {/* Description row */}
+                                                                    <div className="flex items-center gap-1 group/desc mt-0.5">
+                                                                        <p className="text-[10px] text-gray-500 truncate flex-1">{p.description || <span className="italic text-gray-700">açıklama yok</span>}</p>
+                                                                        <button
+                                                                            onClick={() => refineField(ci, pi, 'description')}
+                                                                            disabled={aiFieldLoading !== null}
+                                                                            title="AI ile açıklama iyileştir"
+                                                                            className="flex-shrink-0 opacity-0 group-hover/desc:opacity-100 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-opacity"
+                                                                        >
+                                                                            {isLoading('description') ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                {/* Price + AI button */}
+                                                                <div className="flex items-center gap-1 flex-shrink-0 group/price">
+                                                                    <span className="text-xs font-semibold text-emerald-400">₺{p.price}</span>
+                                                                    <button
+                                                                        onClick={() => refineField(ci, pi, 'price')}
+                                                                        disabled={aiFieldLoading !== null}
+                                                                        title="AI ile fiyat öner"
+                                                                        className="opacity-0 group-hover/price:opacity-100 w-4 h-4 rounded flex items-center justify-center text-violet-400 hover:text-violet-300 disabled:opacity-30 transition-opacity"
+                                                                    >
+                                                                        {isLoading('price') ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             ))}
                                         </div>
@@ -1069,6 +1138,25 @@ export default function PanelMenu() {
                                                             : uploadedCount > 0 && <p className="text-[10px] text-gray-500 mt-1">Arka plan yok → görseller direkt yüklenecek (kredi harcanmaz)</p>
                                                         }
                                                     </div>
+
+                                                    {/* Instruction prompt — only relevant when bg is set */}
+                                                    {aiMenuUserBg && (
+                                                        <div>
+                                                            <label className="text-xs text-gray-400 mb-1 block">💬 Yapay zekaya talimat <span className="text-gray-600">(isteğe bağlı)</span></label>
+                                                            <textarea
+                                                                value={aiMenuImageStyle}
+                                                                onChange={e => setAiMenuImageStyle(e.target.value)}
+                                                                rows={2}
+                                                                placeholder="Örn: Yemeği masanın üzerine yatay olarak koy, sıcak ışık, fine dining tarzı"
+                                                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-violet-500 resize-none"
+                                                            />
+                                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                                {["Masanın üzerinde sun","Arka planı koru","Rustik sunum","Profesyonel ışık","Sıcak renkler","Üstten çekim"].map(s => (
+                                                                    <button key={s} onClick={() => setAiMenuImageStyle(s)} className="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-500 hover:text-white rounded text-[10px] transition-colors">{s}</button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             );
                                         })()}
