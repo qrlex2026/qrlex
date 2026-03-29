@@ -108,7 +108,13 @@ export default function PanelMenu() {
     const [aiMenuImageProgress, setAiMenuImageProgress] = useState({ current: 0, total: 0 });
     const [aiMenuGeneratingImages, setAiMenuGeneratingImages] = useState(false);
     const aiMenuAbortRef = useRef(false);
-    const aiMenuReset = () => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); setAiMenuImageResults({}); setAiMenuImageProgress({ current: 0, total: 0 }); setAiMenuGeneratingImages(false); };
+    // Image mode: A = AI üretsin, B = kullanici gorsel verecek
+    const [aiMenuImageMode, setAiMenuImageMode] = useState<'A'|'B'>('A');
+    const [aiMenuUserImages, setAiMenuUserImages] = useState<File[]>([]); // per-product user images
+    const [aiMenuUserBg, setAiMenuUserBg] = useState<File | null>(null);  // shared background
+    const aiMenuUserBgRef = useRef<HTMLInputElement>(null);
+    const aiMenuUserImgRef = useRef<HTMLInputElement>(null);
+    const aiMenuReset = () => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); setAiMenuImageResults({}); setAiMenuImageProgress({ current: 0, total: 0 }); setAiMenuGeneratingImages(false); setAiMenuImageMode('A'); setAiMenuUserImages([]); setAiMenuUserBg(null); };
 
     // Body scroll lock — prevent background scroll when any modal is open
     useEffect(() => {
@@ -243,29 +249,94 @@ export default function PanelMenu() {
         setAiMenuStep(3);
         const results: Record<string, string> = {};
 
+        // --- Prepare background base64 once (shared) ---
+        let bgBase64: string | undefined;
+        let bgMime: string | undefined;
+        if (aiMenuImageMode === 'B' && aiMenuUserBg) {
+            const buf = await aiMenuUserBg.arrayBuffer();
+            const bytes = new Uint8Array(buf);
+            let binary = "";
+            bytes.forEach(b => binary += String.fromCharCode(b));
+            bgBase64 = btoa(binary);
+            bgMime = aiMenuUserBg.type || "image/jpeg";
+        }
+
         for (let i = 0; i < total; i++) {
             if (aiMenuAbortRef.current) break;
             const prod = allProds[i];
-            for (let attempt = 0; attempt < 3; attempt++) {
-                try {
-                    const res = await fetch('/api/ai/generate-image', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            restaurantId,
-                            productName: prod.name,
-                            productDescription: prod.description,
-                            prompt: aiMenuImageStyle || "professional food photography, studio lighting, white background, top view",
-                        }),
-                    });
-                    if (res.status === 429) { await delay(10000); continue; } // rate limited — wait 10s
-                    const data = await res.json();
-                    if (data.success && data.imageUrl) results[String(i)] = data.imageUrl;
-                    break;
-                } catch { if (attempt === 2) break; await delay(5000); }
+
+            if (aiMenuImageMode === 'B') {
+                // --- Mode B: user provided images ---
+                const userFile = aiMenuUserImages[i];
+                if (!userFile) {
+                    // No user image for this slot — skip
+                    setAiMenuImageProgress(prev => ({ ...prev, current: i + 1 }));
+                    continue;
+                }
+
+                if (!bgBase64) {
+                    // No background → direct upload to R2 (no credit)
+                    try {
+                        const fd = new FormData();
+                        fd.append("file", userFile);
+                        fd.append("folder", "products");
+                        const res = await fetch("/api/upload", { method: "POST", body: fd });
+                        const data = await res.json();
+                        if (data.success && data.url) results[String(i)] = data.url;
+                    } catch { /* skip */ }
+                } else {
+                    // Background provided → img2img via generate-image API
+                    const buf = await userFile.arrayBuffer();
+                    const bytes = new Uint8Array(buf);
+                    let binary = "";
+                    bytes.forEach(b => binary += String.fromCharCode(b));
+                    const prodImgBase64 = btoa(binary);
+                    for (let attempt = 0; attempt < 3; attempt++) {
+                        try {
+                            const res = await fetch('/api/ai/generate-image', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    restaurantId,
+                                    productName: prod.name,
+                                    productDescription: prod.description,
+                                    prompt: aiMenuImageStyle || "professional food photography, natural lighting",
+                                    backgroundImageBase64: bgBase64,
+                                    backgroundImageMimeType: bgMime,
+                                }),
+                            });
+                            if (res.status === 429) { await delay(10000); continue; }
+                            const data = await res.json();
+                            if (data.success && data.imageUrl) results[String(i)] = data.imageUrl;
+                            break;
+                        } catch { if (attempt === 2) break; await delay(5000); }
+                    }
+                    if (i < total - 1 && !aiMenuAbortRef.current) await delay(4000);
+                }
+            } else {
+                // --- Mode A: AI generates via Imagen 4 ---
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    try {
+                        const res = await fetch('/api/ai/generate-image', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                restaurantId,
+                                productName: prod.name,
+                                productDescription: prod.description,
+                                prompt: aiMenuImageStyle || "professional food photography, studio lighting, white background, top view",
+                            }),
+                        });
+                        if (res.status === 429) { await delay(10000); continue; }
+                        const data = await res.json();
+                        if (data.success && data.imageUrl) results[String(i)] = data.imageUrl;
+                        break;
+                    } catch { if (attempt === 2) break; await delay(5000); }
+                }
+                if (i < total - 1 && !aiMenuAbortRef.current) await delay(4000);
             }
+
             setAiMenuImageProgress(prev => ({ ...prev, current: i + 1 }));
-            if (i < total - 1 && !aiMenuAbortRef.current) await delay(4000); // 4s between requests
         }
 
         setAiMenuImageResults(results);
@@ -880,30 +951,115 @@ export default function PanelMenu() {
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="bg-violet-500/5 border border-violet-500/20 rounded-xl p-4">
-                                        <label className="flex items-start gap-3 cursor-pointer">
-                                            <input type="checkbox" checked={aiMenuAddImages} onChange={e => setAiMenuAddImages(e.target.checked)} className="mt-0.5 accent-violet-500 w-4 h-4 flex-shrink-0" />
-                                            <div>
-                                                <p className="text-sm font-semibold text-white">Ürünlere AI resim ekle</p>
-                                                <p className="text-[11px] text-gray-400 mt-0.5">{Math.min(aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0),20)} ürün × 5 kredi = <span className="text-violet-300 font-semibold">{Math.min(aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0),20)*5} kredi</span>{aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0)>20 && <span className="text-amber-400 ml-2">⚠ İlk 20</span>}</p>
-                                            </div>
-                                        </label>
-                                        {aiMenuAddImages && (
-                                            <div className="mt-3 pl-7">
-                                                <label className="text-xs text-gray-400 mb-1 block">Fotoğraf stili (opsiyonel)</label>
+
+                                    {/* Image mode toggle */}
+                                    <div className="bg-violet-500/5 border border-violet-500/20 rounded-xl p-4 space-y-3">
+                                        <p className="text-sm font-semibold text-white">Ürün Görseli</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                onClick={() => setAiMenuImageMode('A')}
+                                                className={`py-2.5 px-3 rounded-xl text-xs font-semibold text-left transition-all border ${
+                                                    aiMenuImageMode === 'A'
+                                                    ? 'bg-violet-500/20 border-violet-500/50 text-violet-300'
+                                                    : 'bg-gray-800/60 border-gray-700 text-gray-400 hover:border-gray-600'
+                                                }`}
+                                            >
+                                                <div className="text-base mb-0.5">🤖</div>
+                                                AI Üretsin
+                                                <div className="text-[10px] opacity-60 mt-0.5">Imagen 4 · 5 kredi/ürün</div>
+                                            </button>
+                                            <button
+                                                onClick={() => setAiMenuImageMode('B')}
+                                                className={`py-2.5 px-3 rounded-xl text-xs font-semibold text-left transition-all border ${
+                                                    aiMenuImageMode === 'B'
+                                                    ? 'bg-violet-500/20 border-violet-500/50 text-violet-300'
+                                                    : 'bg-gray-800/60 border-gray-700 text-gray-400 hover:border-gray-600'
+                                                }`}
+                                            >
+                                                <div className="text-base mb-0.5">📸</div>
+                                                Ben Vereceğim
+                                                <div className="text-[10px] opacity-60 mt-0.5">Kendi fotoğrafların</div>
+                                            </button>
+                                        </div>
+
+                                        {aiMenuImageMode === 'A' && (
+                                            <div className="space-y-2">
+                                                <label className="text-xs text-gray-400">Fotoğraf stili (opsiyonel)</label>
                                                 <input value={aiMenuImageStyle} onChange={e => setAiMenuImageStyle(e.target.value)} placeholder="Örn: sıcak ışık, ahşap zemin, rustik" className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500" />
-                                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                                <div className="flex flex-wrap gap-1.5">
                                                     {["sıcak ışık, ahşap zemin","beyaz zemin, modern","üstten çekim, rustik","koyu zemin, fine dining"].map(s => (
                                                         <button key={s} onClick={() => setAiMenuImageStyle(s)} className="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg text-[10px] transition-colors">{s}</button>
                                                     ))}
                                                 </div>
+                                                <p className="text-[10px] text-gray-500">{Math.min(aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0),20)} ürün × 5 kredi = <span className="text-violet-300 font-semibold">{Math.min(aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0),20)*5} kredi</span></p>
+                                            </div>
+                                        )}
+
+                                        {aiMenuImageMode === 'B' && (
+                                            <div className="space-y-3">
+                                                {/* Ürün görselleri */}
+                                                <div>
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <label className="text-xs text-gray-400">Ürün Görselleri <span className="text-gray-600">(sırayla, her ürüne bir görsel)</span></label>
+                                                        {aiMenuUserImages.length > 0 && <span className="text-[10px] text-violet-400">{aiMenuUserImages.length} görsel yüklendi</span>}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => aiMenuUserImgRef.current?.click()}
+                                                        className="w-full h-12 border border-dashed border-gray-700 rounded-xl flex items-center justify-center gap-2 text-xs text-gray-500 hover:border-violet-500/50 hover:text-gray-400 transition-colors"
+                                                    >
+                                                        <Upload size={13} />
+                                                        {aiMenuUserImages.length > 0 ? `${aiMenuUserImages.length} görsel — daha ekle` : "Ürün fotoğraflarını seç (çoklu)"}
+                                                    </button>
+                                                    <input ref={aiMenuUserImgRef} type="file" accept="image/*" multiple className="hidden"
+                                                        onChange={e => {
+                                                            const files = Array.from(e.target.files || []);
+                                                            setAiMenuUserImages(prev => [...prev, ...files].slice(0, 20));
+                                                            e.target.value = "";
+                                                        }}
+                                                    />
+                                                    {aiMenuUserImages.length > 0 && (
+                                                        <div className="flex gap-1 flex-wrap mt-1.5">
+                                                            {aiMenuUserImages.slice(0, 8).map((f,i) => (
+                                                                <div key={i} className="relative">
+                                                                    <img src={URL.createObjectURL(f)} alt="" className="w-8 h-8 rounded-md object-cover border border-gray-700" />
+                                                                    <button onClick={() => setAiMenuUserImages(prev => prev.filter((_,idx) => idx !== i))} className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-white text-[8px] flex items-center justify-center">×</button>
+                                                                </div>
+                                                            ))}
+                                                            {aiMenuUserImages.length > 8 && <span className="text-[10px] text-gray-500 self-center">+{aiMenuUserImages.length-8}</span>}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Arka plan */}
+                                                <div>
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <label className="text-xs text-gray-400">Arka Plan <span className="text-gray-600">(isteğe bağlı — tüm ürünlere uygulanır)</span></label>
+                                                        {aiMenuUserBg && <button onClick={() => setAiMenuUserBg(null)} className="text-[10px] text-red-400 hover:text-red-300">Kaldır</button>}
+                                                    </div>
+                                                    {aiMenuUserBg ? (
+                                                        <div className="h-16 rounded-xl overflow-hidden border border-gray-700">
+                                                            <img src={URL.createObjectURL(aiMenuUserBg)} alt="" className="w-full h-full object-cover" />
+                                                        </div>
+                                                    ) : (
+                                                        <button onClick={() => aiMenuUserBgRef.current?.click()} className="w-full h-12 border border-dashed border-gray-700 rounded-xl flex items-center justify-center gap-2 text-xs text-gray-500 hover:border-violet-500/50 hover:text-gray-400 transition-colors">
+                                                            <Upload size={13} /> Arka plan yükle
+                                                        </button>
+                                                    )}
+                                                    <input ref={aiMenuUserBgRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                                                        onChange={e => { const f = e.target.files?.[0]; if (f) setAiMenuUserBg(f); e.target.value = ""; }}
+                                                    />
+                                                    {aiMenuUserBg && <p className="text-[10px] text-violet-400 mt-1">✨ Gemini 2.0 ile arka plan üzerine görsel üretilecek · {aiMenuUserImages.length} ürün × 5 kredi</p>}
+                                                    {!aiMenuUserBg && aiMenuUserImages.length > 0 && <p className="text-[10px] text-gray-500 mt-1">Arka plan yok → görseller direkt yüklenecek (kredi harcanmaz)</p>}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
+
                                     <div className="flex gap-2">
-                                        {aiMenuAddImages ? (
+                                        {(aiMenuImageMode === 'A' || (aiMenuImageMode === 'B' && aiMenuUserImages.length > 0)) ? (
                                             <button onClick={generateImagesForMenu} className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 text-white" style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)' }}>
-                                                <Sparkles size={15} /> Resimleri Üret ve Devam Et
+                                                <Sparkles size={15} />
+                                                {aiMenuImageMode === 'A' ? 'Resimleri Üret ve Devam Et' : aiMenuUserBg ? 'Dönüştür ve Devam Et' : 'Görselleri Yükle ve Devam Et'}
                                             </button>
                                         ) : (
                                             <button onClick={handleAiMenuImport} disabled={aiMenuImporting} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
