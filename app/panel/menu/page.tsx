@@ -1123,13 +1123,39 @@ export default function PanelMenu() {
                                             </div>
                                         )}
 
-                                        {aiMenuImageMode === 'B' && (() => {
+                                                {aiMenuImageMode === 'B' && (() => {
                                             const allProdsFlat = aiMenuResult.categories.flatMap(c => c.products);
                                             const uploadedCount = Object.keys(aiMenuUserImages).length;
+                                            const totalSlots = Math.min(allProdsFlat.length, 20);
                                             return (
                                                 <div className="space-y-2">
+                                                    {/* Quick-fill: apply one image to ALL products */}
+                                                    <div className="flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-xl px-3 py-2">
+                                                        <div className="flex-1">
+                                                            <p className="text-xs font-semibold text-violet-300">Tek görsel → tüm ürünlere uygula</p>
+                                                            <p className="text-[10px] text-gray-500">Bir görsel seç, {totalSlots} ürünün hepsine otomatik atanır</p>
+                                                        </div>
+                                                        <label htmlFor="quick-fill-all" className="cursor-pointer flex-shrink-0 px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors">
+                                                            <Upload size={11} /> Seç ve Uygula
+                                                        </label>
+                                                        <input
+                                                            id="quick-fill-all"
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={e => {
+                                                                const f = e.target.files?.[0];
+                                                                if (!f) return;
+                                                                const filled: Record<number, File> = {};
+                                                                for (let i = 0; i < totalSlots; i++) filled[i] = f;
+                                                                setAiMenuUserImages(filled);
+                                                                e.target.value = "";
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <p className="text-[10px] text-gray-500">{uploadedCount} / {totalSlots} ürüne görsel atandı</p>
                                                     {/* Per-product upload rows */}
-                                                    <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                                                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                                                         {allProdsFlat.slice(0, 20).map((prod, idx) => {
                                                             const file = aiMenuUserImages[idx];
                                                             const inputId = `prod-img-${idx}`;
