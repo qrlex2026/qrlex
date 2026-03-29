@@ -517,10 +517,46 @@ export default function PanelMenu() {
     const handleDrop = (e: React.DragEvent) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file) handleFileUpload(file); };
     const handleSave = async () => {
         setSaving(true);
-        const payload = { name: form.name, description: form.description || null, price: form.price, discountPrice: form.discountPrice || null, image: form.image || null, video: form.video || null, prepTime: form.prepTime || null, calories: form.calories || null, ingredients: form.ingredients ? form.ingredients.split(',').map(s => s.trim()).filter(Boolean) : [], categoryId: form.categoryId, isPopular: form.isPopular, isActive: form.isActive };
-        if (editProduct) await fetch(`/api/admin/products/${editProduct.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-        else await fetch(`/api/admin/products?restaurantId=${restaurantId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-        setShowModal(false); setSaving(false); fetchData();
+        try {
+            const payload = {
+                name: form.name,
+                description: form.description || null,
+                price: form.price,
+                discountPrice: form.discountPrice || null,
+                image: form.image || null,
+                video: form.video || null,
+                prepTime: form.prepTime || null,
+                calories: form.calories || null,
+                ingredients: form.ingredients ? form.ingredients.split(',').map(s => s.trim()).filter(Boolean) : [],
+                categoryId: form.categoryId,
+                isPopular: form.isPopular,
+                isActive: form.isActive,
+            };
+
+            let res: Response;
+            if (editProduct) {
+                res = await fetch(`/api/admin/products/${editProduct.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+            } else {
+                if (!restaurantId) { alert("Restoran bilgisi bulunamadı. Lütfen sayfayı yenileyin."); return; }
+                res = await fetch(`/api/admin/products?restaurantId=${restaurantId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+            }
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                const msg = errData?.error || errData?.message || `Hata: ${res.status}`;
+                console.error("Ürün kaydetme hatası:", msg, payload);
+                alert(`Ürün kaydedilemedi: ${msg}`);
+                return;
+            }
+
+            setShowModal(false);
+            fetchData();
+        } catch (err) {
+            console.error("handleSave exception:", err);
+            alert("Bağlantı hatası. Lütfen tekrar deneyin.");
+        } finally {
+            setSaving(false);
+        }
     };
 
     if (sessionLoading) return <div className="text-center py-20 text-gray-500">Yükleniyor...</div>;
