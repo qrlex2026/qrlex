@@ -172,6 +172,11 @@ const DEFAULT_THEME = {
     sliderH1Size: "36",
     sliderH2Size: "20",
     sliderFontFamily: "",
+    // Slider Slide Texts
+    sliderSlide1H1: "",
+    sliderSlide1H2: "",
+    sliderSlide2H1: "",
+    sliderSlide2H2: "",
 
     // Product Detail Overlay
     detailBg: "#ffffff",
@@ -2149,6 +2154,64 @@ export default function PanelDesign() {
                                             }} />
                                         </label>
                                     )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Slayt Metinleri ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Slayt Metinleri</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-2">
+                                {/* Slide 1 */}
+                                <p className="text-[10px] text-gray-600">Slayt 1</p>
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-1.5 bg-[#1a1a1a] rounded-md px-2 h-7">
+                                        <span className="text-[10px] text-gray-600 flex-shrink-0 w-14">Başlık</span>
+                                        <input
+                                            type="text"
+                                            value={(theme as any).sliderSlide1H1 || ''}
+                                            placeholder="Örn: Lezzet Şöleni"
+                                            onChange={(e) => updateTheme('sliderSlide1H1' as any, e.target.value)}
+                                            className="flex-1 bg-transparent text-[11px] text-gray-200 focus:outline-none placeholder:text-gray-700"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-1.5 bg-[#1a1a1a] rounded-md px-2 h-7">
+                                        <span className="text-[10px] text-gray-600 flex-shrink-0 w-14">Açıklama</span>
+                                        <input
+                                            type="text"
+                                            value={(theme as any).sliderSlide1H2 || ''}
+                                            placeholder="Örn: Özel Tarifler"
+                                            onChange={(e) => updateTheme('sliderSlide1H2' as any, e.target.value)}
+                                            className="flex-1 bg-transparent text-[11px] text-gray-200 focus:outline-none placeholder:text-gray-700"
+                                        />
+                                    </div>
+                                </div>
+                                {/* Slide 2 */}
+                                <p className="text-[10px] text-gray-600 pt-1">Slayt 2</p>
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-1.5 bg-[#1a1a1a] rounded-md px-2 h-7">
+                                        <span className="text-[10px] text-gray-600 flex-shrink-0 w-14">Başlık</span>
+                                        <input
+                                            type="text"
+                                            value={(theme as any).sliderSlide2H1 || ''}
+                                            placeholder="Örn: Sezonun En İyisi"
+                                            onChange={(e) => updateTheme('sliderSlide2H1' as any, e.target.value)}
+                                            className="flex-1 bg-transparent text-[11px] text-gray-200 focus:outline-none placeholder:text-gray-700"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-1.5 bg-[#1a1a1a] rounded-md px-2 h-7">
+                                        <span className="text-[10px] text-gray-600 flex-shrink-0 w-14">Açıklama</span>
+                                        <input
+                                            type="text"
+                                            value={(theme as any).sliderSlide2H2 || ''}
+                                            placeholder="Örn: Taze ve Doğal"
+                                            onChange={(e) => updateTheme('sliderSlide2H2' as any, e.target.value)}
+                                            className="flex-1 bg-transparent text-[11px] text-gray-200 focus:outline-none placeholder:text-gray-700"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>

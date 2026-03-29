@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import MenuClient from "./MenuClient";
 
-export const revalidate = 3600; // Cache menu pages for 1 hour (ISR)
+export const revalidate = 300; // Cache menu pages for 5 minutes (ISR) — prevents long cold-start gaps
 
 const defaultTheme = {
     pageBg: "#f9fafb", fontFamily: "Inter", headerBg: "#ffffff",
@@ -85,13 +85,21 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
 
     const theme = { ...defaultTheme, ...(restaurant.theme as Record<string, string> || {}) };
 
-    // Build Google Fonts URL for server-side injection
+    // Non-blocking Google Fonts — font-display:optional prevents render blocking.
+    // Page renders immediately with system font, then swaps once custom font is ready.
     const fontFamily = theme.fontFamily || "Inter";
-    const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
+    const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/ /g, "+")}:wght@400;500;600;700&display=optional`;
 
     return (
         <>
-            {/* Inject critical CSS and font BEFORE any content renders */}
+            {/* Preconnect: early DNS + TLS handshake, zero render cost */}
+            {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+            {/* Preload + async stylesheet — does NOT block first paint */}
+            {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+            <link rel="preload" as="style" href={fontUrl} />
             {/* eslint-disable-next-line @next/next/no-page-custom-font */}
             <link rel="stylesheet" href={fontUrl} />
             <style dangerouslySetInnerHTML={{
@@ -110,4 +118,3 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
         </>
     );
 }
-

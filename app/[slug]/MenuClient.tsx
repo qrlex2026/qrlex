@@ -1497,8 +1497,14 @@ export default function MenuClient({
                     const bgImg = (T as any).sliderBgImage || '';
                     const bgVid = (T as any).sliderBgVideo || '';
                     const slides = [
-                        { h2: t('specialRecipes'), h1: t('flavorFeast') },
-                        { h2: t('freshNatural'), h1: t('bestOfSeason') },
+                        {
+                            h2: (T as any).sliderSlide1H2 || t('specialRecipes'),
+                            h1: (T as any).sliderSlide1H1 || t('flavorFeast'),
+                        },
+                        {
+                            h2: (T as any).sliderSlide2H2 || t('freshNatural'),
+                            h1: (T as any).sliderSlide2H1 || t('bestOfSeason'),
+                        },
                     ];
                     return (
                         <div className="w-full relative overflow-hidden" style={{ height: sHeight, borderRadius: sRadius, background: bgImg && !bgVid ? `url(${bgImg}) center/cover no-repeat` : '#e5e7eb' }}>
@@ -1560,7 +1566,7 @@ export default function MenuClient({
                             <div className={`relative overflow-hidden ${className}`} style={{ borderRadius: imgRadius || `${T.cardImageRadius}px` }}>
                                 {product.video ? (
                                     <>
-                                        <video src={product.video} poster={product.image || undefined} muted autoPlay loop playsInline preload="auto" className="w-full h-full object-cover" />
+                                        <video src={product.video} poster={product.image || undefined} muted autoPlay loop playsInline preload="none" className="w-full h-full object-cover" />
                                         <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"><span className="text-white text-[10px] ml-0.5">▶</span></div>
                                     </>
                                 ) : product.image ? (

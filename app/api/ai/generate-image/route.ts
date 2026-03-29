@@ -6,9 +6,9 @@ import sharp from "sharp";
 const prisma = new PrismaClient();
 const IMAGE_COST = 5; // 5 kredi per görsel
 
-// Imagen 4 Fast — 2x cheaper than gemini-2.5-flash-image, better quality, same API key
-// $0.02/image vs $0.039/image previously
-const IMAGEN_MODEL = "imagen-4.0-fast-generate-preview-06-06";
+// Imagen 4 Fast — correct stable model ID (preview name was deprecated)
+// $0.02/image, fast generation, excellent food photography quality
+const IMAGEN_MODEL = "imagen-4.0-fast-generate-001";
 
 // Extended timeout — Imagen 4 can take up to 30-40s per image
 export const maxDuration = 120;
