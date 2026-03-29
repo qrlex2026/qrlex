@@ -1350,6 +1350,9 @@ export default function PanelMenu() {
                                                 {aiMenuImporting ? <><Loader2 size={15} className="animate-spin" />Yayınlanıyor...</> : "✓ Hemen Yayınla"}
                                             </button>
                                         )}
+                                        <button onClick={handleAiMenuImport} disabled={aiMenuImporting} className="px-4 py-3 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 rounded-xl text-sm font-semibold transition-colors disabled:opacity-40 flex items-center gap-1.5">
+                                            {aiMenuImporting ? <Loader2 size={13} className="animate-spin" /> : "✓"} Resimsiz Yayınla
+                                        </button>
                                         <button onClick={() => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); }} className="px-4 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm transition-colors">Geri</button>
                                     </div>
                                     {aiMenuImportDone && (
