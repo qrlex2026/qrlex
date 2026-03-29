@@ -6,7 +6,7 @@ const FIELD_PROMPTS: Record<string, (name: string, current: string, cat: string)
     name: (_, current, cat) =>
         `Bir Türk restoranında "${cat}" kategorisinde şu anda "${current}" adında bir ürün var. Daha çekici, iştah açıcı ve profesyonel bir ürün adı öner. Sadece adı yaz, başka hiçbir şey yazma. Maksimum 5 kelime.`,
     description: (name, current, cat) =>
-        `Türk restoranında "${cat}" kategorisinde "${name}" adlı ürün için şu an şu açıklama var: "${current}". Daha profesyonel, iştah açıcı ve kısa (maksimum 80 karakter) bir açıklama yaz. Sadece açıklamayı yaz, tırnak işareti veya başka metin ekleme.`,
+        `Sen bir Türk restoranı için menü yazarısın. "${cat}" kategorisinde "${name}" adlı ürün için profesyonel, iştah açıcı ve detaylı bir açıklama yaz. Malzemeleri, pişirme yöntemini ve lezzet profilini içersin. Mevcut açıklama: "${current}". Türkçe yaz, 120-180 karakter arasında olsun. Sadece açıklamayı yaz, başka hiçbir şey ekleme.`,
     price: (name, _, cat) =>
         `Türk restoranında "${cat}" kategorisinde "${name}" adlı ürün için Türkiye piyasasına uygun bir fiyat öner. Sadece sayıyı yaz (örn: 85), başka hiçbir şey yazma.`,
 };

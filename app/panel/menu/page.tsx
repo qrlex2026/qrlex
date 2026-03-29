@@ -115,6 +115,8 @@ export default function PanelMenu() {
     const aiMenuUserBgRef = useRef<HTMLInputElement>(null);
     // AI field refinement
     const [aiFieldLoading, setAiFieldLoading] = useState<{ ci: number; pi: number; field: string } | null>(null);
+    const [bulkRefineLoading, setBulkRefineLoading] = useState<'name'|'description'|'price'|null>(null);
+    const [bulkRefineProgress, setBulkRefineProgress] = useState({ current: 0, total: 0 });
     const aiMenuReset = () => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); setAiMenuImageResults({}); setAiMenuImageProgress({ current: 0, total: 0 }); setAiMenuGeneratingImages(false); setAiMenuImageMode('A'); setAiMenuUserImages({}); setAiMenuUserBg(null); setAiFieldLoading(null); };
 
     const refineField = async (ci: number, pi: number, field: 'name' | 'description' | 'price') => {
@@ -140,6 +142,38 @@ export default function PanelMenu() {
         } catch { /* silent */ } finally {
             setAiFieldLoading(null);
         }
+    };
+
+    const bulkRefineField = async (field: 'name' | 'description' | 'price') => {
+        if (!aiMenuResult || bulkRefineLoading) return;
+        const allProds = aiMenuResult.categories.flatMap((c, ci) =>
+            c.products.map((p, pi) => ({ ci, pi, p, cat: c.name }))
+        );
+        const total = allProds.length;
+        setBulkRefineLoading(field);
+        setBulkRefineProgress({ current: 0, total });
+        for (let idx = 0; idx < total; idx++) {
+            const { ci, pi, p, cat } = allProds[idx];
+            try {
+                const res = await fetch('/api/ai/refine-field', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ field, productName: p.name, currentValue: (p as any)[field], categoryName: cat }),
+                });
+                const data = await res.json();
+                if (data.success && data.value !== null && data.value !== undefined) {
+                    setAiMenuResult(prev => {
+                        if (!prev) return prev;
+                        const next = JSON.parse(JSON.stringify(prev));
+                        next.categories[ci].products[pi][field] = data.value;
+                        return next;
+                    });
+                }
+            } catch { /* silent */ }
+            setBulkRefineProgress({ current: idx + 1, total });
+            if (idx < total - 1) await new Promise(r => setTimeout(r, 300));
+        }
+        setBulkRefineLoading(null);
     };
 
     // Body scroll lock — prevent background scroll when any modal is open
@@ -964,6 +998,30 @@ export default function PanelMenu() {
                                         <div className="flex items-center justify-between mb-2">
                                             <p className="text-sm font-semibold text-white">✓ Menü Hazır</p>
                                             <span className="text-[11px] text-gray-500">{aiMenuResult.categories.reduce((a,c)=>a+c.products.length,0)} ürün / {aiMenuResult.categories.length} kategori</span>
+                                        </div>
+                                        {/* Bulk AI buttons */}
+                                        <div className="flex gap-1.5 mb-2 flex-wrap">
+                                            {(['description','name','price'] as const).map(field => {
+                                                const labels = { name: 'İsim', description: 'Açıklama', price: 'Fiyat' };
+                                                const isThis = bulkRefineLoading === field;
+                                                const isAny = bulkRefineLoading !== null || aiFieldLoading !== null;
+                                                return (
+                                                    <button
+                                                        key={field}
+                                                        onClick={() => bulkRefineField(field)}
+                                                        disabled={isAny}
+                                                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all border ${
+                                                            isThis
+                                                            ? 'bg-violet-500/20 border-violet-500/50 text-violet-300'
+                                                            : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-violet-500/40 hover:text-violet-400 disabled:opacity-40'
+                                                        }`}
+                                                    >
+                                                        {isThis
+                                                            ? <><Loader2 size={10} className="animate-spin" /> Tüm {labels[field]} ({bulkRefineProgress.current}/{bulkRefineProgress.total})</>
+                                                            : <><Sparkles size={10} /> Tüm {labels[field]}leri AI ile Yaz</>}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                         <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
                                             {aiMenuResult.categories.map((cat,ci) => (
