@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { uploadToR2 } from "@/lib/r2";
+import sharp from "sharp";
 
 const prisma = new PrismaClient();
 const IMAGE_COST = 5;
@@ -89,9 +90,14 @@ export async function POST(req: NextRequest) {
             if (part?.inlineData?.data) {
                 const mime = part.inlineData.mimeType ?? "image/png";
                 const ext = mime.includes("jpeg") ? "jpg" : "png";
-                const buf = Buffer.from(part.inlineData.data, "base64");
-                const key = `ai-generated/${restaurantId}/${Date.now()}.${ext}`;
-                const imageUrl = await uploadToR2(buf, key, mime);
+                const rawBuf = Buffer.from(part.inlineData.data, "base64");
+                // Compress with Sharp → WebP (same as normal upload route)
+                const buf = await sharp(rawBuf)
+                    .resize(1000, 1000, { fit: "inside", withoutEnlargement: true })
+                    .webp({ quality: 82 })
+                    .toBuffer();
+                const key = `ai-generated/${restaurantId}/${Date.now()}.webp`;
+                const imageUrl = await uploadToR2(buf, key, "image/webp");
 
                 await (prisma as any).$transaction([
                     (prisma as any).aiCredit.update({
