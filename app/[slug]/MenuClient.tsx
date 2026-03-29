@@ -1480,41 +1480,55 @@ export default function MenuClient({
                 </div>
 
                 {/* Hero Slider (JS Based) — below category nav */}
-                {T.showHeroSlider !== 'false' && (
-                    <div className="w-full h-[300px] relative overflow-hidden bg-gray-100">
-                        <div
-                            className="flex h-full w-full transition-transform duration-700 ease-in-out"
-                            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                        >
-                            {/* Slide 1 */}
-                            <div className="min-w-full h-full relative flex-shrink-0">
-                                <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
-                                    <h3 className="text-xl font-medium mb-2 opacity-80">{t('specialRecipes')}</h3>
-                                    <h1 className="text-4xl font-bold leading-tight">{t('flavorFeast')}</h1>
-                                </div>
+                {T.showHeroSlider !== 'false' && (() => {
+                    const sHeight = parseInt((T as any).sliderHeight || '220');
+                    const sRadius = parseInt((T as any).sliderBorderRadius || '0');
+                    const sOverlay = (T as any).sliderOverlayBg || '#00000030';
+                    const sDotColor = (T as any).sliderDotColor || '#ffffff80';
+                    const sDotActive = (T as any).sliderDotActiveColor || '#ffffff';
+                    const showDots = (T as any).showSliderDots !== 'false';
+                    const sFont = (T as any).sliderFontFamily || T.fontFamily || '';
+                    const h1Size = parseInt((T as any).sliderH1Size || '36');
+                    const h2Size = parseInt((T as any).sliderH2Size || '20');
+                    const bgImg = (T as any).sliderBgImage || '';
+                    const bgVid = (T as any).sliderBgVideo || '';
+                    const slides = [
+                        { h2: t('specialRecipes'), h1: t('flavorFeast') },
+                        { h2: t('freshNatural'), h1: t('bestOfSeason') },
+                    ];
+                    return (
+                        <div className="w-full relative overflow-hidden" style={{ height: sHeight, borderRadius: sRadius, background: bgImg && !bgVid ? `url(${bgImg}) center/cover no-repeat` : '#e5e7eb' }}>
+                            {/* Video background */}
+                            {bgVid && (
+                                <video src={bgVid} className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline preload="auto" />
+                            )}
+                            {/* Slide text strip */}
+                            <div className="flex h-full w-full transition-transform duration-700 ease-in-out absolute inset-0"
+                                style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+                                {slides.map((sl, i) => (
+                                    <div key={i} className="min-w-full h-full relative flex-shrink-0">
+                                        {/* Per-slide overlay */}
+                                        <div className="absolute inset-0" style={{ background: sOverlay }} />
+                                        <div className="absolute inset-0 p-[30px] flex flex-col justify-center" style={{ fontFamily: sFont || undefined }}>
+                                            <h3 className="mb-2 font-medium opacity-90" style={{ fontSize: h2Size, color: sDotActive }}>{sl.h2}</h3>
+                                            <h1 className="font-bold leading-tight" style={{ fontSize: h1Size, color: sDotActive }}>{sl.h1}</h1>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                            {/* Slide 2 */}
-                            <div className="min-w-full h-full relative flex-shrink-0">
-                                <div className="absolute inset-0 p-[30px] flex flex-col justify-center text-gray-900">
-                                    <h3 className="text-xl font-medium mb-2 opacity-80">{t('freshNatural')}</h3>
-                                    <h1 className="text-4xl font-bold leading-tight">{t('bestOfSeason')}</h1>
+                            {/* Dots / progress bars */}
+                            {showDots && (
+                                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                                    {slides.map((_, i) => (
+                                        <button key={i} onClick={() => setCurrentSlide(i)}
+                                            className="h-2 rounded-full transition-all"
+                                            style={{ width: currentSlide === i ? 24 : 8, backgroundColor: currentSlide === i ? sDotActive : sDotColor }} />
+                                    ))}
                                 </div>
-                            </div>
+                            )}
                         </div>
-
-                        {/* Slider Dots */}
-                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                            <button
-                                onClick={() => setCurrentSlide(0)}
-                                className={`w-2 h-2 rounded-full transition-all ${currentSlide === 0 ? 'bg-black w-6' : 'bg-gray-400'}`}
-                            />
-                            <button
-                                onClick={() => setCurrentSlide(1)}
-                                className={`w-2 h-2 rounded-full transition-all ${currentSlide === 1 ? 'bg-black w-6' : 'bg-gray-400'}`}
-                            />
-                        </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {/* Product List (Grouped by Category) */}
                 <div

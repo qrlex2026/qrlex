@@ -151,6 +151,22 @@ const DEFAULT_THEME = {
 
     // Slider
     showHeroSlider: "true",
+    sliderAutoPlay: "true",
+    sliderInterval: "5000",
+    sliderHeight: "220",
+    sliderBorderRadius: "0",
+    sliderOverlayBg: "#00000030",
+    sliderDotColor: "#ffffff80",
+    sliderDotActiveColor: "#ffffff",
+    showSliderArrows: "true",
+    sliderArrowBg: "#00000040",
+    sliderArrowColor: "#ffffff",
+    showSliderDots: "true",
+    sliderBgImage: "",
+    sliderBgVideo: "",
+    sliderH1Size: "36",
+    sliderH2Size: "20",
+    sliderFontFamily: "",
 
     // Product Detail Overlay
     detailBg: "#ffffff",
@@ -1160,10 +1176,10 @@ export default function PanelDesign() {
                             <span className="text-[10px] font-medium leading-tight">Tema</span>
                         </button>
                     </div>
-                    <div className="mt-2">
+                    <div className="mt-2 grid grid-cols-2 gap-2">
                         <button
                             onClick={() => setActiveSection(activeSection === 'welcome' ? '' : 'welcome')}
-                            className={`w-full flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-center transition-all ${
+                            className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-center transition-all ${
                                 activeSection === 'welcome'
                                     ? 'border-amber-500/40 bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/20'
                                     : 'border-white/[0.04] bg-[#111] text-gray-400 hover:bg-[#161616] hover:text-gray-300'
@@ -1171,6 +1187,17 @@ export default function PanelDesign() {
                         >
                             <Globe size={16} className={activeSection === 'welcome' ? 'text-amber-400' : 'text-gray-500'} />
                             <span className="text-[10px] font-medium leading-tight">Hoşgeldiniz</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveSection(activeSection === 'slider' ? '' : 'slider')}
+                            className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border text-center transition-all ${
+                                activeSection === 'slider'
+                                    ? 'border-sky-500/40 bg-sky-500/10 text-sky-300 ring-1 ring-sky-500/20'
+                                    : 'border-white/[0.04] bg-[#111] text-gray-400 hover:bg-[#161616] hover:text-gray-300'
+                            }`}
+                        >
+                            <GalleryHorizontal size={16} className={activeSection === 'slider' ? 'text-sky-400' : 'text-gray-500'} />
+                            <span className="text-[10px] font-medium leading-tight">Slider</span>
                         </button>
                     </div>
                 </div>
@@ -1776,10 +1803,37 @@ export default function PanelDesign() {
                                 <div>
                                     <p className="text-[10px] text-gray-600 mb-1">Video (öncelikli)</p>
                                     {theme.welcomeVideo ? (
-                                        <div className="flex items-center gap-2 p-2 bg-[#111] rounded-lg border border-white/[0.06]">
-                                            <div className="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0" />
-                                            <span className="text-[10px] text-gray-400 flex-1 truncate">Video yüklendi</span>
-                                            <button onClick={() => updateTheme('welcomeVideo', '')} className="text-gray-600 hover:text-red-400 transition-colors"><X size={12} /></button>
+                                        <div className="rounded-lg overflow-hidden border border-white/[0.06] bg-[#111]">
+                                            <div className="relative">
+                                                <video
+                                                    src={theme.welcomeVideo}
+                                                    className="w-full h-20 object-cover"
+                                                    muted
+                                                    playsInline
+                                                    preload="metadata"
+                                                />
+                                                <button
+                                                    onClick={() => updateTheme('welcomeVideo', '')}
+                                                    className="absolute top-1 right-1 w-5 h-5 bg-black/70 rounded flex items-center justify-center text-white hover:bg-red-500/80 transition-colors"
+                                                >
+                                                    <X size={10} />
+                                                </button>
+                                            </div>
+                                            <div className="px-2 py-1.5 flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                                                    <span className="text-[10px] text-gray-400 truncate max-w-[120px]">Video aktif</span>
+                                                </div>
+                                                <label className="text-[9px] text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">
+                                                    Değiştir
+                                                    <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
+                                                        const f = e.target.files?.[0]; if (!f) return;
+                                                        const fd = new FormData(); fd.append('file', f); fd.append('folder', 'welcome');
+                                                        const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
+                                                        if (d.url) updateTheme('welcomeVideo', d.url);
+                                                    }} />
+                                                </label>
+                                            </div>
                                         </div>
                                     ) : (
                                         <label className="flex items-center justify-center h-10 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
@@ -1793,6 +1847,202 @@ export default function PanelDesign() {
                                         </label>
                                     )}
                                 </div>
+                            </div>
+                        </div>
+                    </>)}
+
+                    {activeSection === 'slider' && (<>
+                        {/* ── Görünüm ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Görünüm</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1.5">
+                                {([
+                                    { label: 'Slider Göster', key: 'showHeroSlider' },
+                                    { label: 'Geçiş Barları', key: 'showSliderDots' },
+                                    { label: 'Otomatik Oynat', key: 'sliderAutoPlay' },
+                                ] as { label: string; key: string }[]).map(({ label, key }) => {
+                                    const isOn = (theme as any)[key] !== 'false';
+                                    return (
+                                        <div key={key} className="flex items-center h-7">
+                                            <span className="text-[11px] text-gray-500 flex-1">{label}</span>
+                                            <button onClick={() => updateTheme(key as any, isOn ? 'false' : 'true')}
+                                                className={`relative w-8 h-4 rounded-full transition-colors flex-shrink-0 ${isOn ? 'bg-sky-500' : 'bg-white/10'}`}>
+                                                <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${isOn ? 'right-0.5' : 'left-0.5'}`} />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* ── Boyut ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Boyut</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Yükseklik</span>
+                                    <div className="flex items-center gap-1">
+                                        <input type="range" min="80" max="420" value={(theme as any).sliderHeight || '220'}
+                                            onChange={(e) => updateTheme('sliderHeight' as any, e.target.value)}
+                                            className="w-20 accent-sky-500" />
+                                        <span className="text-[10px] text-gray-400 w-8 text-right">{(theme as any).sliderHeight || '220'}px</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Radius</span>
+                                    <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-md px-2 h-7">
+                                        <input type="text" defaultValue={(theme as any).sliderBorderRadius || '0'}
+                                            onBlur={(e) => { const v = Math.min(32, Math.max(0, parseInt(e.target.value) || 0)); e.target.value = String(v); updateTheme('sliderBorderRadius' as any, String(v)); }}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                            className="w-8 bg-transparent text-[11px] text-gray-200 font-mono text-right focus:outline-none" />
+                                        <span className="text-[10px] text-gray-600">px</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Geçiş Hızı</span>
+                                    <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-md px-2 h-7">
+                                        <input type="text" defaultValue={(theme as any).sliderInterval || '5000'}
+                                            onBlur={(e) => { const v = Math.min(15000, Math.max(1000, parseInt(e.target.value) || 5000)); e.target.value = String(v); updateTheme('sliderInterval' as any, String(v)); }}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                                            className="w-12 bg-transparent text-[11px] text-gray-200 font-mono text-right focus:outline-none" />
+                                        <span className="text-[10px] text-gray-600">ms</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Arka Plan Medya ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Arka Plan Medya</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-2">
+                                {/* Image */}
+                                <div>
+                                    <p className="text-[10px] text-gray-600 mb-1">Resim</p>
+                                    {(theme as any).sliderBgImage ? (
+                                        <div className="relative h-16 rounded-lg overflow-hidden border border-white/[0.06]">
+                                            <img src={(theme as any).sliderBgImage} alt="" className="w-full h-full object-cover" />
+                                            <button onClick={() => updateTheme('sliderBgImage' as any, '')} className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded flex items-center justify-center text-white hover:bg-red-500/80 transition-colors">
+                                                <X size={10} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="flex items-center justify-center h-10 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
+                                            <Upload size={12} /> Resim Yükle
+                                            <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                                const f = e.target.files?.[0]; if (!f) return;
+                                                const fd = new FormData(); fd.append('file', f); fd.append('folder', 'slider');
+                                                const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
+                                                if (d.url) updateTheme('sliderBgImage' as any, d.url);
+                                            }} />
+                                        </label>
+                                    )}
+                                </div>
+                                {/* Video */}
+                                <div>
+                                    <p className="text-[10px] text-gray-600 mb-1">Video (öncelikli)</p>
+                                    {(theme as any).sliderBgVideo ? (
+                                        <div className="rounded-lg overflow-hidden border border-white/[0.06] bg-[#111]">
+                                            <div className="relative">
+                                                <video src={(theme as any).sliderBgVideo} className="w-full h-16 object-cover" muted playsInline preload="metadata" />
+                                                <button onClick={() => updateTheme('sliderBgVideo' as any, '')} className="absolute top-1 right-1 w-5 h-5 bg-black/70 rounded flex items-center justify-center text-white hover:bg-red-500/80 transition-colors">
+                                                    <X size={10} />
+                                                </button>
+                                            </div>
+                                            <div className="px-2 py-1.5 flex items-center justify-between">
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                                    <span className="text-[10px] text-gray-400">Video aktif</span>
+                                                </div>
+                                                <label className="text-[9px] text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">
+                                                    Değiştir
+                                                    <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
+                                                        const f = e.target.files?.[0]; if (!f) return;
+                                                        const fd = new FormData(); fd.append('file', f); fd.append('folder', 'slider');
+                                                        const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
+                                                        if (d.url) updateTheme('sliderBgVideo' as any, d.url);
+                                                    }} />
+                                                </label>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <label className="flex items-center justify-center h-10 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
+                                            <Upload size={12} /> Video Yükle
+                                            <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
+                                                const f = e.target.files?.[0]; if (!f) return;
+                                                const fd = new FormData(); fd.append('file', f); fd.append('folder', 'slider');
+                                                const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
+                                                if (d.url) updateTheme('sliderBgVideo' as any, d.url);
+                                            }} />
+                                        </label>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Yazı Tipleri ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Yazı Tipi</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">Font</span>
+                                    <select value={(theme as any).sliderFontFamily || ''}
+                                        onChange={(e) => updateTheme('sliderFontFamily' as any, e.target.value)}
+                                        className="bg-[#1a1a1a] border border-white/[0.06] rounded-md text-[11px] text-gray-200 px-2 h-7 focus:outline-none">
+                                        <option value="">Varsayılan</option>
+                                        <option value="'Inter', sans-serif">Inter</option>
+                                        <option value="'Roboto', sans-serif">Roboto</option>
+                                        <option value="'Outfit', sans-serif">Outfit</option>
+                                        <option value="'Poppins', sans-serif">Poppins</option>
+                                        <option value="'Playfair Display', serif">Playfair</option>
+                                        <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
+                                        <option value="'Montserrat', sans-serif">Montserrat</option>
+                                        <option value="serif">Serif</option>
+                                        <option value="monospace">Monospace</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">H1 (Büyük Başlık)</span>
+                                    <div className="flex items-center gap-1">
+                                        <input type="range" min="16" max="72" value={(theme as any).sliderH1Size || '36'}
+                                            onChange={(e) => updateTheme('sliderH1Size' as any, e.target.value)}
+                                            className="w-16 accent-sky-500" />
+                                        <span className="text-[10px] text-gray-400 w-7 text-right">{(theme as any).sliderH1Size || '36'}px</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center h-7">
+                                    <span className="text-[11px] text-gray-500 flex-1">H2 (Alt Başlık)</span>
+                                    <div className="flex items-center gap-1">
+                                        <input type="range" min="10" max="40" value={(theme as any).sliderH2Size || '20'}
+                                            onChange={(e) => updateTheme('sliderH2Size' as any, e.target.value)}
+                                            className="w-16 accent-sky-500" />
+                                        <span className="text-[10px] text-gray-400 w-7 text-right">{(theme as any).sliderH2Size || '20'}px</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Renkler ── */}
+                        <div className="mb-5">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">Renkler</span>
+                                <div className="flex-1 h-px bg-white/[0.05]" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <ColorPicker label="Overlay" value={(theme as any).sliderOverlayBg || '#00000030'} onChange={(v) => updateTheme('sliderOverlayBg' as any, v)} />
+                                <ColorPicker label="Geçiş Barı" value={(theme as any).sliderDotColor || '#ffffff80'} onChange={(v) => updateTheme('sliderDotColor' as any, v)} />
+                                <ColorPicker label="Aktif Bar" value={(theme as any).sliderDotActiveColor || '#ffffff'} onChange={(v) => updateTheme('sliderDotActiveColor' as any, v)} />
                             </div>
                         </div>
                     </>)}
