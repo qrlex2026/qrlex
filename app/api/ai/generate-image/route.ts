@@ -39,12 +39,13 @@ export async function POST(req: NextRequest) {
         // 2. Build detailed food photography prompt
         let fullPrompt: string;
         if (productImageBase64 && backgroundImageBase64) {
-            // User provided both product image and background — composite mode
+            // Composite mode — user provided actual product photo + background
+            // IMPORTANT: Do NOT include productName here — it confuses Gemini into generating by name
             fullPrompt = [
-                "You are a professional food photographer. Take the food item shown in the FIRST image and place it naturally on the background shown in the SECOND image.",
-                `Product: ${productName || "food item"}.`,
-                prompt ? `Style: ${prompt}.` : "",
-                "Keep the background intact. Add the food with realistic lighting, shadows and perspective matching the background. No text, no watermarks, no people.",
+                "You are a professional food photographer.",
+                "Take EXACTLY the food item shown in the FIRST image (do not change it, do not substitute it) and place it naturally on the surface visible in the SECOND image.",
+                prompt ? `Lighting style: ${prompt}.` : "Use natural, appetizing lighting that matches the background.",
+                "Preserve the background scene. Add realistic shadows and reflections. The food item must look exactly as in the first image. No text, no watermarks, no people.",
             ].filter(Boolean).join(" ");
         } else {
             fullPrompt = [
