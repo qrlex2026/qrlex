@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Plus, Trash2, Star, Pencil, X, Upload, ChevronDown, ChevronRight, GripVertical, ToggleLeft, ToggleRight, Smartphone, Percent, RefreshCw, Sparkles, Loader2, FileText, Wand2 } from "lucide-react";
+import { Plus, Trash2, Star, Pencil, X, Upload, ChevronDown, ChevronRight, ChevronLeft, GripVertical, ToggleLeft, ToggleRight, Smartphone, Percent, RefreshCw, Sparkles, Loader2, FileText, Wand2 } from "lucide-react";
+
 import { useSession } from "@/lib/useSession";
 import { compressVideo } from "@/lib/videoCompress";
 
@@ -80,8 +81,11 @@ export default function PanelMenu() {
 
     // AI Image generation
     const [showAiImageModal, setShowAiImageModal] = useState(false);
+    const [showAiStep, setShowAiStep] = useState(false);
+    const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
     const [aiImagePrompt, setAiImagePrompt] = useState("");
     const [aiImageLoading, setAiImageLoading] = useState(false);
+    const [aiImageCooldown, setAiImageCooldown] = useState(false);
     const [aiImageResult, setAiImageResult] = useState("");
     const [aiImageError, setAiImageError] = useState("");
     const [aiImageBg, setAiImageBg] = useState<File | null>(null);
@@ -116,6 +120,8 @@ export default function PanelMenu() {
     const [aiMenuUserImages, setAiMenuUserImages] = useState<Record<number, File>>({}); // index → File map
     const [aiMenuUserBg, setAiMenuUserBg] = useState<File | null>(null);  // shared background
     const aiMenuUserBgRef = useRef<HTMLInputElement>(null);
+    const mediaInputRef = useRef<HTMLInputElement>(null);
+
     // AI field refinement
     const [aiFieldLoading, setAiFieldLoading] = useState<{ ci: number; pi: number; field: string } | null>(null);
     const [bulkRefineLoading, setBulkRefineLoading] = useState<'name'|'description'|'price'|null>(null);
@@ -204,13 +210,13 @@ export default function PanelMenu() {
 
     // Body scroll lock — prevent background scroll when any modal is open
     useEffect(() => {
-        const anyOpen = showModal || showCatModal || showAiMenuModal || showAiImageModal;
+        const anyOpen = showModal || showCatModal || showAiMenuModal || showAiImageModal || !!lightboxSrc;
         document.body.style.overflow = anyOpen ? "hidden" : "";
         return () => { document.body.style.overflow = ""; };
-    }, [showModal, showCatModal, showAiMenuModal, showAiImageModal]);
+    }, [showModal, showCatModal, showAiMenuModal, showAiImageModal, lightboxSrc]);
 
     const handleAiImageGenerate = async () => {
-        if ((!aiImagePrompt.trim() && !aiImageBg) || aiImageLoading || !restaurantId) return;
+        if ((!aiImagePrompt.trim() && !aiImageBg) || aiImageLoading || aiImageCooldown || !restaurantId) return;
         setAiImageLoading(true);
         setAiImageError("");
         setAiImageResult("");
@@ -279,6 +285,9 @@ export default function PanelMenu() {
             setAiImageError("Bağlantı hatası");
         } finally {
             setAiImageLoading(false);
+            // 8s cooldown to prevent rapid re-requests
+            setAiImageCooldown(true);
+            setTimeout(() => setAiImageCooldown(false), 8000);
         }
     };
 
@@ -1407,11 +1416,106 @@ export default function PanelMenu() {
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 flex-shrink-0">
-                            <h2 className="text-base font-bold text-white">{editProduct ? 'Ürünü Düzenle' : 'Yeni Ürün Ekle'}</h2>
-                            <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white"><X size={18} /></button>
+                            {showAiStep ? (
+                                <button onClick={() => setShowAiStep(false)} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                                    <ChevronLeft size={18} /><span className="text-sm font-medium">Geri</span>
+                                </button>
+                            ) : (
+                                <h2 className="text-base font-bold text-white">{editProduct ? 'Ürünü Düzenle' : 'Yeni Ürün Ekle'}</h2>
+                            )}
+                            {showAiStep ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-lg bg-violet-500/20 flex items-center justify-center"><Sparkles size={13} className="text-violet-400" /></div>
+                                    <span className="text-sm font-bold text-white">AI Görsel Üret</span>
+                                </div>
+                            ) : (
+                                <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white"><X size={18} /></button>
+                            )}
                         </div>
                         {/* Scrollable body */}
                         <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                        {showAiStep ? (
+                        <div className="space-y-4">
+                            {form.name && (
+                                <div className="px-3 py-2 bg-gray-800/60 rounded-xl text-xs text-gray-400">
+                                    🍽️ <span className="text-gray-300 font-medium">{form.name}</span>
+                                    {form.description && <span className="text-gray-500"> — {form.description.substring(0, 60)}{form.description.length > 60 ? '...' : ''}</span>}
+                                </div>
+                            )}
+                            {/* Ürün Görseli */}
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="text-xs text-gray-400">Ürün Görseli <span className="text-gray-600">(isteğe bağlı)</span></label>
+                                    {aiImageProduct && <button onClick={() => { setAiImageProduct(null); setAiImageProductPreview(""); }} className="text-[11px] text-red-400 hover:text-red-300">Kaldır</button>}
+                                </div>
+                                {aiImageProductPreview ? (
+                                    <div className="relative h-44 rounded-xl overflow-hidden border border-gray-700">
+                                        <img src={aiImageProductPreview} alt="Ürün" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center"><span className="text-[11px] text-white/70 bg-black/50 px-2 py-0.5 rounded-full">{aiImageProduct?.name}</span></div>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => aiImageProductRef.current?.click()} className="w-full h-28 border border-dashed border-gray-700 rounded-xl flex items-center justify-center gap-2 text-xs text-gray-500 hover:border-violet-500/50 hover:text-gray-400 transition-colors">
+                                        <Upload size={14} /> Ürün fotoğrafı yükle
+                                    </button>
+                                )}
+                                <input ref={aiImageProductRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; setAiImageProduct(f); const r = new FileReader(); r.onload = ev => setAiImageProductPreview(ev.target?.result as string); r.readAsDataURL(f); e.target.value = ""; }} />
+                            </div>
+                            {/* Arka Plan */}
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="text-xs text-gray-400">Arka Plan <span className="text-gray-600">(isteğe bağlı)</span></label>
+                                    {aiImageBg && <button onClick={() => { setAiImageBg(null); setAiImageBgPreview(""); }} className="text-[11px] text-red-400 hover:text-red-300">Kaldır</button>}
+                                </div>
+                                {aiImageBgPreview ? (
+                                    <div className="relative h-44 rounded-xl overflow-hidden border border-gray-700">
+                                        <img src={aiImageBgPreview} alt="Arka plan" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center"><span className="text-[11px] text-white/70 bg-black/50 px-2 py-0.5 rounded-full">{aiImageBg?.name}</span></div>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => aiImageBgRef.current?.click()} className="w-full h-28 border border-dashed border-gray-700 rounded-xl flex items-center justify-center gap-2 text-xs text-gray-500 hover:border-violet-500/50 hover:text-gray-400 transition-colors">
+                                        <Upload size={14} /> Arka plan yükle
+                                    </button>
+                                )}
+                                <input ref={aiImageBgRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; setAiImageBg(f); const r = new FileReader(); r.onload = ev => setAiImageBgPreview(ev.target?.result as string); r.readAsDataURL(f); e.target.value = ""; }} />
+                                {aiImageProduct && aiImageBg && <p className="text-[10px] text-violet-400 mt-1">✨ Composite mod aktif</p>}
+                            </div>
+                            {/* Talimat */}
+                            <div>
+                                <label className="text-xs text-gray-400 mb-1.5 block">Talimat <span className="text-gray-600">(boş bırakırsan otomatik)</span></label>
+                                <textarea value={aiImagePrompt} onChange={e => setAiImagePrompt(e.target.value)} placeholder="Örn: Beyaz tabakta, modern sunum" rows={2} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-violet-500 resize-none" />
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {["Profesyonel sunum", "Rustik ahşap masa", "Koyu lüks tema"].map(s => (
+                                        <button key={s} onClick={() => setAiImagePrompt(s)} className="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg text-[11px] transition-colors">{s}</button>
+                                    ))}
+                                </div>
+                            </div>
+                            {aiImageError && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400">{aiImageError}</div>}
+                            {aiImageResult ? (
+                                <div>
+                                    <img
+                                        src={aiImageResult}
+                                        alt="AI Generated"
+                                        className="w-full h-56 object-cover rounded-xl border border-gray-700 cursor-pointer hover:opacity-90 transition-opacity"
+                                        onClick={() => setLightboxSrc(aiImageResult)}
+                                    />
+                                    <div className="flex gap-2 mt-3">
+                                        <button onClick={applyAiImage} className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors">✓ Bu Görseli Kullan</button>
+                                        <button onClick={() => { setAiImageResult(""); handleAiImageGenerate(); }} className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm transition-colors">Yeniden Üret</button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleAiImageGenerate}
+                                    disabled={aiImageLoading || aiImageCooldown || (!aiImagePrompt.trim() && !aiImageBg)}
+                                    className="w-full py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                                    style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', color: 'white' }}
+                                >
+                                    {aiImageLoading ? (<><Loader2 size={16} className="animate-spin" />Üretiliyor...</>) : (<><Sparkles size={16} />Görsel Üret (5 Kredi)</>)}
+                                </button>
+                            )}
+                        </div>
+                        ) : (
+                        <>
                             <div><label className="text-xs text-gray-400 mb-1 block">Ürün Adı *</label><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" /></div>
                             <div><label className="text-xs text-gray-400 mb-1 block">Açıklama</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 resize-none" /></div>
                             <div className="grid grid-cols-2 gap-3">
@@ -1420,45 +1524,44 @@ export default function PanelMenu() {
                             </div>
                             <div><label className="text-xs text-gray-400 mb-1 block">Kategori *</label><select value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">{categories.map(c => (<option key={c.id} value={c.id}>{c.name}</option>))}</select></div>
 
-                            {/* Medya — Resim + Video birleşik */}
+                            {/* Medya — Tek Alan */}
                             <div>
                                 <label className="text-xs text-gray-400 mb-2 block">Medya</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {/* Resim */}
-                                    <div>
-                                        <p className="text-[10px] text-gray-500 mb-1">Resim</p>
-                                        {form.image ? (
-                                            <div className="relative group">
-                                                <img src={form.image} alt="" className="w-full h-28 object-cover rounded-xl border border-gray-700" />
-                                                <button onClick={removeImage} className="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} className="text-white" /></button>
-                                            </div>
+                                {/* Show existing media */}
+                                {form.image && (
+                                    <div className="relative group mb-2">
+                                        <img src={form.image} alt="" className="w-full h-48 object-cover rounded-xl border border-gray-700" />
+                                        <button onClick={removeImage} className="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} className="text-white" /></button>
+                                    </div>
+                                )}
+                                {form.video && (
+                                    <div className="relative group mb-2">
+                                        <video src={form.video} className="w-full h-48 object-cover rounded-xl border border-gray-700" autoPlay muted loop playsInline />
+                                        <button onClick={removeVideo} className="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} className="text-white" /></button>
+                                    </div>
+                                )}
+                                {/* Upload zone — only if no media */}
+                                {!form.image && !form.video && (
+                                    <div
+                                        onDragOver={e => e.preventDefault()}
+                                        onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (!f) return; if (f.type.startsWith('video/')) handleVideoUpload(f); else handleFileUpload(f); }}
+                                        onClick={() => mediaInputRef.current?.click()}
+                                        className="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-xl h-36 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors"
+                                    >
+                                        {uploading || videoUploading ? (
+                                            <><div className="w-full px-4"><div className="w-full bg-gray-700 rounded-full h-1.5"><div className="bg-emerald-500 h-1.5 rounded-full transition-all" style={{ width: `${uploading ? uploadProgress : videoUploadProgress}%` }} /></div></div><p className="text-[10px] text-gray-500">{videoUploading ? (videoStatus || `%${videoUploadProgress}`) : `%${uploadProgress}`}</p></>
                                         ) : (
-                                            <div onDragOver={e => e.preventDefault()} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-xl h-28 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors">
-                                                {uploading ? (<><div className="w-full px-3"><div className="w-full bg-gray-700 rounded-full h-1.5"><div className="bg-emerald-500 h-1.5 rounded-full transition-all" style={{ width: `${uploadProgress}%` }} /></div></div><p className="text-[10px] text-gray-500">%{uploadProgress}</p></>) : (<><Upload size={18} className="text-gray-600" /><p className="text-[10px] text-gray-500">Yükle / Sürükhle</p></>)}
-                                            </div>
+                                            <><Upload size={20} className="text-gray-600" /><p className="text-xs text-gray-500">Resim veya Video Yükle</p><p className="text-[10px] text-gray-600">Sürükle bırak veya tıkla</p></>
                                         )}
                                     </div>
-                                    {/* Video */}
-                                    <div>
-                                        <p className="text-[10px] text-gray-500 mb-1">Video</p>
-                                        {form.video ? (
-                                            <div className="relative group">
-                                                <video src={form.video} className="w-full h-28 object-cover rounded-xl border border-gray-700" autoPlay muted loop playsInline />
-                                                <button onClick={removeVideo} className="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} className="text-white" /></button>
-                                            </div>
-                                        ) : (
-                                            <div onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleVideoUpload(f); }} onClick={() => videoInputRef.current?.click()} className="border-2 border-dashed border-gray-700 hover:border-emerald-500/50 rounded-xl h-28 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors">
-                                                {videoUploading ? (<><div className="w-full px-3"><div className="w-full bg-gray-700 rounded-full h-1.5"><div className="bg-emerald-500 h-1.5 rounded-full transition-all" style={{ width: `${videoUploadProgress}%` }} /></div></div><p className="text-[10px] text-gray-500 text-center px-1">{videoStatus || `%${videoUploadProgress}`}</p></>) : (<><Upload size={18} className="text-gray-600" /><p className="text-[10px] text-gray-500">Video Yükle</p></>)}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                {/* AI Gorse buton */}
-                                <button type="button" onClick={() => { setAiImageResult(""); setAiImageError(""); setShowAiImageModal(true); }} className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold border border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 transition-all">
-                                    <Sparkles size={13} /> AI ile Görsel Üret (5 Kredi)
-                                </button>
+                                )}
+                                <input ref={mediaInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (!f) return; if (f.type.startsWith('video/')) handleVideoUpload(f); else handleFileUpload(f); e.target.value = ""; }} />
                                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); e.target.value = ""; }} />
                                 <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleVideoUpload(f); e.target.value = ""; }} />
+                                {/* AI Görsel Üret */}
+                                <button type="button" onClick={() => { setAiImageResult(""); setAiImageError(""); setAiImagePrompt(""); setAiImageBg(null); setAiImageBgPreview(""); setAiImageProduct(null); setAiImageProductPreview(""); setShowAiStep(true); }} className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold border border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 transition-all">
+                                    <Sparkles size={13} /> AI ile Görsel Üret (5 Kredi)
+                                </button>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
@@ -1476,16 +1579,28 @@ export default function PanelMenu() {
                                 <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isPopular} onChange={e => setForm({ ...form, isPopular: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Popüler</span></label>
                                 <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} className="accent-emerald-500" /><span className="text-sm text-gray-300">Aktif</span></label>
                             </div>
-                        </div>
-                        {/* Sticky footer */}
+                        </>
+                        )}
+                        </div>{/* end scrollable body */}
+                        {/* Sticky footer — only in form mode */}
+                        {!showAiStep && (
                         <div className="px-5 py-4 border-t border-gray-800 flex-shrink-0">
                             <button onClick={handleSave} disabled={saving || !form.name || !form.price || !form.categoryId} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-colors">{saving ? 'Kaydediliyor...' : editProduct ? 'Güncelle' : 'Ekle'}</button>
                         </div>
+                        )}
                     </div>
                 </div>
             )}
 
-            {/* AI Image Generation Modal */}
+            {/* Lightbox */}
+            {lightboxSrc && (
+                <div className="fixed inset-0 z-[80] bg-black/90 flex items-center justify-center p-4" onClick={() => setLightboxSrc(null)}>
+                    <img src={lightboxSrc} alt="Önizleme" className="max-w-full max-h-full rounded-2xl shadow-2xl object-contain" />
+                    <button onClick={() => setLightboxSrc(null)} className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"><X size={20} /></button>
+                </div>
+            )}
+
+            {/* AI Image Generation Modal — LEGACY (kept for body scroll lock compat) */}
             {showAiImageModal && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setShowAiImageModal(false)}>
                     <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
@@ -1620,7 +1735,7 @@ export default function PanelMenu() {
                         ) : (
                             <button
                                 onClick={handleAiImageGenerate}
-                                disabled={aiImageLoading || (!aiImagePrompt.trim() && !aiImageBg)}
+                                disabled={aiImageLoading || aiImageCooldown || (!aiImagePrompt.trim() && !aiImageBg)}
                                 className="w-full py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 flex items-center justify-center gap-2"
                                 style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', color: 'white' }}
                             >
