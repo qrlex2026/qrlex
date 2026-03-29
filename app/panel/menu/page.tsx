@@ -110,11 +110,10 @@ export default function PanelMenu() {
     const aiMenuAbortRef = useRef(false);
     // Image mode: A = AI üretsin, B = kullanici gorsel verecek
     const [aiMenuImageMode, setAiMenuImageMode] = useState<'A'|'B'>('A');
-    const [aiMenuUserImages, setAiMenuUserImages] = useState<File[]>([]); // per-product user images
+    const [aiMenuUserImages, setAiMenuUserImages] = useState<Record<number, File>>({}); // index → File map
     const [aiMenuUserBg, setAiMenuUserBg] = useState<File | null>(null);  // shared background
     const aiMenuUserBgRef = useRef<HTMLInputElement>(null);
-    const aiMenuUserImgRef = useRef<HTMLInputElement>(null);
-    const aiMenuReset = () => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); setAiMenuImageResults({}); setAiMenuImageProgress({ current: 0, total: 0 }); setAiMenuGeneratingImages(false); setAiMenuImageMode('A'); setAiMenuUserImages([]); setAiMenuUserBg(null); };
+    const aiMenuReset = () => { setAiMenuStep(1); setAiMenuResult(null); setAiMenuError(""); setAiMenuImportDone(false); setAiMenuFiles([]); setAiMenuFilePreviews([]); setAiMenuImageResults({}); setAiMenuImageProgress({ current: 0, total: 0 }); setAiMenuGeneratingImages(false); setAiMenuImageMode('A'); setAiMenuUserImages({}); setAiMenuUserBg(null); };
 
     // Body scroll lock — prevent background scroll when any modal is open
     useEffect(() => {
@@ -266,7 +265,7 @@ export default function PanelMenu() {
             const prod = allProds[i];
 
             if (aiMenuImageMode === 'B') {
-                // --- Mode B: user provided images ---
+                // --- Mode B: user provided images (Record<index, File>) ---
                 const userFile = aiMenuUserImages[i];
                 if (!userFile) {
                     // No user image for this slot — skip
@@ -995,68 +994,88 @@ export default function PanelMenu() {
                                             </div>
                                         )}
 
-                                        {aiMenuImageMode === 'B' && (
-                                            <div className="space-y-3">
-                                                {/* Ürün görselleri */}
-                                                <div>
-                                                    <div className="flex items-center justify-between mb-1">
-                                                        <label className="text-xs text-gray-400">Ürün Görselleri <span className="text-gray-600">(sırayla, her ürüne bir görsel)</span></label>
-                                                        {aiMenuUserImages.length > 0 && <span className="text-[10px] text-violet-400">{aiMenuUserImages.length} görsel yüklendi</span>}
-                                                    </div>
-                                                    <button
-                                                        onClick={() => aiMenuUserImgRef.current?.click()}
-                                                        className="w-full h-12 border border-dashed border-gray-700 rounded-xl flex items-center justify-center gap-2 text-xs text-gray-500 hover:border-violet-500/50 hover:text-gray-400 transition-colors"
-                                                    >
-                                                        <Upload size={13} />
-                                                        {aiMenuUserImages.length > 0 ? `${aiMenuUserImages.length} görsel — daha ekle` : "Ürün fotoğraflarını seç (çoklu)"}
-                                                    </button>
-                                                    <input ref={aiMenuUserImgRef} type="file" accept="image/*" multiple className="hidden"
-                                                        onChange={e => {
-                                                            const files = Array.from(e.target.files || []);
-                                                            setAiMenuUserImages(prev => [...prev, ...files].slice(0, 20));
-                                                            e.target.value = "";
-                                                        }}
-                                                    />
-                                                    {aiMenuUserImages.length > 0 && (
-                                                        <div className="flex gap-1 flex-wrap mt-1.5">
-                                                            {aiMenuUserImages.slice(0, 8).map((f,i) => (
-                                                                <div key={i} className="relative">
-                                                                    <img src={URL.createObjectURL(f)} alt="" className="w-8 h-8 rounded-md object-cover border border-gray-700" />
-                                                                    <button onClick={() => setAiMenuUserImages(prev => prev.filter((_,idx) => idx !== i))} className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-white text-[8px] flex items-center justify-center">×</button>
+                                        {aiMenuImageMode === 'B' && (() => {
+                                            const allProdsFlat = aiMenuResult.categories.flatMap(c => c.products);
+                                            const uploadedCount = Object.keys(aiMenuUserImages).length;
+                                            return (
+                                                <div className="space-y-2">
+                                                    {/* Per-product upload rows */}
+                                                    <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                                                        {allProdsFlat.slice(0, 20).map((prod, idx) => {
+                                                            const file = aiMenuUserImages[idx];
+                                                            const inputId = `prod-img-${idx}`;
+                                                            return (
+                                                                <div key={idx} className="flex items-center gap-2 bg-gray-800/60 rounded-xl px-3 py-2">
+                                                                    {/* Thumbnail or placeholder */}
+                                                                    <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border border-gray-700 bg-gray-800">
+                                                                        {file
+                                                                            ? <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                                                                            : <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">?</div>
+                                                                        }
+                                                                    </div>
+                                                                    {/* Product name */}
+                                                                    <span className="flex-1 text-xs text-white truncate">{prod.name}</span>
+                                                                    {/* Action */}
+                                                                    {file ? (
+                                                                        <button
+                                                                            onClick={() => setAiMenuUserImages(prev => { const n = {...prev}; delete n[idx]; return n; })}
+                                                                            className="text-[10px] text-red-400 hover:text-red-300 flex-shrink-0"
+                                                                        >✕</button>
+                                                                    ) : (
+                                                                        <label htmlFor={inputId} className="text-[10px] text-violet-400 hover:text-violet-300 cursor-pointer flex-shrink-0 flex items-center gap-1">
+                                                                            <Upload size={10} /> Yükle
+                                                                        </label>
+                                                                    )}
+                                                                    <input
+                                                                        id={inputId}
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        className="hidden"
+                                                                        onChange={e => {
+                                                                            const f = e.target.files?.[0];
+                                                                            if (f) setAiMenuUserImages(prev => ({ ...prev, [idx]: f }));
+                                                                            e.target.value = "";
+                                                                        }}
+                                                                    />
                                                                 </div>
-                                                            ))}
-                                                            {aiMenuUserImages.length > 8 && <span className="text-[10px] text-gray-500 self-center">+{aiMenuUserImages.length-8}</span>}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Arka plan */}
-                                                <div>
-                                                    <div className="flex items-center justify-between mb-1">
-                                                        <label className="text-xs text-gray-400">Arka Plan <span className="text-gray-600">(isteğe bağlı — tüm ürünlere uygulanır)</span></label>
-                                                        {aiMenuUserBg && <button onClick={() => setAiMenuUserBg(null)} className="text-[10px] text-red-400 hover:text-red-300">Kaldır</button>}
+                                                            );
+                                                        })}
+                                                        {allProdsFlat.length > 20 && (
+                                                            <p className="text-[10px] text-amber-400 text-center py-1">⚠ Maksimum 20 ürün işlenir</p>
+                                                        )}
                                                     </div>
-                                                    {aiMenuUserBg ? (
-                                                        <div className="h-16 rounded-xl overflow-hidden border border-gray-700">
-                                                            <img src={URL.createObjectURL(aiMenuUserBg)} alt="" className="w-full h-full object-cover" />
+                                                    <p className="text-[10px] text-gray-500">{uploadedCount} / {Math.min(allProdsFlat.length,20)} görsel yüklendi</p>
+
+                                                    {/* Shared background */}
+                                                    <div className="border-t border-gray-700/50 pt-2">
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <label className="text-xs text-gray-400">🌄 Arka Plan <span className="text-gray-600">(tüm ürünlere uygulanır)</span></label>
+                                                            {aiMenuUserBg && <button onClick={() => setAiMenuUserBg(null)} className="text-[10px] text-red-400 hover:text-red-300">Kaldır</button>}
                                                         </div>
-                                                    ) : (
-                                                        <button onClick={() => aiMenuUserBgRef.current?.click()} className="w-full h-12 border border-dashed border-gray-700 rounded-xl flex items-center justify-center gap-2 text-xs text-gray-500 hover:border-violet-500/50 hover:text-gray-400 transition-colors">
-                                                            <Upload size={13} /> Arka plan yükle
-                                                        </button>
-                                                    )}
-                                                    <input ref={aiMenuUserBgRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
-                                                        onChange={e => { const f = e.target.files?.[0]; if (f) setAiMenuUserBg(f); e.target.value = ""; }}
-                                                    />
-                                                    {aiMenuUserBg && <p className="text-[10px] text-violet-400 mt-1">✨ Gemini 2.0 ile arka plan üzerine görsel üretilecek · {aiMenuUserImages.length} ürün × 5 kredi</p>}
-                                                    {!aiMenuUserBg && aiMenuUserImages.length > 0 && <p className="text-[10px] text-gray-500 mt-1">Arka plan yok → görseller direkt yüklenecek (kredi harcanmaz)</p>}
+                                                        {aiMenuUserBg ? (
+                                                            <div className="h-14 rounded-xl overflow-hidden border border-gray-700">
+                                                                <img src={URL.createObjectURL(aiMenuUserBg)} alt="" className="w-full h-full object-cover" />
+                                                            </div>
+                                                        ) : (
+                                                            <button onClick={() => aiMenuUserBgRef.current?.click()} className="w-full h-10 border border-dashed border-gray-700 rounded-xl flex items-center justify-center gap-2 text-xs text-gray-500 hover:border-violet-500/50 hover:text-gray-400 transition-colors">
+                                                                <Upload size={12} /> Arka plan yükle
+                                                            </button>
+                                                        )}
+                                                        <input ref={aiMenuUserBgRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                                                            onChange={e => { const f = e.target.files?.[0]; if (f) setAiMenuUserBg(f); e.target.value = ""; }}
+                                                        />
+                                                        {aiMenuUserBg
+                                                            ? <p className="text-[10px] text-violet-400 mt-1">✨ Gemini img2img · {uploadedCount} ürün × 5 kredi = {uploadedCount*5} kredi</p>
+                                                            : uploadedCount > 0 && <p className="text-[10px] text-gray-500 mt-1">Arka plan yok → görseller direkt yüklenecek (kredi harcanmaz)</p>
+                                                        }
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
+                                            );
+                                        })()}
                                     </div>
 
                                     <div className="flex gap-2">
-                                        {(aiMenuImageMode === 'A' || (aiMenuImageMode === 'B' && aiMenuUserImages.length > 0)) ? (
+                                        {(aiMenuImageMode === 'A' || (aiMenuImageMode === 'B' && Object.keys(aiMenuUserImages).length > 0)) ? (
                                             <button onClick={generateImagesForMenu} className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 text-white" style={{ background: 'linear-gradient(135deg,#7c3aed,#6d28d9)' }}>
                                                 <Sparkles size={15} />
                                                 {aiMenuImageMode === 'A' ? 'Resimleri Üret ve Devam Et' : aiMenuUserBg ? 'Dönüştür ve Devam Et' : 'Görselleri Yükle ve Devam Et'}
