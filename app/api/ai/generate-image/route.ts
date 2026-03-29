@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { uploadToR2 } from "@/lib/r2";
+import sharp from "sharp";
 
 const prisma = new PrismaClient();
 const IMAGE_COST = 5; // 5 kredi per görsel
@@ -137,9 +138,10 @@ export async function POST(req: NextRequest) {
                 if (part?.inlineData?.data) {
                     const mimeType = part.inlineData.mimeType ?? "image/png";
                     const ext = mimeType.includes("jpeg") ? "jpg" : "png";
-                    const imageBuffer = Buffer.from(part.inlineData.data, "base64");
-                    const key = `ai-generated/${restaurantId}/${Date.now()}.${ext}`;
-                    const imageUrl = await uploadToR2(imageBuffer, key, mimeType);
+                    const rawBuffer = Buffer.from(part.inlineData.data, "base64");
+                    const imageBuffer = await sharp(rawBuffer).resize(1000, 1000, { fit: "inside", withoutEnlargement: true }).webp({ quality: 82 }).toBuffer();
+                    const key = `ai-generated/${restaurantId}/${Date.now()}.webp`;
+                    const imageUrl = await uploadToR2(imageBuffer, key, "image/webp");
                     await deductCredit(prisma, restaurantId, credit, IMAGE_COST, fullPrompt);
                     const updatedCredit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
                     return NextResponse.json({ success: true, imageUrl, balance: updatedCredit?.balance ?? credit.balance - IMAGE_COST });
@@ -162,11 +164,11 @@ export async function POST(req: NextRequest) {
         const mimeType = prediction.mimeType ?? "image/png";
 
         // 4. Upload to R2
-        const ext = mimeType.includes("jpeg") ? "jpg" : "png";
-        const imageBuffer = Buffer.from(base64Image, "base64");
+        const rawBuffer = Buffer.from(base64Image, "base64");
+        const imageBuffer = await sharp(rawBuffer).resize(1000, 1000, { fit: "inside", withoutEnlargement: true }).webp({ quality: 82 }).toBuffer();
         const timestamp = Date.now();
-        const key = `ai-generated/${restaurantId}/${timestamp}.${ext}`;
-        const imageUrl = await uploadToR2(imageBuffer, key, mimeType);
+        const key = `ai-generated/${restaurantId}/${timestamp}.webp`;
+        const imageUrl = await uploadToR2(imageBuffer, key, "image/webp");
 
         // 5. Kredi düş + log
         await deductCredit(prisma, restaurantId, credit, IMAGE_COST, fullPrompt);
