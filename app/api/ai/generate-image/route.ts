@@ -48,63 +48,48 @@ export async function POST(req: NextRequest) {
             "No text, no watermarks, no people.",
         ].filter(Boolean).join(" ");
 
-        // --- PATH A: Background image provided → Gemini img2img ---
+        // --- PATH A: Background image provided → gemini-2.5-flash-image (img+text→img) ---
         if (backgroundImageBase64) {
             const bgMime = backgroundImageMimeType || "image/jpeg";
-
-            // Try models in order — first one that works wins
-            const imgModels = [
-                "gemini-2.0-flash-exp",
-                "gemini-2.5-flash-preview-04-17",
-                "gemini-2.0-flash",
-            ];
-
-            for (const model of imgModels) {
-                try {
-                    const geminiRes = await fetch(
-                        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-                        {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                contents: [{
-                                    parts: [
-                                        { text: fullPrompt },
-                                        { inlineData: { mimeType: bgMime, data: backgroundImageBase64 } },
-                                    ],
-                                }],
-                                generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
-                            }),
-                        }
-                    );
-
-                    if (!geminiRes.ok) {
-                        const errText = await geminiRes.text();
-                        console.error(`Gemini img2img [${model}] error (${geminiRes.status}):`, errText.substring(0, 400));
-                        continue; // try next model
-                    }
-
-                    const geminiData = await geminiRes.json();
-                    const parts = geminiData?.candidates?.[0]?.content?.parts ?? [];
-                    for (const part of parts) {
-                        if (part?.inlineData?.data) {
-                            const mime = part.inlineData.mimeType ?? "image/png";
-                            const ext = mime.includes("jpeg") ? "jpg" : "png";
-                            const buf = Buffer.from(part.inlineData.data, "base64");
-                            const key = `ai-generated/${restaurantId}/${Date.now()}.${ext}`;
-                            const imageUrl = await uploadToR2(buf, key, mime);
-                            await deductCredit(prisma, restaurantId, credit, IMAGE_COST, fullPrompt);
-                            const updatedCredit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
-                            return NextResponse.json({ success: true, imageUrl, balance: updatedCredit?.balance ?? credit.balance - IMAGE_COST });
-                        }
-                    }
-                    console.error(`Gemini img2img [${model}]: no image in response`, JSON.stringify(geminiData).substring(0, 300));
-                } catch (e) {
-                    console.error(`Gemini img2img [${model}] exception:`, e);
+            const geminiRes = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: fullPrompt },
+                                { inlineData: { mimeType: bgMime, data: backgroundImageBase64 } },
+                            ],
+                        }],
+                        generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+                    }),
                 }
+            );
+
+            if (!geminiRes.ok) {
+                const errText = await geminiRes.text();
+                console.error(`Gemini img2img error (${geminiRes.status}):`, errText.substring(0, 400));
+                return NextResponse.json({ error: "Arka planlı görsel üretilemedi. Lütfen tekrar deneyin." }, { status: 500 });
             }
 
-            return NextResponse.json({ error: "Arka planlı görsel üretilemedi. Arka planı daha küçük bir görsel ile tekrar deneyin." }, { status: 500 });
+            const geminiData = await geminiRes.json();
+            const parts = geminiData?.candidates?.[0]?.content?.parts ?? [];
+            for (const part of parts) {
+                if (part?.inlineData?.data) {
+                    const mime = part.inlineData.mimeType ?? "image/png";
+                    const ext = mime.includes("jpeg") ? "jpg" : "png";
+                    const buf = Buffer.from(part.inlineData.data, "base64");
+                    const key = `ai-generated/${restaurantId}/${Date.now()}.${ext}`;
+                    const imageUrl = await uploadToR2(buf, key, mime);
+                    await deductCredit(prisma, restaurantId, credit, IMAGE_COST, fullPrompt);
+                    const updatedCredit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
+                    return NextResponse.json({ success: true, imageUrl, balance: updatedCredit?.balance ?? credit.balance - IMAGE_COST });
+                }
+            }
+            console.error("Gemini img2img: no image in response", JSON.stringify(geminiData).substring(0, 300));
+            return NextResponse.json({ error: "Arka planlı görsel üretilemedi. Farklı bir prompt deneyin." }, { status: 500 });
         }
 
         // --- PATH B: No background → Imagen 4 Fast ---
