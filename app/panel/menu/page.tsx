@@ -329,6 +329,8 @@ export default function PanelMenu() {
                                     prompt: aiMenuImageStyle || "professional food photography, natural lighting",
                                     backgroundImageBase64: bgBase64,
                                     backgroundImageMimeType: bgMime,
+                                    productImageBase64: prodImgBase64,
+                                    productImageMimeType: userFile.type || "image/jpeg",
                                 }),
                             });
                             if (res.status === 429) { await delay(10000); continue; }

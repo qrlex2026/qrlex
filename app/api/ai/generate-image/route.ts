@@ -14,7 +14,7 @@ export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
     try {
-        const { restaurantId, productName, productDescription, prompt, backgroundImageBase64, backgroundImageMimeType } = await req.json();
+        const { restaurantId, productName, productDescription, prompt, backgroundImageBase64, backgroundImageMimeType, productImageBase64, productImageMimeType } = await req.json();
 
         if (!restaurantId || !prompt) {
             return NextResponse.json({ error: "restaurantId ve prompt gerekli" }, { status: 400 });
@@ -37,32 +37,48 @@ export async function POST(req: NextRequest) {
         }
 
         // 2. Build detailed food photography prompt
-        const fullPrompt = [
-            "Professional food photography.",
-            productName ? `Dish: ${productName}.` : "",
-            productDescription ? `Description: ${productDescription}.` : "",
-            `Style: ${prompt}.`,
-            backgroundImageBase64
-                ? "Place the food naturally on this background. Keep the background intact, only add the food item with realistic lighting and shadows."
-                : "High resolution, appetizing presentation, perfect studio lighting, photorealistic.",
-            "No text, no watermarks, no people.",
-        ].filter(Boolean).join(" ");
+        let fullPrompt: string;
+        if (productImageBase64 && backgroundImageBase64) {
+            // User provided both product image and background — composite mode
+            fullPrompt = [
+                "You are a professional food photographer. Take the food item shown in the FIRST image and place it naturally on the background shown in the SECOND image.",
+                `Product: ${productName || "food item"}.`,
+                prompt ? `Style: ${prompt}.` : "",
+                "Keep the background intact. Add the food with realistic lighting, shadows and perspective matching the background. No text, no watermarks, no people.",
+            ].filter(Boolean).join(" ");
+        } else {
+            fullPrompt = [
+                "Professional food photography.",
+                productName ? `Dish: ${productName}.` : "",
+                productDescription ? `Description: ${productDescription}.` : "",
+                `Style: ${prompt}.`,
+                backgroundImageBase64
+                    ? "Place the food naturally on this background. Keep the background intact, only add the food item with realistic lighting and shadows."
+                    : "High resolution, appetizing presentation, perfect studio lighting, photorealistic.",
+                "No text, no watermarks, no people.",
+            ].filter(Boolean).join(" ");
+        }
 
         // --- PATH A: Background image provided → gemini-2.5-flash-image (img+text→img) ---
         if (backgroundImageBase64) {
             const bgMime = backgroundImageMimeType || "image/jpeg";
+            const prodMime = productImageMimeType || "image/jpeg";
+
+            // Build parts: text always first, then product image (if any), then background
+            type GeminiPart = { text?: string; inlineData?: { mimeType: string; data: string } };
+            const requestParts: GeminiPart[] = [{ text: fullPrompt }];
+            if (productImageBase64) {
+                requestParts.push({ inlineData: { mimeType: prodMime, data: productImageBase64 } });
+            }
+            requestParts.push({ inlineData: { mimeType: bgMime, data: backgroundImageBase64 } });
+
             const geminiRes = await fetch(
                 `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        contents: [{
-                            parts: [
-                                { text: fullPrompt },
-                                { inlineData: { mimeType: bgMime, data: backgroundImageBase64 } },
-                            ],
-                        }],
+                        contents: [{ parts: requestParts }],
                         generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
                     }),
                 }
@@ -75,8 +91,8 @@ export async function POST(req: NextRequest) {
             }
 
             const geminiData = await geminiRes.json();
-            const parts = geminiData?.candidates?.[0]?.content?.parts ?? [];
-            for (const part of parts) {
+            const responseParts = geminiData?.candidates?.[0]?.content?.parts ?? [];
+            for (const part of responseParts) {
                 if (part?.inlineData?.data) {
                     const mime = part.inlineData.mimeType ?? "image/png";
                     const ext = mime.includes("jpeg") ? "jpg" : "png";
