@@ -40,13 +40,16 @@ export async function POST(req: NextRequest) {
         let fullPrompt: string;
         if (productImageBase64 && backgroundImageBase64) {
             // Composite mode — user provided actual product photo + background
-            // IMPORTANT: Do NOT include productName here — it confuses Gemini into generating by name
+            // IMPORTANT: Do NOT include productName — it confuses Gemini into generating by name
+            const styleNote = prompt ? `Lighting/style: ${prompt}.` : "Use warm, appetizing lighting that matches the background environment.";
             fullPrompt = [
-                "You are a professional food photographer.",
-                "Take EXACTLY the food item shown in the FIRST image (do not change it, do not substitute it) and place it naturally on the surface visible in the SECOND image.",
-                prompt ? `Lighting style: ${prompt}.` : "Use natural, appetizing lighting that matches the background.",
-                "Preserve the background scene. Add realistic shadows and reflections. The food item must look exactly as in the first image. No text, no watermarks, no people.",
-            ].filter(Boolean).join(" ");
+                "You are a professional food photographer and image compositor.",
+                "STEP 1: Look at IMAGE 1 — this is the food item you will use. Remember its appearance exactly.",
+                "STEP 2: Look at IMAGE 2 — this is the background scene (table, plate, surface). Remove ALL existing food items or dishes from this background completely.",
+                "STEP 3: Place the food item from IMAGE 1 naturally onto the clean surface from IMAGE 2. It should look like a professional restaurant photo.",
+                styleNote,
+                "The background environment (table, cloth, props) must remain intact. Only the food item from IMAGE 1 should appear on it. No text, no watermarks, no people.",
+            ].join(" ");
         } else {
             fullPrompt = [
                 "Professional food photography.",
