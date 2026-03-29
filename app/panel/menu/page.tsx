@@ -215,34 +215,55 @@ export default function PanelMenu() {
         return () => { document.body.style.overflow = ""; };
     }, [showModal, showCatModal, showAiMenuModal, showAiImageModal, lightboxSrc]);
 
+    // Compress image to base64 using canvas (max 1024px, JPEG 80%)
+    const compressImageToBase64 = (file: File, maxSize = 1024, quality = 0.8): Promise<{ base64: string; mime: string }> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const img = new Image();
+                img.onload = () => {
+                    let { width, height } = img;
+                    if (width > maxSize || height > maxSize) {
+                        if (width > height) { height = Math.round(height * maxSize / width); width = maxSize; }
+                        else { width = Math.round(width * maxSize / height); height = maxSize; }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d')!;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    resolve({ base64: dataUrl.replace(/^data:image\/\w+;base64,/, ''), mime: 'image/jpeg' });
+                };
+                img.onerror = reject;
+                img.src = ev.target?.result as string;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
     const handleAiImageGenerate = async () => {
         if ((!aiImagePrompt.trim() && !aiImageBg) || aiImageLoading || aiImageCooldown || !restaurantId) return;
         setAiImageLoading(true);
         setAiImageError("");
         setAiImageResult("");
         try {
-            // Convert background to base64 if provided
+            // Compress and convert background to base64
             let backgroundImageBase64: string | undefined;
             let backgroundImageMimeType: string | undefined;
             if (aiImageBg) {
-                const buf = await aiImageBg.arrayBuffer();
-                const bytes = new Uint8Array(buf);
-                let binary = "";
-                bytes.forEach(b => binary += String.fromCharCode(b));
-                backgroundImageBase64 = btoa(binary);
-                backgroundImageMimeType = aiImageBg.type || "image/jpeg";
+                const compressed = await compressImageToBase64(aiImageBg);
+                backgroundImageBase64 = compressed.base64;
+                backgroundImageMimeType = compressed.mime;
             }
 
-            // Convert product image to base64 if provided
+            // Compress and convert product image to base64
             let productImageBase64: string | undefined;
             let productImageMimeType: string | undefined;
             if (aiImageProduct) {
-                const buf = await aiImageProduct.arrayBuffer();
-                const bytes = new Uint8Array(buf);
-                let binary = "";
-                bytes.forEach(b => binary += String.fromCharCode(b));
-                productImageBase64 = btoa(binary);
-                productImageMimeType = aiImageProduct.type || "image/jpeg";
+                const compressed = await compressImageToBase64(aiImageProduct);
+                productImageBase64 = compressed.base64;
+                productImageMimeType = compressed.mime;
             }
 
             let endpoint = "/api/ai/generate-image";
