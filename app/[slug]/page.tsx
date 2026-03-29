@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import MenuClient from "./MenuClient";
 
+export const revalidate = 3600; // Cache menu pages for 1 hour (ISR)
+
 const defaultTheme = {
     pageBg: "#f9fafb", fontFamily: "Inter", headerBg: "#ffffff",
     headerGradientFrom: "#f3e8ff", headerGradientTo: "#e0f2fe",
