@@ -1619,6 +1619,10 @@ export default function PanelDesign() {
                             </div>
                         </div>
 
+                    </>)}
+
+                    {activeSection === 'welcome' && (<>
+
                         {/* ── Arka Plan ── */}
                         <div className="mb-5">
                             <div className="flex items-center gap-2 mb-2.5">
