@@ -84,6 +84,9 @@ export default function PanelMenu() {
     const [aiImageLoading, setAiImageLoading] = useState(false);
     const [aiImageResult, setAiImageResult] = useState("");
     const [aiImageError, setAiImageError] = useState("");
+    const [aiImageBg, setAiImageBg] = useState<File | null>(null);
+    const [aiImageBgPreview, setAiImageBgPreview] = useState("");
+    const aiImageBgRef = useRef<HTMLInputElement>(null);
 
     // AI Menu Creator
     const [showAiMenuModal, setShowAiMenuModal] = useState(false);
@@ -120,6 +123,18 @@ export default function PanelMenu() {
         setAiImageError("");
         setAiImageResult("");
         try {
+            // If background image provided, convert to base64
+            let backgroundImageBase64: string | undefined;
+            let backgroundImageMimeType: string | undefined;
+            if (aiImageBg) {
+                const buf = await aiImageBg.arrayBuffer();
+                const bytes = new Uint8Array(buf);
+                let binary = "";
+                bytes.forEach(b => binary += String.fromCharCode(b));
+                backgroundImageBase64 = btoa(binary);
+                backgroundImageMimeType = aiImageBg.type || "image/jpeg";
+            }
+
             const res = await fetch("/api/ai/generate-image", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -128,6 +143,7 @@ export default function PanelMenu() {
                     productName: form.name,
                     productDescription: form.description,
                     prompt: aiImagePrompt,
+                    ...(backgroundImageBase64 ? { backgroundImageBase64, backgroundImageMimeType } : {}),
                 }),
             });
             const data = await res.json();
@@ -149,6 +165,8 @@ export default function PanelMenu() {
         setShowAiImageModal(false);
         setAiImageResult("");
         setAiImagePrompt("");
+        setAiImageBg(null);
+        setAiImageBgPreview("");
     };
 
     // AI Menu handlers
@@ -1046,6 +1064,50 @@ export default function PanelMenu() {
                                 {form.description && <span className="text-gray-500"> — {form.description.substring(0, 60)}{form.description.length > 60 ? '...' : ''}</span>}
                             </div>
                         )}
+
+                        {/* Arka Plan Yükleme */}
+                        <div className="mb-4">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label className="text-xs text-gray-400">Arka Plan <span className="text-gray-600">(isteğe bağlı)</span></label>
+                                {aiImageBg && (
+                                    <button onClick={() => { setAiImageBg(null); setAiImageBgPreview(""); }} className="text-[11px] text-red-400 hover:text-red-300 transition-colors">Kaldır</button>
+                                )}
+                            </div>
+                            {aiImageBgPreview ? (
+                                <div className="relative h-20 rounded-xl overflow-hidden border border-gray-700">
+                                    <img src={aiImageBgPreview} alt="Arka plan" className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                        <span className="text-[11px] text-white/70 bg-black/50 px-2 py-0.5 rounded-full">{aiImageBg?.name}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => aiImageBgRef.current?.click()}
+                                    className="w-full h-16 border border-dashed border-gray-700 rounded-xl flex items-center justify-center gap-2 text-xs text-gray-500 hover:border-violet-500/50 hover:text-gray-400 transition-colors"
+                                >
+                                    <Upload size={14} />
+                                    Arka plan görseli yükle (JPG, PNG)
+                                </button>
+                            )}
+                            <input
+                                ref={aiImageBgRef}
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                className="hidden"
+                                onChange={e => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    setAiImageBg(file);
+                                    const reader = new FileReader();
+                                    reader.onload = ev => setAiImageBgPreview(ev.target?.result as string);
+                                    reader.readAsDataURL(file);
+                                    e.target.value = "";
+                                }}
+                            />
+                            {aiImageBg && (
+                                <p className="text-[10px] text-violet-400 mt-1">✨ Gemini 2.0 ile arka plan üzerine görsel üretilecek</p>
+                            )}
+                        </div>
 
                         <div className="mb-4">
                             <label className="text-xs text-gray-400 mb-1.5 block">Görsel stili ve detayları tarif edin</label>

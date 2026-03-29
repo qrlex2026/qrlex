@@ -14,7 +14,7 @@ export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
     try {
-        const { restaurantId, productName, productDescription, prompt } = await req.json();
+        const { restaurantId, productName, productDescription, prompt, backgroundImageBase64, backgroundImageMimeType } = await req.json();
 
         if (!restaurantId || !prompt) {
             return NextResponse.json({ error: "restaurantId ve prompt gerekli" }, { status: 400 });
@@ -42,10 +42,56 @@ export async function POST(req: NextRequest) {
             productName ? `Dish: ${productName}.` : "",
             productDescription ? `Description: ${productDescription}.` : "",
             `Style: ${prompt}.`,
-            "High resolution, appetizing presentation, perfect studio lighting, photorealistic. No text, no watermarks, no people.",
+            backgroundImageBase64
+                ? "Place the food naturally on this background. Keep the background intact, only add the food item with realistic lighting and shadows."
+                : "High resolution, appetizing presentation, perfect studio lighting, photorealistic.",
+            "No text, no watermarks, no people.",
         ].filter(Boolean).join(" ");
 
-        // 3. Call Imagen 4 Fast via Gemini API predict endpoint
+        // --- PATH A: Background image provided → Gemini 2.0 Flash (img2img) ---
+        if (backgroundImageBase64) {
+            const bgMime = backgroundImageMimeType || "image/jpeg";
+            const geminiRes = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: fullPrompt },
+                                { inlineData: { mimeType: bgMime, data: backgroundImageBase64 } },
+                            ],
+                        }],
+                        generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+                    }),
+                }
+            );
+
+            if (!geminiRes.ok) {
+                const errText = await geminiRes.text();
+                console.error("Gemini img2img error:", errText);
+                return NextResponse.json({ error: "Arka planlı görsel üretilemedi. Lütfen tekrar deneyin." }, { status: 500 });
+            }
+
+            const geminiData = await geminiRes.json();
+            const parts = geminiData?.candidates?.[0]?.content?.parts ?? [];
+            for (const part of parts) {
+                if (part?.inlineData?.data) {
+                    const mime = part.inlineData.mimeType ?? "image/png";
+                    const ext = mime.includes("jpeg") ? "jpg" : "png";
+                    const buf = Buffer.from(part.inlineData.data, "base64");
+                    const key = `ai-generated/${restaurantId}/${Date.now()}.${ext}`;
+                    const imageUrl = await uploadToR2(buf, key, mime);
+                    await deductCredit(prisma, restaurantId, credit, IMAGE_COST, fullPrompt);
+                    const updatedCredit = await (prisma as any).aiCredit.findUnique({ where: { restaurantId } });
+                    return NextResponse.json({ success: true, imageUrl, balance: updatedCredit?.balance ?? credit.balance - IMAGE_COST });
+                }
+            }
+            return NextResponse.json({ error: "Arka planlı görsel üretilemedi. Farklı bir arka plan deneyin." }, { status: 500 });
+        }
+
+        // --- PATH B: No background → Imagen 4 Fast ---
         const imagenRes = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${IMAGEN_MODEL}:predict?key=${apiKey}`,
             {
