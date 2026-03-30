@@ -1057,7 +1057,11 @@ export default function PanelDesign() {
             .then((r) => r.json())
             .then((data) => {
                 if (data && typeof data === 'object' && !('error' in data)) {
-                    const loaded = { ...DEFAULT_THEME, ...data };
+                    // Filter out null values so they don't override DEFAULT_THEME defaults
+                    const cleanData = Object.fromEntries(
+                        Object.entries(data).filter(([, v]) => v !== null && v !== undefined)
+                    );
+                    const loaded = { ...DEFAULT_THEME, ...cleanData };
                     setTheme(loaded);
                     setSavedTheme(loaded);
                     if (Array.isArray((data as any)._savedThemes)) setSavedThemes((data as any)._savedThemes as SavedTheme[]);
