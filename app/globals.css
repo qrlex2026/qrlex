@@ -115,3 +115,14 @@ video::-webkit-media-controls-picture-in-picture-button { display: none !importa
 video::-webkit-media-controls-overflow-button { display: none !important; }
 video::--webkit-media-text-track-container { display: none !important; }
 video::-webkit-media-controls-toggle-closed-captions-button { display: none !important; }
+
+/* iOS Safari: force hide the big play button that appears on first load */
+video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Prevent iOS from showing any media overlay */
+video { -webkit-tap-highlight-color: transparent; }

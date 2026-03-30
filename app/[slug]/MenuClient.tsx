@@ -580,12 +580,18 @@ export default function MenuClient({
                 const bgLayer = (
                     <div className="absolute inset-0 overflow-hidden" style={bgStyle(wBg)}>
                         {wVideo ? (
-                            <video src={wVideo} autoPlay muted loop playsInline disablePictureInPicture controlsList="nodownload nofullscreen noremoteplayback" className="absolute inset-0 w-full h-full object-cover pointer-events-none" style={{ opacity: overlayOpacity }} />
+                            <video
+                                src={wVideo}
+                                autoPlay muted loop playsInline
+                                preload="auto"
+                                disablePictureInPicture
+                                controlsList="nodownload nofullscreen noremoteplayback"
+                                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                style={{ opacity: overlayOpacity }}
+                            />
                         ) : wImage ? (
                             <img src={wImage} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: overlayOpacity }} />
-                        ) : (
-                            <video src="https://github.com/qrlex2026/qrlexvideo/raw/refs/heads/main/1.mp4" autoPlay muted loop playsInline disablePictureInPicture controlsList="nodownload nofullscreen noremoteplayback" className="absolute inset-0 w-full h-full object-cover pointer-events-none" style={{ opacity: overlayOpacity }} />
-                        )}
+                        ) : null}
                     </div>
                 );
 
