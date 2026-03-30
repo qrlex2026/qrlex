@@ -1027,10 +1027,7 @@ export default function PanelDesign() {
             const result = await compressVideo(file, (p) => {
                 setVideoUploadStatus(`Sıkıştırılıyor... %${p}`);
             });
-            if (result.video.size >= file.size) {
-                alert(`Video sıkıştırılamadı. Daha kısa veya düşük çözünürlüklü bir video deneyin.`);
-                return;
-            }
+            // Upload whatever is smaller (compressVideo already returns original if compression fails)
             setVideoUploadStatus('Yükleniyor...');
             const fd = new FormData();
             fd.append('file', result.video);
