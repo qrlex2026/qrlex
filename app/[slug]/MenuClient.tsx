@@ -396,8 +396,19 @@ export default function MenuClient({
 
     const getShadow = (s: string) => { switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; case 'xl': return '0 20px 25px -5px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } };
 
-    // Language splash screen - always show on every visit (localStorage disabled for testing)
-    const [showLangSplash, setShowLangSplash] = useState(true);
+    // Language splash screen — show once per hour per restaurant (cached in localStorage)
+    const [showLangSplash, setShowLangSplash] = useState(() => {
+        try {
+            const cacheKey = `qrlex_splash_${slug}`;
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                const { ts } = JSON.parse(cached);
+                // Hide splash if visited within the last hour (3600s)
+                if (Date.now() - ts < 3600 * 1000) return false;
+            }
+        } catch { /* localStorage unavailable (private mode etc.) */ }
+        return true;
+    });
     const [splashFading, setSplashFading] = useState(false);
     const [showLangPicker, setShowLangPicker] = useState(false);
 
@@ -475,8 +486,11 @@ export default function MenuClient({
     // Close welcome screen and go to menu
     const goToMenu = () => {
         setSplashFading(true);
+        // Cache the visit so splash is skipped for the next hour
+        try { localStorage.setItem(`qrlex_splash_${slug}`, JSON.stringify({ ts: Date.now() })); } catch { }
         setTimeout(() => setShowLangSplash(false), 400);
     };
+
 
     const selectLanguage = async (lang: string) => {
         setSelectedLang(lang);
@@ -1582,9 +1596,27 @@ export default function MenuClient({
                     ];
                     return (
                         <div className="w-full relative overflow-hidden" style={{ height: sHeight, borderRadius: sRadius, background: bgImg && !bgVid ? `url(${bgImg}) center/cover no-repeat` : '#e5e7eb' }}>
-                            {/* Video background */}
+                            {/* Video background — iOS Safari requires ref-based setAttribute for autoplay */}
                             {bgVid && (
-                                <video src={bgVid} className="absolute inset-0 w-full h-full object-cover pointer-events-none" autoPlay muted loop playsInline preload="auto" disablePictureInPicture controlsList="nodownload nofullscreen noremoteplayback" />
+                                <video
+                                    ref={(el) => {
+                                        if (el) {
+                                            el.setAttribute('muted', '');
+                                            el.setAttribute('playsinline', '');
+                                            el.muted = true;
+                                            el.playsInline = true;
+                                            if (el.paused) el.play().catch(() => {});
+                                        }
+                                    }}
+                                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                    autoPlay muted loop playsInline
+                                    preload="metadata"
+                                    crossOrigin="anonymous"
+                                    disablePictureInPicture
+                                    controlsList="nodownload nofullscreen noremoteplayback"
+                                >
+                                    <source src={bgVid} type="video/mp4" />
+                                </video>
                             )}
                             {/* Slide text strip */}
                             <div className="flex h-full w-full transition-transform duration-700 ease-in-out absolute inset-0"
@@ -1635,29 +1667,46 @@ export default function MenuClient({
                         const defaultLayout = (T as any).layoutVariant || 'list';
                         const layout = categoryLayoutOverrides[cat.id] || defaultLayout;
 
-                        // Shared image renderer
+                        // Shared image renderer — iOS-compatible video + lazy img + fallback
                         const renderImage = (product: any, className: string, imgRadius?: string) => (
-                            <div className={`relative overflow-hidden ${className}`} style={{ borderRadius: imgRadius || `${T.cardImageRadius}px` }}>
+                            <div className={`relative overflow-hidden ${className}`} style={{ borderRadius: imgRadius || `${T.cardImageRadius}px`, backgroundColor: '#f3f4f6' }}>
                                 {product.video ? (
-                                    <>
-                                        <video
-                                            src={product.video}
-                                            poster={product.image || undefined}
-                                            muted
-                                            autoPlay
-                                            loop
-                                            playsInline
-                                            preload="none"
-                                            disablePictureInPicture
-                                            controlsList="nodownload nofullscreen noremoteplayback"
-                                            className="w-full h-full object-cover pointer-events-none"
-                                            style={{ WebkitMediaControlsPanel: 'none' } as any}
-                                        />
-                                    </>
+                                    <video
+                                        ref={(el) => {
+                                            if (el) {
+                                                // iOS Safari requires HTML attributes (not just DOM props) for autoplay
+                                                el.setAttribute('muted', '');
+                                                el.setAttribute('playsinline', '');
+                                                el.muted = true;
+                                                el.playsInline = true;
+                                                if (el.paused) el.play().catch(() => {});
+                                            }
+                                        }}
+                                        poster={product.image || undefined}
+                                        muted
+                                        autoPlay
+                                        loop
+                                        playsInline
+                                        preload="metadata"
+                                        crossOrigin="anonymous"
+                                        disablePictureInPicture
+                                        controlsList="nodownload nofullscreen noremoteplayback"
+                                        className="w-full h-full object-cover pointer-events-none"
+                                        style={{ WebkitMediaControlsPanel: 'none' } as any}
+                                    >
+                                        <source src={product.video} type="video/mp4" />
+                                    </video>
                                 ) : product.image ? (
-                                    <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover" />
+                                    <img
+                                        src={product.image}
+                                        alt={product.name}
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                    />
                                 ) : (
-                                    <div className="w-full h-full bg-gray-200 flex items-center justify-center"><span className="text-gray-400 text-2xl">🍽️</span></div>
+                                    <div className="w-full h-full bg-gray-100 flex items-center justify-center"><span className="text-gray-300 text-2xl">🍽️</span></div>
                                 )}
                             </div>
                         );
@@ -1669,8 +1718,15 @@ export default function MenuClient({
                             <div key={cat.id} id={cat.id} className="rounded-xl px-4" style={{ backgroundColor: (T as any).categorySectionBg || 'transparent', marginBottom: '4px' }}>
                                 {/* Category Header */}
                                 {cat.image ? (
-                                    <div className="relative w-full h-[200px] overflow-hidden rounded-xl mb-3" style={{ marginTop: '24px' }}>
-                                        <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                                    <div className="relative w-full h-[200px] overflow-hidden rounded-xl mb-3" style={{ marginTop: '24px', backgroundColor: '#f3f4f6' }}>
+                                        <img
+                                            src={cat.image}
+                                            alt={cat.name}
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                        />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                                         <h2 className="absolute bottom-4 left-4 text-xl text-white drop-shadow-lg" style={{ fontWeight: T.categoryTitleWeight }}>{cat.name}</h2>
                                     </div>

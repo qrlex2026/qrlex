@@ -5,6 +5,15 @@ import { Plus, Trash2, Star, Pencil, X, Upload, ChevronDown, ChevronRight, Chevr
 import { useSession } from "@/lib/useSession";
 import { compressVideo } from "@/lib/videoCompress";
 
+// Normalize media URLs: convert r2.dev direct URLs to /media proxy
+// Works for both old stored URLs and new proxy URLs
+const R2_PUBLIC = "https://pub-5b35497dfb5b4103971895d42f4b4222.r2.dev";
+function normalizeUrl(url: string | null | undefined): string {
+    if (!url) return "";
+    if (url.startsWith(R2_PUBLIC)) return url.replace(R2_PUBLIC, "/media");
+    return url;
+}
+
 interface Category { id: string; name: string; sortOrder: number; isActive: boolean; }
 interface Product {
     id: string; name: string; description: string | null; price: number;
@@ -913,7 +922,7 @@ export default function PanelMenu() {
                                 <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
                                     {matched.map(product => (
                                         <div key={product.id} className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-800/50 last:border-b-0 hover:bg-gray-800/30 transition-colors ${!product.isActive ? "opacity-40" : ""}`}>
-                                            {product.image ? <img src={product.image} alt="" loading="lazy" decoding="async" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-xs text-gray-600">🍽️</div>}
+                                            {product.image ? <img src={normalizeUrl(product.image)} alt="" loading="lazy" decoding="async" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" onError={(e)=>{(e.target as HTMLImageElement).style.display='none'}} /> : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-xs text-gray-600">🍽️</div>}
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm text-white truncate">{product.name}</p>
                                                 <p className="text-[11px] text-gray-500">{categories.find(c => c.id === product.categoryId)?.name} · ₺{Number(product.price).toFixed(0)}</p>
@@ -965,7 +974,7 @@ export default function PanelMenu() {
                                                         onClick={e => e.stopPropagation()}
                                                         className="w-3.5 h-3.5 accent-emerald-500 flex-shrink-0"
                                                     />
-                                                    {product.image ? <img src={product.image} alt="" loading="lazy" decoding="async" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-xs text-gray-600">🍽️</div>}
+                                                    {product.image ? <img src={normalizeUrl(product.image)} alt="" loading="lazy" decoding="async" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" onError={(e)=>{(e.target as HTMLImageElement).style.display='none'}} /> : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-xs text-gray-600">🍽️</div>}
                                                     <div className="flex-1 min-w-0" onDoubleClick={() => startInlineEdit(product)}>
                                                         {inlineEdit?.id === product.id ? (
                                                             <input autoFocus value={inlineEdit.value} onChange={e => setInlineEdit({ ...inlineEdit, value: e.target.value })} onBlur={saveInlineEdit} onKeyDown={e => { if (e.key === "Enter") saveInlineEdit(); if (e.key === "Escape") setInlineEdit(null); }} className="w-full bg-gray-800 border border-emerald-500 rounded px-2 py-1 text-sm text-white outline-none" />
@@ -1613,13 +1622,23 @@ export default function PanelMenu() {
                                 {/* Show existing media */}
                                 {form.image && (
                                     <div className="relative group mb-2">
-                                        <img src={form.image} alt="" className="w-full h-48 object-cover rounded-xl border border-gray-700" />
+                                        <img
+                                            src={normalizeUrl(form.image)}
+                                            alt=""
+                                            className="w-full h-48 object-cover rounded-xl border border-gray-700"
+                                            onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }}
+                                        />
                                         <button onClick={removeImage} className="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} className="text-white" /></button>
                                     </div>
                                 )}
                                 {form.video && (
                                     <div className="relative group mb-2">
-                                        <video src={form.video} className="w-full h-48 object-cover rounded-xl border border-gray-700" autoPlay muted loop playsInline />
+                                        <video
+                                            src={normalizeUrl(form.video)}
+                                            className="w-full h-48 object-cover rounded-xl border border-gray-700"
+                                            ref={(el) => { if (el) { el.setAttribute('muted', ''); el.setAttribute('playsinline', ''); el.muted = true; } }}
+                                            autoPlay muted loop playsInline
+                                        />
                                         <button onClick={removeVideo} className="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500/90 hover:bg-red-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} className="text-white" /></button>
                                     </div>
                                 )}
