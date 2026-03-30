@@ -1202,19 +1202,21 @@ export default function MenuClient({
                         {showLangPicker && (
                             <div className="absolute inset-0 z-20 flex flex-col" style={{ animation: 'fadeIn 0.3s ease-out' }}>
                                 <div className="flex-1 bg-black/50" onClick={() => setShowLangPicker(false)} />
-                                <div className="bg-[#1a1a1a] rounded-t-2xl px-4 pt-4 flex flex-col" style={{ height: '40dvh', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', animation: 'slideUp 0.35s ease-out' }}>
+                                <div className="bg-[#1a1a1a] rounded-t-2xl px-4 pt-4 flex flex-col" style={{ maxHeight: '75dvh', animation: 'slideUp 0.35s ease-out' }}>
                                     <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-3 shrink-0" />
-                                    <div className="flex-1 flex flex-wrap gap-2.5 justify-center content-center overflow-y-auto">
-                                        {languages.map((lang) => (
-                                            <button
-                                                key={lang.code}
-                                                onClick={() => { setShowLangPicker(false); selectLanguage(lang.code); }}
-                                                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${selectedLang === lang.code ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                                            >
-                                                <span className="text-base">{lang.flag}</span>
-                                                <span>{lang.name}</span>
-                                            </button>
-                                        ))}
+                                    <div className="flex-1 overflow-y-auto" style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
+                                        <div className="flex flex-wrap gap-2.5 justify-center content-start pb-2">
+                                            {languages.map((lang) => (
+                                                <button
+                                                    key={lang.code}
+                                                    onClick={() => { setShowLangPicker(false); selectLanguage(lang.code); }}
+                                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${selectedLang === lang.code ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                                                >
+                                                    <span className="text-base">{lang.flag}</span>
+                                                    <span>{lang.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1238,31 +1240,27 @@ export default function MenuClient({
             )}
 
             {/* ── Main Menu Language Picker Overlay ── */}
-            {/* Shows when lang icon is clicked in header (outside welcome screen) */}
             {showLangPicker && !showLangSplash && (
                 <div className="fixed inset-0 z-[95] flex flex-col" style={{ animation: 'fadeIn 0.25s ease-out' }}>
-                    {/* Backdrop */}
                     <div className="flex-1 bg-black/50" onClick={() => setShowLangPicker(false)} />
-                    {/* Bottom sheet */}
-                    <div className="bg-[#1a1a1a] rounded-t-2xl px-4 pt-4 flex flex-col" style={{ maxHeight: '50dvh', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', animation: 'slideUp 0.35s ease-out' }}>
-                        {/* Drag handle */}
+                    <div className="bg-[#1a1a1a] rounded-t-2xl px-4 pt-4 flex flex-col" style={{ maxHeight: '75dvh', animation: 'slideUp 0.35s ease-out' }}>
                         <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-3 shrink-0" />
-                        {/* Current language indicator */}
                         <p className="text-center text-white/50 text-xs mb-3 shrink-0">
                             {languages.find(l => l.code === selectedLang)?.flag} {languages.find(l => l.code === selectedLang)?.name}
                         </p>
-                        {/* Language grid */}
-                        <div className="flex-1 flex flex-wrap gap-2.5 justify-center content-start overflow-y-auto pb-2">
-                            {languages.map((lang) => (
-                                <button
-                                    key={lang.code}
-                                    onClick={() => { setShowLangPicker(false); selectLanguage(lang.code); }}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${selectedLang === lang.code ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                                >
-                                    <span className="text-base">{lang.flag}</span>
-                                    <span>{lang.name}</span>
-                                </button>
-                            ))}
+                        <div className="flex-1 overflow-y-auto" style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
+                            <div className="flex flex-wrap gap-2.5 justify-center content-start pb-2">
+                                {languages.map((lang) => (
+                                    <button
+                                        key={lang.code}
+                                        onClick={() => { setShowLangPicker(false); selectLanguage(lang.code); }}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${selectedLang === lang.code ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                                    >
+                                        <span className="text-base">{lang.flag}</span>
+                                        <span>{lang.name}</span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
