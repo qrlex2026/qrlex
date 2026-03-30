@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { compressVideo } from "@/lib/videoCompress";
 import {
     Save, Loader2, Palette, Type, Square, Layers, Eye, RotateCcw, Settings,
     Sun, Moon, Sparkles, Paintbrush, SlidersHorizontal, Monitor, Menu, Upload, X, Globe,
@@ -1009,6 +1010,44 @@ export default function PanelDesign() {
     const [iconPanelOpen, setIconPanelOpen] = useState<Record<string,boolean>>({});
     type SavedTheme = { id: string; name: string; ts: number; data: ThemeType; cardVariant?: string; detailVariant?: string };
     const [savedThemes, setSavedThemes] = useState<SavedTheme[]>([]);
+    // Video upload state
+    const [videoUploadingKey, setVideoUploadingKey] = useState<string | null>(null);
+    const [videoUploadStatus, setVideoUploadStatus] = useState('');
+
+    // ── Compressed video upload helper ──────────────────────
+    const uploadVideoCompressed = async (file: File, themeKey: string, folder: string) => {
+        if (file.size > 200 * 1024 * 1024) {
+            alert(`Video çok büyük (${(file.size / 1024 / 1024).toFixed(0)}MB). Lütfen 200MB'dan küçük bir video seçin.\n\nİpucu: iPhone'da HD (1080p) kullanın, 4K değil.`);
+            return;
+        }
+        setVideoUploadingKey(themeKey);
+        setVideoUploadStatus('FFmpeg yükleniyor...');
+        try {
+            const result = await compressVideo(file, (p) => {
+                setVideoUploadStatus(`Sıkıştırılıyor... %${p}`);
+            });
+            if (result.video.size >= file.size) {
+                alert(`Video sıkıştırılamadı. Daha kısa veya düşük çözünürlüklü bir video deneyin.`);
+                return;
+            }
+            setVideoUploadStatus('Yükleniyor...');
+            const fd = new FormData();
+            fd.append('file', result.video);
+            fd.append('folder', folder);
+            const r = await fetch('/api/upload', { method: 'POST', body: fd });
+            const d = await r.json();
+            if (d.url) {
+                updateTheme(themeKey as any, d.url);
+                setVideoUploadStatus('Yüklendi ✓');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Video işleme başarısız! Daha küçük bir video deneyin.');
+        } finally {
+            setTimeout(() => { setVideoUploadingKey(null); setVideoUploadStatus(''); }, 1500);
+        }
+    };
+
     // Image upload for AI
 
     useEffect(() => {
@@ -1447,13 +1486,13 @@ export default function PanelDesign() {
                                             </div>
                                             <div className="px-2 py-1 flex items-center justify-between">
                                                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[10px] text-gray-400">Video aktif</span></div>
-                                                <label className="text-[9px] text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">Değiştir<input type="file" accept="video/*" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const fd = new FormData(); fd.append('file', f); fd.append('folder', 'bg'); const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json(); if (d.url) updateTheme('pageBgVideo' as any, d.url); }} /></label>
+                                                <label className="text-[9px] text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">Değiştir<input type="file" accept="video/*" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; await uploadVideoCompressed(f, 'pageBgVideo', 'bg'); }} /></label>
                                             </div>
                                         </div>
                                     ) : (
                                         <label className="flex items-center justify-center h-9 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
                                             <Upload size={12} /> Video Yükle
-                                            <input type="file" accept="video/*" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const fd = new FormData(); fd.append('file', f); fd.append('folder', 'bg'); const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json(); if (d.url) updateTheme('pageBgVideo' as any, d.url); }} />
+                                            <input type="file" accept="video/*" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; await uploadVideoCompressed(f, 'pageBgVideo', 'bg'); }} />
                                         </label>
                                     )}
                                 </div>
@@ -1984,9 +2023,7 @@ export default function PanelDesign() {
                                                     Değiştir
                                                     <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
                                                         const f = e.target.files?.[0]; if (!f) return;
-                                                        const fd = new FormData(); fd.append('file', f); fd.append('folder', 'welcome');
-                                                        const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
-                                                        if (d.url) updateTheme('welcomeVideo', d.url);
+                                                        await uploadVideoCompressed(f, 'welcomeVideo', 'welcome');
                                                     }} />
                                                 </label>
                                             </div>
@@ -1996,9 +2033,7 @@ export default function PanelDesign() {
                                             <Upload size={12} /> Video Yükle
                                             <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
                                                 const f = e.target.files?.[0]; if (!f) return;
-                                                const fd = new FormData(); fd.append('file', f); fd.append('folder', 'welcome');
-                                                const r = await fetch('/api/upload', { method: 'POST', body: fd }); const d = await r.json();
-                                                if (d.url) updateTheme('welcomeVideo', d.url);
+                                                await uploadVideoCompressed(f, 'welcomeVideo', 'welcome');
                                             }} />
                                         </label>
                                     )}
