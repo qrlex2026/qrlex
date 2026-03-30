@@ -1015,32 +1015,29 @@ export default function PanelDesign() {
     const [videoUploadingKey, setVideoUploadingKey] = useState<string | null>(null);
     const [videoUploadStatus, setVideoUploadStatus] = useState('');
 
-    // ── Compressed video upload helper ──────────────────────
+    // ── Direct video upload helper (no FFmpeg — faster, more reliable) ──
     const uploadVideoCompressed = async (file: File, themeKey: string, folder: string) => {
-        if (file.size > 200 * 1024 * 1024) {
-            alert(`Video çok büyük (${(file.size / 1024 / 1024).toFixed(0)}MB). Lütfen 200MB'dan küçük bir video seçin.\n\nİpucu: iPhone'da HD (1080p) kullanın, 4K değil.`);
+        if (file.size > 500 * 1024 * 1024) {
+            alert(`Video çok büyük (${(file.size / 1024 / 1024).toFixed(0)}MB). Lütfen 500MB'dan küçük bir video seçin.`);
             return;
         }
         setVideoUploadingKey(themeKey);
-        setVideoUploadStatus('FFmpeg yükleniyor...');
+        setVideoUploadStatus('Yükleniyor...');
         try {
-            const result = await compressVideo(file, (p) => {
-                setVideoUploadStatus(`Sıkıştırılıyor... %${p}`);
-            });
-            // Upload whatever is smaller (compressVideo already returns original if compression fails)
-            setVideoUploadStatus('Yükleniyor...');
             const fd = new FormData();
-            fd.append('file', result.video);
+            fd.append('file', file);
             fd.append('folder', folder);
             const r = await fetch('/api/upload', { method: 'POST', body: fd });
             const d = await r.json();
             if (d.url) {
                 updateTheme(themeKey as any, d.url);
                 setVideoUploadStatus('Yüklendi ✓');
+            } else {
+                alert('Video yükleme başarısız. Tekrar deneyin.');
             }
         } catch (err) {
             console.error(err);
-            alert('Video işleme başarısız! Daha küçük bir video deneyin.');
+            alert('Video yükleme başarısız! İnternet bağlantınızı kontrol edin.');
         } finally {
             setTimeout(() => { setVideoUploadingKey(null); setVideoUploadStatus(''); }, 1500);
         }
