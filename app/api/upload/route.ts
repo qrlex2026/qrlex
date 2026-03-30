@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
         // Image compression with Sharp
         if (contentType.startsWith("image/")) {
             buffer = await sharp(Buffer.from(bytes))
-                .resize(800, 800, { fit: "inside", withoutEnlargement: true })
-                .webp({ quality: 80 })
+                .resize(600, 600, { fit: "inside", withoutEnlargement: true })
+                .webp({ quality: 78 })
                 .toBuffer();
             contentType = "image/webp";
             ext = "webp";

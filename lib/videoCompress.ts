@@ -41,19 +41,48 @@ export async function compressVideo(
 
         await ff.writeFile(inputName, await fetchFile(file));
 
-        // Compress: 480p max, H.264, CRF 32 (aggressive for QR menu)
-        await ff.exec([
-            "-i", inputName,
-            "-vf", "scale='min(480,iw)':-2",
-            "-c:v", "libx264",
-            "-preset", "fast",
-            "-crf", "32",
-            "-c:a", "aac",
-            "-b:a", "64k",
-            "-movflags", "+faststart",
-            "-y",
-            outputName,
-        ]);
+        // Compress: 640p max, H.264, CRF 28 — good quality/size balance for food videos
+        // -pix_fmt yuv420p ensures iPhone HEVC/MOV files are properly converted
+        let compressed = false;
+        try {
+            await ff.exec([
+                "-i", inputName,
+                "-vf", "scale='min(640,iw)':-2",
+                "-c:v", "libx264",
+                "-preset", "fast",
+                "-crf", "28",
+                "-pix_fmt", "yuv420p",
+                "-c:a", "aac",
+                "-b:a", "64k",
+                "-movflags", "+faststart",
+                "-y",
+                outputName,
+            ]);
+            compressed = true;
+        } catch {
+            // Retry with more compatible settings for iPhone MOV/HEVC
+            try {
+                await ff.exec([
+                    "-i", inputName,
+                    "-vf", "scale='min(480,iw)':-2",
+                    "-vcodec", "libx264",
+                    "-pix_fmt", "yuv420p",
+                    "-crf", "32",
+                    "-acodec", "aac",
+                    "-b:a", "48k",
+                    "-movflags", "+faststart",
+                    "-y",
+                    outputName,
+                ]);
+                compressed = true;
+            } catch (e2) {
+                console.error("Both compression attempts failed:", e2);
+            }
+        }
+
+        if (!compressed) {
+            throw new Error("Video compression failed after retry");
+        }
 
         // Extract first frame as thumbnail
         let thumbnail: File | null = null;

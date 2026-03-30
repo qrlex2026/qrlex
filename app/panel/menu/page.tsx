@@ -720,11 +720,30 @@ export default function PanelMenu() {
     };
     const handleVideoUpload = async (file: File) => {
         if (!file.type.startsWith("video/")) { alert("Sadece video dosyaları!"); return; }
+
+        // Size limit: 200MB max — iPhone 4K can be 500MB+
+        const MAX_MB = 200;
+        if (file.size > MAX_MB * 1024 * 1024) {
+            alert(`Video dosyası çok büyük (${(file.size / 1024 / 1024).toFixed(0)}MB). Lütfen ${MAX_MB}MB'dan küçük bir video seçin.\n\nİpucu: iPhone'da çekerken HD (1080p) modu kullanın, 4K değil.`);
+            return;
+        }
+
         setVideoUploading(true); setVideoUploadProgress(5);
         try {
             setVideoStatus("FFmpeg yükleniyor...");
             const result = await compressVideo(file, (p) => { setVideoUploadProgress(Math.round(p * 0.5)); if (p > 0) setVideoStatus(`Sıkıştırılıyor... %${p}`); });
-            setVideoStatus(`Sıkıştırıldı! (${(file.size / 1024 / 1024).toFixed(1)}MB → ${(result.video.size / 1024 / 1024).toFixed(1)}MB)`);
+
+            const originalMB = (file.size / 1024 / 1024).toFixed(1);
+            const compressedMB = (result.video.size / 1024 / 1024).toFixed(1);
+
+            // Safety check: if compressed is not actually smaller, warn and abort
+            if (result.video.size >= file.size) {
+                alert(`Bu video sıkıştırılamadı (${originalMB}MB → ${compressedMB}MB).\n\nLütfen daha kısa veya daha düşük kalitede bir video deneyin. iPhone'da çekerken HD (1080p) kullanın, 4K değil.`);
+                setVideoUploading(false); setVideoUploadProgress(0); setVideoStatus("");
+                return;
+            }
+
+            setVideoStatus(`Sıkıştırıldı! (${originalMB}MB → ${compressedMB}MB)`);
             if (result.thumbnail && !form.image) {
                 setVideoUploadProgress(55); setVideoStatus("Thumbnail yükleniyor...");
                 const thumbFd = new FormData(); thumbFd.append("file", result.thumbnail); thumbFd.append("folder", "products");
@@ -737,9 +756,10 @@ export default function PanelMenu() {
             const data = await res.json();
             if (data.success) { setForm(prev => ({ ...prev, video: data.url })); setVideoUploadProgress(100); setVideoStatus("Yüklendi ✓"); }
             else alert("Video yükleme hatası");
-        } catch (err) { console.error(err); alert("Video işleme başarısız!"); }
+        } catch (err) { console.error(err); alert("Video işleme başarısız! iPhone kullanıyorsanız videoyu önce kameranızdan bilgisayara aktarıp oradan yüklemeyi deneyin."); }
         finally { setTimeout(() => { setVideoUploading(false); setVideoUploadProgress(0); setVideoStatus(""); }, 1500); }
     };
+
     const removeImage = async () => { if (form.image) try { await fetch("/api/upload", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: form.image }) }); } catch { } setForm(prev => ({ ...prev, image: "" })); };
     const removeVideo = async () => { if (form.video) try { await fetch("/api/upload", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: form.video }) }); } catch { } setForm(prev => ({ ...prev, video: "" })); };
     const handleDrop = (e: React.DragEvent) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file) handleFileUpload(file); };
@@ -893,7 +913,7 @@ export default function PanelMenu() {
                                 <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
                                     {matched.map(product => (
                                         <div key={product.id} className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-800/50 last:border-b-0 hover:bg-gray-800/30 transition-colors ${!product.isActive ? "opacity-40" : ""}`}>
-                                            {product.image ? <img src={product.image} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-xs text-gray-600">🍽️</div>}
+                                            {product.image ? <img src={product.image} alt="" loading="lazy" decoding="async" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-xs text-gray-600">🍽️</div>}
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm text-white truncate">{product.name}</p>
                                                 <p className="text-[11px] text-gray-500">{categories.find(c => c.id === product.categoryId)?.name} · ₺{Number(product.price).toFixed(0)}</p>
@@ -945,7 +965,7 @@ export default function PanelMenu() {
                                                         onClick={e => e.stopPropagation()}
                                                         className="w-3.5 h-3.5 accent-emerald-500 flex-shrink-0"
                                                     />
-                                                    {product.image ? <img src={product.image} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-xs text-gray-600">🍽️</div>}
+                                                    {product.image ? <img src={product.image} alt="" loading="lazy" decoding="async" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 text-xs text-gray-600">🍽️</div>}
                                                     <div className="flex-1 min-w-0" onDoubleClick={() => startInlineEdit(product)}>
                                                         {inlineEdit?.id === product.id ? (
                                                             <input autoFocus value={inlineEdit.value} onChange={e => setInlineEdit({ ...inlineEdit, value: e.target.value })} onBlur={saveInlineEdit} onKeyDown={e => { if (e.key === "Enter") saveInlineEdit(); if (e.key === "Escape") setInlineEdit(null); }} className="w-full bg-gray-800 border border-emerald-500 rounded px-2 py-1 text-sm text-white outline-none" />
