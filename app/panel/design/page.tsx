@@ -1015,17 +1015,36 @@ export default function PanelDesign() {
     const [videoUploadingKey, setVideoUploadingKey] = useState<string | null>(null);
     const [videoUploadStatus, setVideoUploadStatus] = useState('');
 
-    // ── Direct video upload helper (no FFmpeg — faster, more reliable) ──
+    // ── Video upload helper with FFmpeg compression (needed for Vercel 4.5MB limit) ──
     const uploadVideoCompressed = async (file: File, themeKey: string, folder: string) => {
         if (file.size > 500 * 1024 * 1024) {
             alert(`Video çok büyük (${(file.size / 1024 / 1024).toFixed(0)}MB). Lütfen 500MB'dan küçük bir video seçin.`);
             return;
         }
         setVideoUploadingKey(themeKey);
-        setVideoUploadStatus('Yükleniyor...');
+
         try {
+            let fileToUpload = file;
+
+            // Compress if file > 3MB (Vercel has ~4.5MB body limit)
+            if (file.size > 3 * 1024 * 1024) {
+                setVideoUploadStatus('Sıkıştırılıyor... (bekleyin)');
+                try {
+                    const result = await compressVideo(file, (p) => {
+                        setVideoUploadStatus(`Sıkıştırılıyor... %${p}`);
+                    });
+                    if (result.video.size < file.size) {
+                        fileToUpload = result.video;
+                    }
+                } catch {
+                    // FFmpeg failed — try direct upload anyway
+                    console.warn('FFmpeg compression failed, trying direct upload');
+                }
+            }
+
+            setVideoUploadStatus('Yükleniyor...');
             const fd = new FormData();
-            fd.append('file', file);
+            fd.append('file', fileToUpload);
             fd.append('folder', folder);
             const r = await fetch('/api/upload', { method: 'POST', body: fd });
             const d = await r.json();
@@ -1033,15 +1052,16 @@ export default function PanelDesign() {
                 updateTheme(themeKey as any, d.url);
                 setVideoUploadStatus('Yüklendi ✓');
             } else {
-                alert('Video yükleme başarısız. Tekrar deneyin.');
+                alert(`Video yükleme başarısız: ${d.error || 'Bilinmeyen hata'}\n\nİpucu: Daha küçük bir video deneyin (< 10MB, 720p).`);
             }
         } catch (err) {
             console.error(err);
             alert('Video yükleme başarısız! İnternet bağlantınızı kontrol edin.');
         } finally {
-            setTimeout(() => { setVideoUploadingKey(null); setVideoUploadStatus(''); }, 1500);
+            setTimeout(() => { setVideoUploadingKey(null); setVideoUploadStatus(''); }, 2000);
         }
     };
+
 
     // Image upload for AI
 

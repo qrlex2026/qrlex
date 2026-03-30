@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { uploadToR2, deleteFromR2, getKeyFromUrl } from "@/lib/r2";
 
+// Allow large file uploads (videos up to 100MB) on Vercel
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
+
 // POST /api/upload — Upload image/video to R2
 export async function POST(req: NextRequest) {
     try {
