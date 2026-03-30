@@ -618,9 +618,7 @@ export default function MenuClient({
                                 src={wVideo}
                                 autoPlay muted loop playsInline
                                 preload="auto"
-                                disablePictureInPicture
-                                controlsList="nodownload nofullscreen noremoteplayback"
-                                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                className="absolute inset-0 w-full h-full object-cover"
                                 style={{ opacity: overlayOpacity }}
                             />
                         ) : wImage ? (
