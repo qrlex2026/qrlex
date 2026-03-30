@@ -298,18 +298,30 @@ export default function MenuClient({
 
     // Force-play all muted autoplay videos (iOS Safari fix — prevents play button overlay)
     useEffect(() => {
-        const playAll = () => {
-            document.querySelectorAll<HTMLVideoElement>('video[autoplay][muted]').forEach(v => {
+        const forcePlay = (el?: Element) => {
+            const targets = el
+                ? [el, ...Array.from(el.querySelectorAll('video'))]
+                : Array.from(document.querySelectorAll('video'));
+            targets.forEach(node => {
+                if (node.tagName !== 'VIDEO') return;
+                const v = node as HTMLVideoElement;
                 v.muted = true;
-                v.play().catch(() => {});
+                if (v.paused) v.play().catch(() => {});
             });
         };
-        playAll();
-        // Retry after a short delay for late-mounted videos
-        const t = setTimeout(playAll, 800);
-        return () => clearTimeout(t);
-    }, []);
 
+        // Play existing videos immediately
+        forcePlay();
+
+        // Watch for new video elements added to DOM (splash screen, modals)
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach(m => m.addedNodes.forEach(n => {
+                if (n.nodeType === 1) forcePlay(n as Element);
+            }));
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        return () => observer.disconnect();
+    }, []);
 
 
     // Listen for live theme updates from design panel iframe
