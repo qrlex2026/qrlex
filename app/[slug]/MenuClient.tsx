@@ -1224,11 +1224,41 @@ export default function MenuClient({
                 );
             })()}
 
-            {/* Translation Loading Overlay */}
             {isTranslating && (
                 <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm" style={{ fontFamily: T.fontFamily }}>
                     <div className="w-10 h-10 border-3 border-gray-200 border-t-black rounded-full animate-spin mb-4" />
                     <p className="text-sm text-gray-600 font-medium">{t('loading')}</p>
+                </div>
+            )}
+
+            {/* ── Main Menu Language Picker Overlay ── */}
+            {/* Shows when lang icon is clicked in header (outside welcome screen) */}
+            {showLangPicker && !showLangSplash && (
+                <div className="fixed inset-0 z-[95] flex flex-col" style={{ animation: 'fadeIn 0.25s ease-out' }}>
+                    {/* Backdrop */}
+                    <div className="flex-1 bg-black/50" onClick={() => setShowLangPicker(false)} />
+                    {/* Bottom sheet */}
+                    <div className="bg-[#1a1a1a] rounded-t-2xl px-4 pt-4 flex flex-col" style={{ maxHeight: '50dvh', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', animation: 'slideUp 0.35s ease-out' }}>
+                        {/* Drag handle */}
+                        <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-3 shrink-0" />
+                        {/* Current language indicator */}
+                        <p className="text-center text-white/50 text-xs mb-3 shrink-0">
+                            {languages.find(l => l.code === selectedLang)?.flag} {languages.find(l => l.code === selectedLang)?.name}
+                        </p>
+                        {/* Language grid */}
+                        <div className="flex-1 flex flex-wrap gap-2.5 justify-center content-start overflow-y-auto pb-2">
+                            {languages.map((lang) => (
+                                <button
+                                    key={lang.code}
+                                    onClick={() => { setShowLangPicker(false); selectLanguage(lang.code); }}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95 ${selectedLang === lang.code ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                                >
+                                    <span className="text-base">{lang.flag}</span>
+                                    <span>{lang.name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
 
