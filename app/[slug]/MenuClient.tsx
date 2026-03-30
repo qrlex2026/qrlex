@@ -580,11 +580,11 @@ export default function MenuClient({
                 const bgLayer = (
                     <div className="absolute inset-0 overflow-hidden" style={bgStyle(wBg)}>
                         {wVideo ? (
-                            <video src={wVideo} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" style={{ opacity: overlayOpacity }} />
+                            <video src={wVideo} autoPlay muted loop playsInline disablePictureInPicture controlsList="nodownload nofullscreen noremoteplayback" className="absolute inset-0 w-full h-full object-cover pointer-events-none" style={{ opacity: overlayOpacity }} />
                         ) : wImage ? (
                             <img src={wImage} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: overlayOpacity }} />
                         ) : (
-                            <video src="https://github.com/qrlex2026/qrlexvideo/raw/refs/heads/main/1.mp4" autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" style={{ opacity: overlayOpacity }} />
+                            <video src="https://github.com/qrlex2026/qrlexvideo/raw/refs/heads/main/1.mp4" autoPlay muted loop playsInline disablePictureInPicture controlsList="nodownload nofullscreen noremoteplayback" className="absolute inset-0 w-full h-full object-cover pointer-events-none" style={{ opacity: overlayOpacity }} />
                         )}
                     </div>
                 );
@@ -1234,7 +1234,7 @@ export default function MenuClient({
 
             {/* Page background video */}
             {(T as any).pageBgVideo && (
-                <video src={(T as any).pageBgVideo} className="fixed inset-0 w-full h-full object-cover -z-10 pointer-events-none" autoPlay muted loop playsInline preload="auto" />
+                <video src={(T as any).pageBgVideo} className="fixed inset-0 w-full h-full object-cover -z-10 pointer-events-none" autoPlay muted loop playsInline preload="auto" disablePictureInPicture controlsList="nodownload nofullscreen noremoteplayback" />
             )}
             <div className="" style={{ ...((T as any).pageBgVideo ? {} : T.pageBg?.includes('gradient') || T.pageBg?.startsWith('url(') ? { background: T.pageBg } : { backgroundColor: T.pageBg }), fontFamily: T.fontFamily, minHeight: '100dvh', paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 {/* Sticky Header + Category Nav */}
@@ -1510,7 +1510,7 @@ export default function MenuClient({
                         <div className="w-full relative overflow-hidden" style={{ height: sHeight, borderRadius: sRadius, background: bgImg && !bgVid ? `url(${bgImg}) center/cover no-repeat` : '#e5e7eb' }}>
                             {/* Video background */}
                             {bgVid && (
-                                <video src={bgVid} className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline preload="auto" />
+                                <video src={bgVid} className="absolute inset-0 w-full h-full object-cover pointer-events-none" autoPlay muted loop playsInline preload="auto" disablePictureInPicture controlsList="nodownload nofullscreen noremoteplayback" />
                             )}
                             {/* Slide text strip */}
                             <div className="flex h-full w-full transition-transform duration-700 ease-in-out absolute inset-0"
@@ -2098,7 +2098,9 @@ export default function MenuClient({
                                 loop
                                 playsInline
                                 preload="auto"
-                                className="absolute inset-0 w-full h-full object-cover"
+                                disablePictureInPicture
+                                controlsList="nodownload nofullscreen noremoteplayback"
+                                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                             />
                         ) : selectedProduct.image ? (
                             <img
