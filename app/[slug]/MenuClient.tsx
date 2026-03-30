@@ -297,6 +297,8 @@ export default function MenuClient({
     }, [selectedProduct, isSearchOpen, isSidebarDrawerOpen]);
 
     // Force-play all muted autoplay videos (iOS Safari fix — prevents play button overlay)
+    // NOTE: React does NOT set the 'muted' HTML attribute, only the DOM property.
+    // iOS Safari requires the HTML attribute for autoplay. We fix this via setAttribute.
     useEffect(() => {
         const forcePlay = (el?: Element) => {
             const targets = el
@@ -305,7 +307,11 @@ export default function MenuClient({
             targets.forEach(node => {
                 if (node.tagName !== 'VIDEO') return;
                 const v = node as HTMLVideoElement;
+                // Set as HTML attributes (not just DOM props) — required by iOS Safari
+                v.setAttribute('muted', '');
+                v.setAttribute('playsinline', '');
                 v.muted = true;
+                v.playsInline = true;
                 if (v.paused) v.play().catch(() => {});
             });
         };
