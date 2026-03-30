@@ -615,6 +615,14 @@ export default function MenuClient({
                     <div className="absolute inset-0 overflow-hidden" style={bgStyle(wBg)}>
                         {wVideo ? (
                             <video
+                                ref={(el) => {
+                                    if (el) {
+                                        el.setAttribute('muted', '');
+                                        el.setAttribute('playsinline', '');
+                                        el.muted = true;
+                                        el.play().catch(() => {});
+                                    }
+                                }}
                                 src={wVideo}
                                 autoPlay muted loop playsInline
                                 preload="auto"
