@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { compressVideo } from "@/lib/videoCompress";
 import {
@@ -738,17 +738,18 @@ function ColorPicker({ label, value, onChange }: { label: string; value: string;
     const triggerRef = useRef<HTMLDivElement>(null);
     const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
 
-    // Extract display hex
-    const hexVal = value.startsWith('#')
-        ? value.replace('#', '').substring(0, 6).toUpperCase()
-        : value.startsWith('rgba')
-            ? (() => { const m = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/); if (!m) return '000000'; return [parseInt(m[1]),parseInt(m[2]),parseInt(m[3])].map(n => n.toString(16).padStart(2,'0')).join('').toUpperCase(); })()
+    // Extract display hex (guard against null/undefined value)
+    const safeVal = value || '';
+    const hexVal = safeVal.startsWith('#')
+        ? safeVal.replace('#', '').substring(0, 6).toUpperCase()
+        : safeVal.startsWith('rgba')
+            ? (() => { const m = safeVal.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/); if (!m) return '000000'; return [parseInt(m[1]),parseInt(m[2]),parseInt(m[3])].map(n => n.toString(16).padStart(2,'0')).join('').toUpperCase(); })()
             : '';
 
     // Extract current opacity (0-100)
     const opacityVal = (() => {
-        if (value.startsWith('rgba')) { const m = value.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*([\d.]+)\)/); if (m) return Math.round(parseFloat(m[1]) * 100); }
-        if (value.startsWith('#') && value.length === 9) return Math.round(parseInt(value.slice(7, 9), 16) / 255 * 100);
+        if (safeVal.startsWith('rgba')) { const m = safeVal.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*([\d.]+)\)/); if (m) return Math.round(parseFloat(m[1]) * 100); }
+        if (safeVal.startsWith('#') && safeVal.length === 9) return Math.round(parseInt(safeVal.slice(7, 9), 16) / 255 * 100);
         return 100;
     })();
 
