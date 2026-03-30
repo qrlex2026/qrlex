@@ -296,6 +296,22 @@ export default function MenuClient({
         }
     }, [selectedProduct, isSearchOpen, isSidebarDrawerOpen]);
 
+    // Force-play all muted autoplay videos (iOS Safari fix — prevents play button overlay)
+    useEffect(() => {
+        const playAll = () => {
+            document.querySelectorAll<HTMLVideoElement>('video[autoplay][muted]').forEach(v => {
+                v.muted = true;
+                v.play().catch(() => {});
+            });
+        };
+        playAll();
+        // Retry after a short delay for late-mounted videos
+        const t = setTimeout(playAll, 800);
+        return () => clearTimeout(t);
+    }, []);
+
+
+
     // Listen for live theme updates from design panel iframe
     const [isDesignMode, setIsDesignMode] = useState(false);
 
