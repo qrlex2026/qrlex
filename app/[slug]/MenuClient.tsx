@@ -1566,8 +1566,19 @@ export default function MenuClient({
                             <div className={`relative overflow-hidden ${className}`} style={{ borderRadius: imgRadius || `${T.cardImageRadius}px` }}>
                                 {product.video ? (
                                     <>
-                                        <video src={product.video} poster={product.image || undefined} muted autoPlay loop playsInline preload="none" className="w-full h-full object-cover" />
-                                        <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"><span className="text-white text-[10px] ml-0.5">▶</span></div>
+                                        <video
+                                            src={product.video}
+                                            poster={product.image || undefined}
+                                            muted
+                                            autoPlay
+                                            loop
+                                            playsInline
+                                            preload="none"
+                                            disablePictureInPicture
+                                            controlsList="nodownload nofullscreen noremoteplayback"
+                                            className="w-full h-full object-cover pointer-events-none"
+                                            style={{ WebkitMediaControlsPanel: 'none' } as any}
+                                        />
                                     </>
                                 ) : product.image ? (
                                     <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover" />
