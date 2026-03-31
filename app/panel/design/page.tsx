@@ -2047,6 +2047,11 @@ export default function PanelDesign() {
                                                 </label>
                                             </div>
                                         </div>
+                                    ) : videoUploadingKey === 'welcomeVideo' ? (
+                                        <div className="flex flex-col items-center justify-center h-12 rounded-lg border border-white/[0.08] bg-[#111] gap-1">
+                                            <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.15)', borderTop: '2px solid #a78bfa', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                                            <span className="text-[10px] text-gray-400">{videoUploadStatus || 'Hazırlanıyor...'}</span>
+                                        </div>
                                     ) : (
                                         <label className="flex items-center justify-center h-10 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-white/[0.2] cursor-pointer transition-colors gap-1.5">
                                             <Upload size={12} /> Video Yükle
@@ -2177,34 +2182,30 @@ export default function PanelDesign() {
                                                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                                                     <span className="text-[10px] text-gray-400">Video aktif</span>
                                                 </div>
-                                                <label className="text-[9px] text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">
-                                                    Değiştir
-                                                    <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
-                                                        const f = e.target.files?.[0]; if (!f) return;
-                                                        try {
-                                                            const fd = new FormData(); fd.append('file', f); fd.append('folder', 'slider');
-                                                            const r = await fetch('/api/upload', { method: 'POST', body: fd });
-                                                            const d = await r.json();
-                                                            if (d.url) updateTheme('sliderBgVideo' as any, d.url);
-                                                            else alert('Yükleme hatası: ' + (d.error || 'Hata'));
-                                                        } catch (err) { alert('Video yükleme başarısız'); console.error(err); }
-                                                    }} />
-                                                </label>
+                                                {videoUploadingKey === 'sliderBgVideo' ? (
+                                                    <span className="text-[9px] text-sky-400">{videoUploadStatus || 'Yükleniyor...'}</span>
+                                                ) : (
+                                                    <label className="text-[9px] text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">
+                                                        Değiştir
+                                                        <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
+                                                            const f = e.target.files?.[0]; if (!f) return;
+                                                            await uploadVideoCompressed(f, 'sliderBgVideo', 'slider');
+                                                        }} />
+                                                    </label>
+                                                )}
                                             </div>
+                                        </div>
+                                    ) : videoUploadingKey === 'sliderBgVideo' ? (
+                                        <div className="flex flex-col items-center justify-center h-12 rounded-lg border border-white/[0.08] bg-[#111] gap-1">
+                                            <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.15)', borderTop: '2px solid #38bdf8', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                                            <span className="text-[10px] text-gray-400">{videoUploadStatus || 'Hazırlanıyor...'}</span>
                                         </div>
                                     ) : (
                                         <label className="flex items-center justify-center h-10 rounded-lg border border-dashed border-white/[0.1] text-[11px] text-gray-500 hover:text-gray-300 hover:border-sky-500/30 cursor-pointer transition-colors gap-1.5">
                                             <Upload size={12} /> Video Yükle
                                             <input type="file" accept="video/*,video/mp4,video/webm" className="hidden" onChange={async (e) => {
                                                 const f = e.target.files?.[0]; if (!f) return;
-                                                const label = e.target.closest('label'); if (label) { label.textContent = 'Yükleniyor...'; }
-                                                try {
-                                                    const fd = new FormData(); fd.append('file', f); fd.append('folder', 'slider');
-                                                    const r = await fetch('/api/upload', { method: 'POST', body: fd });
-                                                    const d = await r.json();
-                                                    if (d.url) updateTheme('sliderBgVideo' as any, d.url);
-                                                    else alert('Yükleme hatası: ' + (d.error || 'Hata'));
-                                                } catch (err) { alert('Video yükleme başarısız'); console.error(err); }
+                                                await uploadVideoCompressed(f, 'sliderBgVideo', 'slider');
                                             }} />
                                         </label>
                                     )}
