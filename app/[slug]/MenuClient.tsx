@@ -1660,22 +1660,34 @@ export default function MenuClient({
                                 {product.video ? (
                                     <video
                                         ref={(el) => {
-                                            if (el) {
-                                                // iOS Safari requires HTML attributes (not just DOM props) for autoplay
-                                                el.setAttribute('muted', '');
-                                                el.setAttribute('playsinline', '');
-                                                el.muted = true;
-                                                el.playsInline = true;
-                                                if (el.paused) el.play().catch(() => {});
-                                            }
+                                            if (!el) return;
+                                            // iOS Safari: set as HTML attributes (not just DOM props)
+                                            el.setAttribute('muted', '');
+                                            el.setAttribute('playsinline', '');
+                                            el.muted = true;
+                                            el.playsInline = true;
+                                            // Lazy load: only fetch & play when card is in viewport
+                                            const obs = new IntersectionObserver(
+                                                (entries) => {
+                                                    entries.forEach(entry => {
+                                                        if (entry.isIntersecting) {
+                                                            if (el.readyState === 0) el.load();
+                                                            el.play().catch(() => {});
+                                                        } else {
+                                                            el.pause();
+                                                        }
+                                                    });
+                                                },
+                                                { threshold: 0.1 }
+                                            );
+                                            obs.observe(el);
                                         }}
                                         poster={product.image || undefined}
                                         muted
                                         autoPlay
                                         loop
                                         playsInline
-                                        preload="metadata"
-                                        crossOrigin="anonymous"
+                                        preload="none"
                                         disablePictureInPicture
                                         controlsList="nodownload nofullscreen noremoteplayback"
                                         className="w-full h-full object-cover pointer-events-none"
