@@ -47,13 +47,12 @@ export async function compressVideo(
         try {
             await ff.exec([
                 "-i", inputName,
-                "-vf", "scale='min(640,iw)':-2",
+                "-vf", "scale='min(480,iw)':-2",
                 "-c:v", "libx264",
                 "-preset", "fast",
-                "-crf", "28",
+                "-crf", "33",
                 "-pix_fmt", "yuv420p",
-                "-c:a", "aac",
-                "-b:a", "64k",
+                "-an",                    // no audio — menu videos are always muted
                 "-movflags", "+faststart",
                 "-y",
                 outputName,
@@ -64,12 +63,11 @@ export async function compressVideo(
             try {
                 await ff.exec([
                     "-i", inputName,
-                    "-vf", "scale='min(480,iw)':-2",
+                    "-vf", "scale='min(360,iw)':-2",
                     "-vcodec", "libx264",
                     "-pix_fmt", "yuv420p",
-                    "-crf", "32",
-                    "-acodec", "aac",
-                    "-b:a", "48k",
+                    "-crf", "35",
+                    "-an",                    // no audio
                     "-movflags", "+faststart",
                     "-y",
                     outputName,
