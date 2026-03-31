@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "pub-5b35497dfb5b4103971895d42f4b4222.r2.dev" },
+      { protocol: "https", hostname: "cdn.qrlex.com" },
       { protocol: "https", hostname: "**" },
     ],
   },
@@ -12,7 +13,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/media/:path*",
-        destination: "https://pub-5b35497dfb5b4103971895d42f4b4222.r2.dev/:path*",
+        destination: "https://cdn.qrlex.com/:path*",
       },
     ];
   },
