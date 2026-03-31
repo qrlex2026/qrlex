@@ -37,10 +37,10 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
 
     // Proxy R2 URLs through our domain to bypass ISP blocks on r2.dev
     const R2_PUBLIC = "https://pub-5b35497dfb5b4103971895d42f4b4222.r2.dev";
-    // Image proxy: Next.js rewrite → fast edge CDN
+    // Both images and videos use the fast Next.js edge rewrite (/media/)
+    // Videos are all <4MB so no Range request issues; /api/video/ cold start was causing slowness
     const toProxyImage = (url: string | null) => url ? url.replace(R2_PUBLIC, "/media") : "";
-    // Video proxy: dedicated Range-aware API route → iOS Safari compatible
-    const toProxyVideo = (url: string | null) => url ? url.replace(R2_PUBLIC, "/api/video") : "";
+    const toProxyVideo = (url: string | null) => url ? url.replace(R2_PUBLIC, "/media") : "";
 
     const hasPopular = restaurant.products.some((p) => p.isPopular && p.isActive);
     const categories = [
