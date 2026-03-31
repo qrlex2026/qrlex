@@ -1658,43 +1658,61 @@ export default function MenuClient({
                         const renderImage = (product: any, className: string, imgRadius?: string) => (
                             <div className={`relative overflow-hidden ${className}`} style={{ borderRadius: imgRadius || `${T.cardImageRadius}px`, backgroundColor: '#f3f4f6' }}>
                                 {product.video ? (
-                                    <video
-                                        ref={(el) => {
-                                            if (!el) return;
-                                            // iOS Safari: set as HTML attributes (not just DOM props)
-                                            el.setAttribute('muted', '');
-                                            el.setAttribute('playsinline', '');
-                                            el.muted = true;
-                                            el.playsInline = true;
-                                            // Lazy load: only fetch & play when card is in viewport
-                                            const obs = new IntersectionObserver(
-                                                (entries) => {
-                                                    entries.forEach(entry => {
-                                                        if (entry.isIntersecting) {
-                                                            if (el.readyState === 0) el.load();
-                                                            el.play().catch(() => {});
-                                                        } else {
-                                                            el.pause();
-                                                        }
-                                                    });
-                                                },
-                                                { threshold: 0.1 }
-                                            );
-                                            obs.observe(el);
-                                        }}
-                                        poster={product.image || undefined}
-                                        muted
-                                        autoPlay
-                                        loop
-                                        playsInline
-                                        preload="none"
-                                        disablePictureInPicture
-                                        controlsList="nodownload nofullscreen noremoteplayback"
-                                        className="w-full h-full object-cover pointer-events-none"
-                                        style={{ WebkitMediaControlsPanel: 'none' } as any}
-                                    >
-                                        <source src={product.video} type="video/mp4" />
-                                    </video>
+                                    <>
+                                        {/* Yükleme spinner — video oynatılabilir olunca kaybolur */}
+                                        <div className="video-spinner absolute inset-0 flex items-center justify-center z-10"
+                                            style={{ background: 'rgba(0,0,0,0.15)' }}>
+                                            <div style={{
+                                                width: 26, height: 26,
+                                                border: '3px solid rgba(255,255,255,0.3)',
+                                                borderTop: '3px solid #fff',
+                                                borderRadius: '50%',
+                                                animation: 'spin 0.8s linear infinite',
+                                            }} />
+                                        </div>
+                                        <video
+                                            ref={(el) => {
+                                                if (!el) return;
+                                                // iOS Safari: set as HTML attributes (not just DOM props)
+                                                el.setAttribute('muted', '');
+                                                el.setAttribute('playsinline', '');
+                                                el.muted = true;
+                                                el.playsInline = true;
+                                                // Lazy load: only fetch & play when card is in viewport
+                                                const obs = new IntersectionObserver(
+                                                    (entries) => {
+                                                        entries.forEach(entry => {
+                                                            if (entry.isIntersecting) {
+                                                                if (el.readyState === 0) el.load();
+                                                                el.play().catch(() => {});
+                                                            } else {
+                                                                el.pause();
+                                                            }
+                                                        });
+                                                    },
+                                                    { threshold: 0.1 }
+                                                );
+                                                obs.observe(el);
+                                            }}
+                                            onCanPlay={(e) => {
+                                                const s = (e.currentTarget as HTMLElement).parentElement?.querySelector('.video-spinner') as HTMLElement | null;
+                                                if (s) s.style.display = 'none';
+                                            }}
+                                            poster={product.image || undefined}
+                                            muted
+                                            autoPlay
+                                            loop
+                                            playsInline
+                                            preload="none"
+                                            disablePictureInPicture
+                                            controlsList="nodownload nofullscreen noremoteplayback"
+                                            className="w-full h-full object-cover pointer-events-none"
+                                            style={{ WebkitMediaControlsPanel: 'none' } as any}
+                                        >
+                                            <source src={product.video} type="video/mp4" />
+                                        </video>
+                                    </>
+
                                 ) : product.image ? (
                                     <img
                                         src={product.image}
