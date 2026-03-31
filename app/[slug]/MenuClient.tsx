@@ -396,19 +396,8 @@ export default function MenuClient({
 
     const getShadow = (s: string) => { switch (s) { case 'none': return 'none'; case 'sm': return '0 1px 2px 0 rgba(0,0,0,0.05)'; case 'md': return '0 4px 6px -1px rgba(0,0,0,0.1)'; case 'lg': return '0 10px 15px -3px rgba(0,0,0,0.1)'; case 'xl': return '0 20px 25px -5px rgba(0,0,0,0.1)'; default: return '0 1px 2px 0 rgba(0,0,0,0.05)'; } };
 
-    // Language splash screen — show once per hour per restaurant (cached in localStorage)
-    const [showLangSplash, setShowLangSplash] = useState(() => {
-        try {
-            const cacheKey = `qrlex_splash_${slug}`;
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
-                const { ts } = JSON.parse(cached);
-                // Hide splash if visited within the last hour (3600s)
-                if (Date.now() - ts < 3600 * 1000) return false;
-            }
-        } catch { /* localStorage unavailable (private mode etc.) */ }
-        return true;
-    });
+    // Language splash screen — show on every page load (no caching)
+    const [showLangSplash, setShowLangSplash] = useState(true);
     const [splashFading, setSplashFading] = useState(false);
     const [showLangPicker, setShowLangPicker] = useState(false);
 
@@ -486,8 +475,6 @@ export default function MenuClient({
     // Close welcome screen and go to menu
     const goToMenu = () => {
         setSplashFading(true);
-        // Cache the visit so splash is skipped for the next hour
-        try { localStorage.setItem(`qrlex_splash_${slug}`, JSON.stringify({ ts: Date.now() })); } catch { }
         setTimeout(() => setShowLangSplash(false), 400);
     };
 
